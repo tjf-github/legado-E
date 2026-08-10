@@ -47,4 +47,33 @@ object ChapterNumberUtils {
         }
         return if (rewritten) result else null
     }
+
+    /**
+     * 仅重写标题中的编号前缀，返回如“第3章”“Chapter 3”这类纯编号标题。
+     * 用于新增章节时预填默认标题，避免复制上一章的副标题。
+     *
+     * @return 纯编号标题；未命中任何编号模式时返回 null
+     */
+    fun nextNumberTitle(title: String, delta: Int): String? {
+        if (delta == 0 || title.isBlank()) return null
+        patternCn.find(title)?.let { match ->
+            val num = match.groupValues[2].toIntOrNull()
+            if (num != null) {
+                val newNum = num + delta
+                if (newNum >= 1) {
+                    return "${match.groupValues[1]}$newNum${match.groupValues[3]}"
+                }
+            }
+        }
+        patternEn.find(title)?.let { match ->
+            val num = match.groupValues[2].toIntOrNull()
+            if (num != null) {
+                val newNum = num + delta
+                if (newNum >= 1) {
+                    return "${match.groupValues[1]}$newNum"
+                }
+            }
+        }
+        return null
+    }
 }

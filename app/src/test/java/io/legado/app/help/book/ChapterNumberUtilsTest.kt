@@ -37,4 +37,13 @@ class ChapterNumberUtilsTest {
         assertNull(ChapterNumberUtils.rewriteTitle("第1章", -1))
         assertNull(ChapterNumberUtils.rewriteTitle("Chapter 1", -1))
     }
+
+    @Test
+    fun nextNumberTitleReturnsPrefixOnly() {
+        assertEquals("第3章", ChapterNumberUtils.nextNumberTitle("第2章 山中怪影", 1))
+        assertEquals("第1章", ChapterNumberUtils.nextNumberTitle("第2章 山中怪影", -1))
+        assertEquals("Chapter 3", ChapterNumberUtils.nextNumberTitle("Chapter 2 abc", 1))
+        assertNull(ChapterNumberUtils.nextNumberTitle("序章", 1))
+        assertNull(ChapterNumberUtils.nextNumberTitle("第1章", -1))
+    }
 }
