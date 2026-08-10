@@ -1223,4 +1223,25 @@
     <string name="auto_check_new_backup_t">自动检查新备份</string>
     <string name="auto_check_new_backup_s">打开软件时检查是否有新备份，有新备份时提示是否更新</string>
     <string name="sys_image_picker">系统图片选择器</string>
+    <string name="import_manga">匯入本機漫畫</string>
+    <string name="import_manga_mode_whole">整本匯入</string>
+    <string name="import_manga_mode_series">系列匯入</string>
+    <string name="import_manga_mode_whole_desc">所選資料夾=一本書，直接子資料夾=章節</string>
+    <string name="import_manga_mode_series_desc">所選資料夾=系列分組，直接子資料夾=各自獨立書</string>
+    <string name="import_manga_scanning">正在掃描漫畫資料夾…</string>
+    <string name="import_manga_preview">匯入預覽</string>
+    <string name="import_manga_confirm">確認匯入</string>
+    <string name="import_manga_rename">改名</string>
+    <string name="import_manga_images">%1$d 張圖片</string>
+    <string name="import_manga_chapters">%1$d 個章節</string>
+    <string name="import_manga_role_whole">整本連看</string>
+    <string name="import_manga_role_chapters">子資料夾為章節</string>
+    <string name="import_manga_duplicate">已在書架</string>
+    <string name="import_manga_skipped">無圖片，跳過</string>
+    <string name="import_manga_import_success">匯入成功</string>
+    <string name="import_manga_import_failed">匯入失敗</string>
+    <string name="import_manga_scan_failed">掃描失敗</string>
+    <string name="import_manga_empty">未找到可匯入的漫畫</string>
+    <string name="import_manga_reimport">已存在，將重新匯入</string>
+    <string name="import_manga_summary">將匯入 %1$d 本書，共 %2$d 張圖片</string>
 </resources>

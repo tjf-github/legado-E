@@ -281,6 +281,10 @@
         <activity
             android:name=".ui.book.import.local.ImportBookActivity"
             android:launchMode="singleTop" />
+        <!-- 导入本地漫画 -->
+        <activity
+            android:name=".ui.book.import.manga.ImportMangaActivity"
+            android:launchMode="singleTop" />
         <!-- 添加远程 -->
         <activity
             android:name=".ui.book.import.remote.RemoteBookActivity"

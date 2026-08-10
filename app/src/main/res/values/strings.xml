@@ -1356,4 +1356,25 @@
     <string name="click_image_way">点击图片方式</string>
     <string name="auto_update_summary">每天自动检查软件是否更新</string>
     <string name="shibboleth">口令</string>
+    <string name="import_manga">Import local manga</string>
+    <string name="import_manga_mode_whole">Import as a book</string>
+    <string name="import_manga_mode_series">Import as a series</string>
+    <string name="import_manga_mode_whole_desc">Selected folder = one book; its sub-folders = chapters</string>
+    <string name="import_manga_mode_series_desc">Selected folder = series; its sub-folders = individual books</string>
+    <string name="import_manga_scanning">Scanning manga folders…</string>
+    <string name="import_manga_preview">Import preview</string>
+    <string name="import_manga_confirm">Import now</string>
+    <string name="import_manga_rename">Rename</string>
+    <string name="import_manga_images">%1$d images</string>
+    <string name="import_manga_chapters">%1$d chapters</string>
+    <string name="import_manga_role_whole">Whole book</string>
+    <string name="import_manga_role_chapters">Sub-folders as chapters</string>
+    <string name="import_manga_duplicate">Already on shelf</string>
+    <string name="import_manga_skipped">No images, skipped</string>
+    <string name="import_manga_import_success">Import successful</string>
+    <string name="import_manga_import_failed">Import failed</string>
+    <string name="import_manga_scan_failed">Scan failed</string>
+    <string name="import_manga_empty">No importable manga found</string>
+    <string name="import_manga_reimport">Already exists, will re-import</string>
+    <string name="import_manga_summary">Will import %1$d book(s), %2$d image(s)</string>
 </resources>
