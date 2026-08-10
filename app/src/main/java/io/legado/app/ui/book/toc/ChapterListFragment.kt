@@ -15,10 +15,15 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.databinding.FragmentChapterListBinding
+import io.legado.app.databinding.DialogChapterInsertBinding
+import io.legado.app.help.book.ChapterNumberUtils
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.isLocal
+import io.legado.app.help.book.isLocalTxt
 import io.legado.app.help.book.isVideo
 import io.legado.app.help.book.simulatedTotalChapterNum
+import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
 import io.legado.app.ui.widget.recycler.UpLinearLayoutManager
@@ -218,6 +223,51 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
                     .putExtra("chapterChanged", bookChapter.index != durChapterIndex)
             )
             finish()
+        }
+    }
+
+    override fun onChapterMenu(bookChapter: BookChapter) {
+        val book = viewModel.bookData.value ?: return
+        if (!book.isLocalTxt) return
+        requireContext().selector(
+            R.string.chapter_menu_title,
+            listOf(
+                getString(R.string.add_chapter_after),
+                getString(R.string.delete_chapter)
+            )
+        ) { _, index ->
+            when (index) {
+                0 -> showInsertChapterDialog(book, bookChapter)
+                1 -> showDeleteChapterDialog(book, bookChapter)
+            }
+        }
+    }
+
+    private fun showInsertChapterDialog(book: Book, anchor: BookChapter) {
+        val defaultTitle = ChapterNumberUtils.rewriteTitle(anchor.title, 1)
+            ?: getString(R.string.chapter_default_title, anchor.index + 2)
+        alert {
+            setTitle(R.string.add_chapter_title)
+            val alertBinding = DialogChapterInsertBinding.inflate(layoutInflater)
+            alertBinding.editTitle.setText(defaultTitle)
+            setCustomView(alertBinding.root)
+            okButton {
+                val title = alertBinding.editTitle.text?.toString() ?: ""
+                val content = alertBinding.editContent.text?.toString() ?: ""
+                viewModel.insertChapter(book, anchor, title, content)
+            }
+            cancelButton()
+        }
+    }
+
+    private fun showDeleteChapterDialog(book: Book, chapter: BookChapter) {
+        alert {
+            setTitle(R.string.delete_chapter)
+            setMessage(getString(R.string.delete_chapter_confirm, chapter.title))
+            okButton {
+                viewModel.deleteChapter(book, chapter)
+            }
+            cancelButton()
         }
     }
 
