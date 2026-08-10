@@ -2,6 +2,7 @@ package io.legado.app.help.book
 
 import android.graphics.BitmapFactory
 import android.os.ParcelFileDescriptor
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.script.rhino.runScriptWithContext
 import io.legado.app.constant.AppLog
@@ -233,6 +234,11 @@ object BookHelp {
             if (isImageExist(book, src)) {
                 return
             }
+            // 本地图片（content:// 或本地文件路径）直接复制到缓存，不走网络请求
+            readLocalImageBytes(src)?.let { bytes ->
+                writeImage(book, src, bytes)
+                return
+            }
             val analyzeUrl = AnalyzeUrl(
                 src, source = bookSource, coroutineContext = currentCoroutineContext()
             )
@@ -258,6 +264,21 @@ object BookHelp {
         } finally {
             downloadImages.remove(src)
             mutex.unlock()
+        }
+    }
+
+    private fun readLocalImageBytes(src: String): ByteArray? {
+        return if (src.isContentScheme()) {
+            kotlin.runCatching {
+                appCtx.contentResolver.openInputStream(src.toUri())?.use { it.readBytes() }
+            }.getOrNull()
+        } else {
+            val file = if (src.startsWith("file://")) {
+                File(src.removePrefix("file://"))
+            } else {
+                File(src)
+            }
+            if (file.exists()) file.readBytes() else null
         }
     }
 

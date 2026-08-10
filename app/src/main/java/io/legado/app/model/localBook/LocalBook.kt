@@ -27,6 +27,8 @@ import io.legado.app.help.book.getLocalUri
 import io.legado.app.help.book.getRemoteUrl
 import io.legado.app.help.book.isArchive
 import io.legado.app.help.book.isEpub
+import io.legado.app.help.book.isImage
+import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isMobi
 import io.legado.app.help.book.isPdf
 import io.legado.app.help.book.isUmd
@@ -119,6 +121,10 @@ object LocalBook {
     @Throws(TocEmptyException::class)
     fun getChapterList(book: Book): ArrayList<BookChapter> {
         val chapters = when {
+            book.isImage && book.isLocal -> {
+                MangaFolderScanner.scanChapters(book)
+            }
+
             book.isEpub -> {
                 EpubFile.getChapterList(book)
             }
@@ -172,6 +178,11 @@ object LocalBook {
     fun getContent(book: Book, chapter: BookChapter): String? {
         var content = try {
             when {
+                book.isImage && book.isLocal -> {
+                    val images = MangaFolderScanner.imagesOf(chapter)
+                    if (images.isEmpty()) null else MangaFolderScanner.buildImgHtml(images)
+                }
+
                 book.isEpub -> {
                     EpubFile.getContent(book, chapter)
                 }
