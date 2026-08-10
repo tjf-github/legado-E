@@ -9,15 +9,22 @@ import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.BookChapter
 import io.legado.app.exception.NoStackTraceException
+import io.legado.app.help.book.BookHelp
+import io.legado.app.help.book.ChapterNumberUtils
 import io.legado.app.model.ReadBook
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.utils.FileDoc
 import io.legado.app.utils.GSON
+import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.createFileIfNotExist
+import io.legado.app.utils.externalFiles
+import io.legado.app.utils.getFile
 import io.legado.app.utils.openOutputStream
 import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.writeText
+import java.io.File
 
 class TocViewModel(application: Application) : BaseViewModel(application) {
     var bookUrl: String = ""
@@ -65,6 +72,153 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             }
         }.onSuccess {
             it?.let(success)
+        }
+    }
+
+    /**
+     * 在指定章节后新增章节，后续章节序号与标题数字自动 +1
+     */
+    fun insertChapter(book: Book, anchor: BookChapter, title: String, content: String) {
+        execute {
+            val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            if (toc.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
+            }
+            val insertIndex = anchor.index + 1
+            // 从后往前重排，避免 (bookUrl, index) 唯一索引中间态冲突
+            for (i in toc.size - 1 downTo 0) {
+                val chapter = toc[i]
+                if (chapter.index >= insertIndex) {
+                    val newIndex = chapter.index + 1
+                    val newTitle = ChapterNumberUtils.rewriteTitle(chapter.title, 1) ?: chapter.title
+                    renameChapterFile(book, chapter, newIndex, newTitle)
+                    appDb.bookChapterDao.upIndexTitle(book.bookUrl, chapter.url, newIndex, newTitle)
+                    appDb.bookmarkDao.shiftChapter(
+                        book.name,
+                        book.author,
+                        chapter.index,
+                        newIndex,
+                        newTitle
+                    )
+                }
+            }
+            // 构造并写入新章节
+            val newChapter = BookChapter(
+                url = MD5Utils.md5Encode16(
+                    "${book.originName}_edit_${anchor.index}_${System.currentTimeMillis()}"
+                ),
+                title = title.ifBlank {
+                    context.getString(R.string.chapter_default_title, insertIndex + 1)
+                },
+                bookUrl = book.bookUrl,
+                index = insertIndex
+            )
+            appDb.bookChapterDao.insert(newChapter)
+            BookHelp.saveText(
+                book,
+                newChapter,
+                content.ifBlank { context.getString(R.string.chapter_content_placeholder) }
+            )
+            // 更新书籍元数据与阅读位置
+            book.totalChapterNum += 1
+            if (book.durChapterIndex > anchor.index) {
+                book.durChapterIndex += 1
+                appDb.bookChapterDao.getChapter(book.bookUrl, book.durChapterIndex)?.let {
+                    book.durChapterTitle = it.title
+                }
+            }
+            appDb.bookDao.update(book)
+            ReadBook.onChapterListUpdated(book)
+            bookData.postValue(book)
+        }.onSuccess {
+            context.toastOnUi(context.getString(R.string.add_chapter_success))
+            chapterListCallBack?.upChapterList(searchKey)
+        }.onError {
+            AppLog.put(context.getString(R.string.add_chapter_error), it, true)
+        }
+    }
+
+    /**
+     * 删除指定章节，后续章节序号与标题数字自动 -1
+     */
+    fun deleteChapter(book: Book, chapter: BookChapter) {
+        execute {
+            val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            if (toc.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
+            }
+            // 删除目标章节的正文覆盖文件与书签
+            BookHelp.delContent(book, chapter)
+            appDb.bookmarkDao.delByChapterIndex(book.name, book.author, chapter.index)
+            appDb.bookChapterDao.delChapter(book.bookUrl, chapter.url)
+            // 从前往后重排后续章节
+            for (c in toc) {
+                if (c.index > chapter.index) {
+                    val newIndex = c.index - 1
+                    val newTitle = ChapterNumberUtils.rewriteTitle(c.title, -1) ?: c.title
+                    renameChapterFile(book, c, newIndex, newTitle)
+                    appDb.bookChapterDao.upIndexTitle(book.bookUrl, c.url, newIndex, newTitle)
+                    appDb.bookmarkDao.shiftChapter(
+                        book.name,
+                        book.author,
+                        c.index,
+                        newIndex,
+                        newTitle
+                    )
+                }
+            }
+            // 更新书籍元数据与阅读位置
+            book.totalChapterNum = (book.totalChapterNum - 1).coerceAtLeast(0)
+            when {
+                book.durChapterIndex > chapter.index -> book.durChapterIndex -= 1
+                book.durChapterIndex == chapter.index -> {
+                    book.durChapterIndex =
+                        book.durChapterIndex.coerceAtMost((book.totalChapterNum - 1).coerceAtLeast(0))
+                    book.durChapterPos = 0
+                }
+            }
+            appDb.bookChapterDao.getChapter(book.bookUrl, book.durChapterIndex)?.let {
+                book.durChapterTitle = it.title
+            }
+            appDb.bookDao.update(book)
+            ReadBook.onChapterListUpdated(book)
+            bookData.postValue(book)
+        }.onSuccess {
+            context.toastOnUi(context.getString(R.string.delete_chapter_success))
+            chapterListCallBack?.upChapterList(searchKey)
+        }.onError {
+            AppLog.put(context.getString(R.string.delete_chapter_error), it, true)
+        }
+    }
+
+    /**
+     * 章节重排后重命名正文覆盖文件，失败仅告警，不阻断数据库操作
+     */
+    private fun renameChapterFile(
+        book: Book,
+        chapter: BookChapter,
+        newIndex: Int,
+        newTitle: String
+    ) {
+        kotlin.runCatching {
+            val oldName = String.format(
+                "%05d-%s.nb",
+                chapter.index,
+                MD5Utils.md5Encode16(chapter.title)
+            )
+            val newName = String.format(
+                "%05d-%s.nb",
+                newIndex,
+                MD5Utils.md5Encode16(newTitle)
+            )
+            if (oldName == newName) return@runCatching
+            val dir = context.externalFiles.getFile("book_cache", book.getFolderName())
+            val oldFile = File(dir, oldName)
+            if (oldFile.exists()) {
+                oldFile.renameTo(File(dir, newName))
+            }
+        }.onFailure {
+            AppLog.put("重命名章节正文文件失败\n${it.localizedMessage}", it)
         }
     }
 
