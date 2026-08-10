@@ -40,6 +40,12 @@ interface BookChapterDao {
     @Query("delete from chapters where bookUrl = :bookUrl")
     fun delByBook(bookUrl: String)
 
+    @Query("delete from chapters where bookUrl = :bookUrl and url = :url")
+    fun delChapter(bookUrl: String, url: String)
+
+    @Query("update chapters set `index` = :index, title = :title where bookUrl = :bookUrl and url = :url")
+    fun upIndexTitle(bookUrl: String, url: String, index: Int, title: String)
+
     @Query("update chapters set wordCount = :wordCount where bookUrl = :bookUrl and url = :url")
     fun upWordCount(bookUrl: String, url: String, wordCount: String)
 

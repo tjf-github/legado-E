@@ -48,6 +48,24 @@ interface BookmarkDao {
     )
     fun search(bookName: String, bookAuthor: String, key: String): List<Bookmark>
 
+    @Query(
+        """update bookmarks set chapterIndex = :newIndex, chapterName = :newTitle
+        where bookName = :bookName and bookAuthor = :bookAuthor and chapterIndex = :oldIndex"""
+    )
+    fun shiftChapter(
+        bookName: String,
+        bookAuthor: String,
+        oldIndex: Int,
+        newIndex: Int,
+        newTitle: String
+    )
+
+    @Query(
+        """delete from bookmarks
+        where bookName = :bookName and bookAuthor = :bookAuthor and chapterIndex = :index"""
+    )
+    fun delByChapterIndex(bookName: String, bookAuthor: String, index: Int)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg bookmark: Bookmark)
 
