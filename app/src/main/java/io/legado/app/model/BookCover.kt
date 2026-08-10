@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import androidx.annotation.Keep
+import androidx.core.net.toUri
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.DataSource
@@ -35,6 +36,7 @@ import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.getPrefBoolean
 import io.legado.app.utils.getPrefString
+import io.legado.app.utils.isContentScheme
 import kotlinx.coroutines.currentCoroutineContext
 import splitties.init.appCtx
 import java.io.File
@@ -165,10 +167,12 @@ object BookCover {
         if (sourceOrigin != null) {
             options = options.set(OkHttpModelLoader.sourceOriginOption, sourceOrigin)
         }
+        // content:// 等本地图片直接按 Uri 预取，避免被当作文件路径
+        val model: Any? = if (path?.isContentScheme() == true) path.toUri() else path
         return Glide.with(context)
             .downloadOnly()
             .apply(options)
-            .load(path)
+            .load(model)
     }
 
     /**

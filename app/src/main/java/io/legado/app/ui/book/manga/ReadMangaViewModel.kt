@@ -14,6 +14,7 @@ import io.legado.app.data.entities.BookProgress
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.book.isImage
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isLocalModified
 import io.legado.app.help.book.removeType
@@ -82,7 +83,8 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
             return
         }
 
-        if (book.isLocal && !checkLocalBookFileExist(book)) {
+        // 本地漫画书是文件夹而非文件，不走文件流校验
+        if (book.isLocal && !book.isImage && !checkLocalBookFileExist(book)) {
             return
         }
 
@@ -117,6 +119,21 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
     }
 
     private suspend fun loadChapterListAwait(book: Book): Boolean {
+        if (book.isLocal) {
+            return kotlin.runCatching {
+                LocalBook.getChapterList(book).let {
+                    appDb.bookChapterDao.delByBook(book.bookUrl)
+                    appDb.bookChapterDao.insert(*it.toTypedArray())
+                    appDb.bookDao.update(book)
+                    ReadManga.onChapterListUpdated(book)
+                }
+                true
+            }.getOrElse {
+                AppLog.put("LoadTocError:${it.localizedMessage}", it)
+                ReadManga.mCallback?.loadFail(appCtx.getString(R.string.error_load_toc))
+                false
+            }
+        }
         val bookSource = ReadManga.bookSource ?: return true
         val oldBook = book.copy()
         WebBook.getChapterListAwait(bookSource, book, true).onSuccess { cList ->
