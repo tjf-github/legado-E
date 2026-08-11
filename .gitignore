@@ -18,3 +18,7 @@ package-lock.json
 .kotlin/
 .cxx
 .vscode
+# 沙箱构建临时目录（Gradle 缓存与调试签名副本）
+.gradle_home/
+.user_home/
+.android_prefs/
