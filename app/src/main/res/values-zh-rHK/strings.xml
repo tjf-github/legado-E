@@ -1244,4 +1244,6 @@
     <string name="import_manga_reimport">已存在，將重新匯入</string>
     <string name="import_manga_summary">將匯入 %1$d 本書，共 %2$d 張圖片</string>
     <string name="local_manga">本機漫畫</string>
+    <string name="net_book">書源書籍</string>
+    <string name="image_no_gap">直排無間隙</string>
 </resources>

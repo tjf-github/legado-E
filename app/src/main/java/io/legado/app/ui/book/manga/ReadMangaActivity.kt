@@ -612,6 +612,15 @@ class ReadMangaActivity : VMBaseActivity<ActivityMangaBinding, ReadMangaViewMode
                 }
             }
 
+            R.id.menu_image_no_gap -> {
+                item.isChecked = !item.isChecked
+                ReadManga.book?.let { book ->
+                    book.setImageNoGap(item.isChecked)
+                    book.save()
+                }
+                mAdapter.notifyDataSetChanged()
+            }
+
             R.id.menu_gray_manga -> {
                 item.isChecked = !item.isChecked
                 AppConfig.enableMangaGray = item.isChecked
@@ -706,6 +715,7 @@ class ReadMangaActivity : VMBaseActivity<ActivityMangaBinding, ReadMangaViewMode
             isChecked = AppConfig.disableHorizontalPageSnap || AppConfig.disableMangaPageAnim
         }
         menu.findItem(R.id.menu_disable_manga_page_anim).isChecked = AppConfig.disableMangaPageAnim
+        menu.findItem(R.id.menu_image_no_gap).isChecked = ReadManga.book?.getImageNoGap() ?: true
         menu.findItem(R.id.menu_gray_manga).isChecked = AppConfig.enableMangaGray
     }
 

@@ -94,9 +94,9 @@ class TextChapterLayout(
     private val titleTopSpacing = ChapterProvider.titleTopSpacing
     private val titleBottomSpacing = ChapterProvider.titleBottomSpacing
     private val lineSpacingExtra = ChapterProvider.lineSpacingExtra
-    // 图片书竖排阅读时去掉段间距，让图片上下紧贴（用户反馈：竖看无间隙）
+    // 图片书竖排阅读时可去掉段间距让图片紧贴，是否无间隙由书籍设置控制
     private val paragraphSpacing
-        get() = if (book.isImage) 0 else ChapterProvider.paragraphSpacing
+        get() = if (book.isImage && book.getImageNoGap()) 0 else ChapterProvider.paragraphSpacing
 
     private val visibleHeight = ChapterProvider.visibleHeight
     private val visibleWidth = ChapterProvider.visibleWidth

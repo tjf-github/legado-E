@@ -87,6 +87,13 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/menu_image_no_gap"
+        android:checkable="true"
+        android:checked="true"
+        android:title="@string/image_no_gap"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_manga_footer_config"
         android:title="@string/manga_footer_config"
         app:showAsAction="never" />

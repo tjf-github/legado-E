@@ -244,6 +244,15 @@ data class Book(
         return config.imageStyle
     }
 
+    fun setImageNoGap(imageNoGap: Boolean) {
+        config.imageNoGap = imageNoGap
+    }
+
+    /** 竖排阅读时图片上下是否无间隙，默认开启 */
+    fun getImageNoGap(): Boolean {
+        return config.imageNoGap ?: true
+    }
+
     fun setTtsEngine(ttsEngine: String?) {
         config.ttsEngine = ttsEngine
     }
@@ -455,6 +464,7 @@ data class Book(
         var pageAnim: Int? = null,
         var reSegment: Boolean = false,
         var imageStyle: String? = null,
+        var imageNoGap: Boolean? = null,
         var useReplaceRule: Boolean? = null,// 正文使用净化替换规则
         var delTag: Long = 0L,//去除标签
         var ttsEngine: String? = null,

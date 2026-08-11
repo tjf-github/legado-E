@@ -183,6 +183,13 @@ abstract class AppDatabase : RoomDatabase() {
                 """.trimIndent()
                 db.execSQL(insertBookGroupAllSql)
                 @Language("sql")
+                val insertBookGroupNetBookSql = """
+                    insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
+                    select ${BookGroup.IdNetBook}, '书源书籍', -11, 1, 1
+                    where not exists (select * from book_groups where groupId = ${BookGroup.IdNetBook})
+                """.trimIndent()
+                db.execSQL(insertBookGroupNetBookSql)
+                @Language("sql")
                 val insertBookGroupLocalSql = """
                     insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
                     select ${BookGroup.IdLocal}, '本地', -9, 0, 1
