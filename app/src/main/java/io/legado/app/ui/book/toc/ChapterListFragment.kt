@@ -4,8 +4,15 @@ import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.graphics.PorterDuff
+import android.text.TextUtils
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import io.legado.app.R
@@ -18,6 +25,8 @@ import io.legado.app.databinding.FragmentChapterListBinding
 import io.legado.app.databinding.DialogChapterInsertBinding
 import io.legado.app.help.book.ChapterNumberUtils
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.book.ChapterSplitter
+import io.legado.app.help.book.ChapterSplitter.SplitUnit
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isLocalTxt
 import io.legado.app.help.book.isVideo
@@ -26,11 +35,14 @@ import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.bottomBackground
 import io.legado.app.lib.theme.getPrimaryTextColor
+import io.legado.app.lib.theme.getSecondaryTextColor
 import io.legado.app.ui.widget.recycler.UpLinearLayoutManager
 import io.legado.app.ui.widget.recycler.VerticalDivider
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.applyNavigationBarPadding
+import io.legado.app.utils.dpToPx
 import io.legado.app.utils.observeEvent
+import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
@@ -233,12 +245,14 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
             R.string.chapter_menu_title,
             listOf(
                 getString(R.string.add_chapter_after),
-                getString(R.string.delete_chapter)
+                getString(R.string.delete_chapter),
+                getString(R.string.split_chapter)
             )
         ) { _, index ->
             when (index) {
                 0 -> showInsertChapterDialog(book, bookChapter)
                 1 -> showDeleteChapterDialog(book, bookChapter)
+                2 -> showSplitPreviewDialog(book, bookChapter)
             }
         }
     }
@@ -266,6 +280,113 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
             setMessage(getString(R.string.delete_chapter_confirm, chapter.title))
             okButton {
                 viewModel.deleteChapter(book, chapter)
+            }
+            cancelButton()
+        }
+    }
+
+    private fun showSplitPreviewDialog(book: Book, chapter: BookChapter) {
+        viewModel.previewSplit(book, chapter) { units ->
+            showSplitUnitsDialog(book, chapter, units)
+        }
+    }
+
+    private fun showSplitUnitsDialog(book: Book, chapter: BookChapter, units: List<SplitUnit>) {
+        val context = requireContext()
+        val titles = units.map { it.title }.toMutableList()
+        val checked = MutableList(units.size) { true }
+        val dark = ColorUtils.isColorLight(bottomBackground)
+        val primaryColor = context.getPrimaryTextColor(dark)
+        val secondaryColor = context.getSecondaryTextColor(dark)
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(12.dpToPx(), 8.dpToPx(), 12.dpToPx(), 8.dpToPx())
+            addView(
+                TextView(context).apply {
+                    text = getString(R.string.split_chapter_rule_hint) + "\n" +
+                        getString(R.string.split_chapter_preview_count, units.size)
+                    textSize = 13f
+                    setTextColor(secondaryColor)
+                    setPadding(4.dpToPx(), 4.dpToPx(), 4.dpToPx(), 8.dpToPx())
+                }
+            )
+        }
+        units.forEachIndexed { index, unit ->
+            val row = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(4.dpToPx(), 6.dpToPx(), 4.dpToPx(), 6.dpToPx())
+            }
+            val checkBox = CheckBox(context).apply {
+                isChecked = true
+                isEnabled = index > 0
+                setOnCheckedChangeListener { _, isChecked -> checked[index] = isChecked }
+            }
+            row.addView(
+                checkBox,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+            val textColumn = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+            val titleView = TextView(context).apply {
+                text = unit.title
+                textSize = 15f
+                setTextColor(primaryColor)
+            }
+            titleView.setOnClickListener {
+                alert {
+                    setTitle(R.string.split_chapter_rename)
+                    val editText = EditText(context).apply {
+                        setText(titles[index])
+                        selectAll()
+                    }
+                    setCustomView(editText)
+                    okButton {
+                        val newTitle = editText.text?.toString()?.trim().orEmpty()
+                        if (newTitle.isNotEmpty()) {
+                            titles[index] = newTitle
+                            titleView.text = newTitle
+                        }
+                    }
+                    cancelButton()
+                }
+            }
+            val detailView = TextView(context).apply {
+                val firstLine = unit.content.lineSequence().firstOrNull().orEmpty()
+                text = getString(R.string.split_chapter_first_line, firstLine) +
+                    " · " + getString(R.string.split_chapter_chars, unit.content.length)
+                textSize = 12f
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
+                setTextColor(secondaryColor)
+            }
+            textColumn.addView(titleView)
+            textColumn.addView(detailView)
+            row.addView(
+                textColumn,
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            )
+            container.addView(row)
+        }
+        val scroll = ScrollView(context).apply {
+            addView(container)
+        }
+        alert {
+            setTitle(R.string.split_chapter_preview)
+            setCustomView(scroll)
+            okButton {
+                val finalUnits = units.mapIndexedNotNull { index, unit ->
+                    if (checked[index]) SplitUnit(titles[index], unit.content) else null
+                }
+                if (finalUnits.size < 2) {
+                    context.toastOnUi(R.string.split_chapter_single)
+                } else {
+                    viewModel.splitChapter(book, chapter, finalUnits)
+                }
             }
             cancelButton()
         }

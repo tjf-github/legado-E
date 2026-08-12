@@ -18,6 +18,7 @@ import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ChapterNumberUtils
 import io.legado.app.help.book.ChapterSplitter
+import io.legado.app.help.book.ChapterSplitter.SplitUnit
 import io.legado.app.model.ReadBook
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.utils.FileDoc
@@ -219,16 +220,39 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     }
 
     /**
-     * 按标题规则拆分粘连章节：
-     * 原章节改写为第一个拆分单元，其余单元作为新章插入，后续章节序号与标题数字自动右移。
+     * 读取章节有效正文并生成拆分预览单元（IO 线程）。
+     * 未命中标题 / 仅一章 / 超上限时抛出带提示的异常，由 onError toast。
      */
-    fun splitChapter(book: Book, chapter: BookChapter) {
+    fun previewSplit(book: Book, chapter: BookChapter, callback: (List<SplitUnit>) -> Unit) {
         execute {
             val content = BookHelp.getContent(book, chapter).orEmpty()
             val units = ChapterSplitter.split(content)
             if (units.isEmpty()) {
                 throw NoStackTraceException(context.getString(R.string.split_chapter_no_title))
             }
+            if (units.size < 2) {
+                throw NoStackTraceException(context.getString(R.string.split_chapter_single))
+            }
+            if (units.size > SPLIT_LIMIT) {
+                throw NoStackTraceException(
+                    context.getString(R.string.split_chapter_too_many, SPLIT_LIMIT)
+                )
+            }
+            units
+        }.onSuccess {
+            callback.invoke(it)
+        }.onError {
+            AppLog.put(context.getString(R.string.split_chapter_error), it, true)
+        }
+    }
+
+    /**
+     * 按标题规则拆分粘连章节：
+     * 原章节改写为第一个拆分单元，其余单元作为新章插入，后续章节序号与标题数字自动右移。
+     * @param units 拆分单元（可由 previewSplit 生成，并经预览勾选/改名调整）
+     */
+    fun splitChapter(book: Book, chapter: BookChapter, units: List<SplitUnit>) {
+        execute {
             if (units.size < 2) {
                 throw NoStackTraceException(context.getString(R.string.split_chapter_single))
             }
