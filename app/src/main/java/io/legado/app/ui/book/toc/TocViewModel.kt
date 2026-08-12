@@ -342,7 +342,8 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     /**
      * 多选合并冗余章节：
      * 选中的章节按 index 升序拼接正文写入第一章覆盖文件，删除其余选中章节，
-     * 后续章节仅 index 左移、标题保留原文，整体单事务提交。
+     * 后续章节 index 左移且标题数字 -removalCount 重写（保持序号连续，与删除语义一致），
+     * 整体单事务提交。
      * @param chapters 选中章节（≥2，可为跨章）
      * @param mergedTitle 合并后标题（默认第一章标题）
      */
@@ -374,11 +375,14 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             BookHelp.saveText(book, updatedFirst, mergedContent)
             sorted.drop(1).forEach { BookHelp.delContent(book, it) }
 
-            // 3. 后续章节（maxMergedIndex 之后）从前往后左移 removalCount 位，标题保留
+            // 3. 后续章节（maxMergedIndex 之后）从前往后左移 removalCount 位，
+            //    标题数字同步 -removalCount 重写，保持序号连续
             for (c in toc) {
                 if (c.index > maxMergedIndex) {
                     val newIndex = c.index - removalCount
-                    collectShift(book, c, newIndex, c.title, chapterShifts, bookmarkShifts)
+                    val newTitle =
+                        ChapterNumberUtils.rewriteTitle(c.title, -removalCount) ?: c.title
+                    collectShift(book, c, newIndex, newTitle, chapterShifts, bookmarkShifts)
                 }
             }
 
