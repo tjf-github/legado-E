@@ -259,7 +259,7 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
 
     private fun showInsertChapterDialog(book: Book, anchor: BookChapter) {
         val defaultTitle = ChapterNumberUtils.nextNumberTitle(anchor.title, 1)
-            ?: getString(R.string.chapter_default_title, anchor.index + 2)
+            ?: getString(R.string.chapter_default_title, anchor.index + 1)
         alert {
             setTitle(R.string.add_chapter_title)
             val alertBinding = DialogChapterInsertBinding.inflate(layoutInflater)

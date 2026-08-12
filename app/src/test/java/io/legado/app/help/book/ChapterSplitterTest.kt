@@ -136,4 +136,79 @@ class ChapterSplitterTest {
         assertEquals("第1章 初入江湖", units[0].title)
         assertEquals("江湖路远。", units[0].content)
     }
+
+    @Test
+    fun internalSpacesInTitle() {
+        val content = "第 1 章 风云\n正文一\n第2 章 山雨\n正文二"
+        val units = ChapterSplitter.split(content)
+        assertEquals(2, units.size)
+        assertEquals("第 1 章 风云", units[0].title)
+        assertEquals("第2 章 山雨", units[1].title)
+    }
+
+    @Test
+    fun uppercaseChineseNumerals() {
+        val content = "第壹章 风云\n正文一\n第贰章 山雨\n正文二"
+        val units = ChapterSplitter.split(content)
+        assertEquals(2, units.size)
+        assertEquals("第壹章 风云", units[0].title)
+        assertEquals("第贰章 山雨", units[1].title)
+    }
+
+    @Test
+    fun fullWidthDigitsAndLetters() {
+        val content = "第１章 风云\n正文一\nＣｈａｐｔｅｒ ２ Next\n正文二"
+        val units = ChapterSplitter.split(content)
+        assertEquals(2, units.size)
+        assertEquals("第１章 风云", units[0].title)
+        assertEquals("Ｃｈａｐｔｅｒ ２ Next", units[1].title)
+    }
+
+    @Test
+    fun extraSuffixesJuanJiHua() {
+        val content = "第1卷 上\n正文一\n第2话 下\n正文二\n第一集 番外\n正文三"
+        val units = ChapterSplitter.split(content)
+        assertEquals(3, units.size)
+        assertEquals("第1卷 上", units[0].title)
+        assertEquals("第2话 下", units[1].title)
+        assertEquals("第一集 番外", units[2].title)
+    }
+
+    @Test
+    fun wrappedTitles() {
+        val content = "【第1章 风云】\n正文一\n『第2章 山雨』\n正文二"
+        val units = ChapterSplitter.split(content)
+        assertEquals(2, units.size)
+        assertEquals("【第1章 风云】", units[0].title)
+        assertEquals("『第2章 山雨』", units[1].title)
+    }
+
+    @Test
+    fun compositeVolumeTitle() {
+        val content = "第一卷 第一章 风云\n正文一\n第二卷 第一章 山雨\n正文二"
+        val units = ChapterSplitter.split(content)
+        assertEquals(2, units.size)
+        assertEquals("第一卷 第一章 风云", units[0].title)
+    }
+
+    @Test
+    fun pureNumberTitleNotMatchedByDefault() {
+        val content = "1、风云\n正文一\n2、山雨\n正文二"
+        assertTrue(ChapterSplitter.split(content).isEmpty())
+    }
+
+    @Test
+    fun firstTitleNormalizedByNumberNotDuplicated() {
+        // 中文数字 vs 阿拉伯数字、简繁差异：编号相同不重复补入
+        val content = """
+            第一章 风雨
+            江湖路远。
+            第二章 山雨
+            那人影一闪而逝。
+        """.trimIndent()
+        val units = ChapterSplitter.split(content, "第1章 風雨")
+        assertEquals(2, units.size)
+        assertEquals("第一章 风雨", units[0].title)
+        assertEquals("第二章 山雨", units[1].title)
+    }
 }

@@ -114,7 +114,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                     "${book.originName}_edit_${anchor.index}_${System.currentTimeMillis()}"
                 ),
                 title = title.ifBlank {
-                    context.getString(R.string.chapter_default_title, insertIndex + 1)
+                    context.getString(R.string.chapter_default_title, insertIndex)
                 },
                 bookUrl = book.bookUrl,
                 index = insertIndex

@@ -8,9 +8,24 @@ package io.legado.app.help.book
  */
 object ChapterSplitter {
 
-    /** 标题起始行规则：第N章/回/节（阿拉伯或中文数字）或 Chapter N（忽略大小写） */
+    /**
+     * 标题起始行规则（匹配前先做全角转半角规范化）：
+     * - 第N章/回/节/卷/集/部/篇/话：允许内部空白，数字支持阿拉伯/中文大小写/全角；
+     * - Chapter N：允许空白与全角变体；
+     * - 行首允许【〔「『［《（ 等包裹符号。
+     * 纯数字标题（如 “1、xxx”）默认不识别，避免正文列举行误命中。
+     */
     private val titleRegex = Regex(
-        "^[\\s\u3000]*(第(?:\\d+|[一二三四五六七八九十百千万零两〇]+)[章回节]|Chapter\\s*\\d+).*$",
+        "^[\\s\u3000]*(?:[【〔「『［《（(]+[\\s\u3000]*)?" +
+            "(第\\s{0,4}[0-9〇零一二两三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟]+\\s{0,4}[章回节卷集部篇话]|" +
+            "Chapter\\s{0,4}[0-9]{1,4}).*$",
+        RegexOption.IGNORE_CASE
+    )
+
+    /** 编号片段（用于首标题规范化比较）：第N章… 或 Chapter N */
+    private val prefixRegex = Regex(
+        "第\\s{0,4}[0-9〇零一二两三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟]+\\s{0,4}[章回节卷集部篇话]|" +
+            "Chapter\\s{0,4}[0-9]{1,4}",
         RegexOption.IGNORE_CASE
     )
 
@@ -31,7 +46,7 @@ object ChapterSplitter {
     fun split(content: String?, firstTitle: String? = null): List<SplitUnit> {
         if (content.isNullOrBlank()) return emptyList()
         val text = if (!firstTitle.isNullOrBlank() &&
-            content.lineSequence().firstOrNull()?.trim() != firstTitle.trim()
+            !sameTitle(content.lineSequence().firstOrNull().orEmpty(), firstTitle)
         ) {
             "$firstTitle\n$content"
         } else {
@@ -43,7 +58,7 @@ object ChapterSplitter {
         val units = mutableListOf<MutableSplitUnit>()
         val prologue = mutableListOf<String>()
         for (line in lines) {
-            if (titleRegex.matches(line)) {
+            if (titleRegex.matches(normalizeFullWidth(line))) {
                 units.add(MutableSplitUnit(line.trim()))
             } else if (units.isNotEmpty()) {
                 units.last().bodyLines.add(line)
@@ -59,4 +74,46 @@ object ChapterSplitter {
             SplitUnit(unit.title, unit.bodyLines.joinToString("\n").trim())
         }
     }
+
+    /** 全角字符转半角（数字/字母/空格），用于规则匹配与编号比较 */
+    private fun normalizeFullWidth(line: String): String {
+        val sb = StringBuilder(line.length)
+        for (ch in line) {
+            when {
+                ch in '０'..'９' -> sb.append('0' + (ch - '０'))
+                ch in 'Ａ'..'Ｚ' -> sb.append('A' + (ch - 'Ａ'))
+                ch in 'ａ'..'ｚ' -> sb.append('a' + (ch - 'ａ'))
+                ch == '　' -> sb.append(' ')
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
+    }
+
+    /**
+     * 编号片段规范化比较：抽行首“第N章/回…”“Chapter N”的编号值，
+     * 阿拉伯与中文数字归一（第1章 == 第一章），避免格式差异导致重复单元；
+     * 无法抽取时回退整行 trim 比较。
+     */
+    private fun sameTitle(a: String, b: String): Boolean {
+        val keyA = titlePrefixKey(a)
+        val keyB = titlePrefixKey(b)
+        if (keyA != null && keyB != null) return keyA == keyB
+        return a.trim() == b.trim()
+    }
+
+    /** 返回 (类型, 编号)：cn=第N章…、en=Chapter N；无法识别返回 null */
+    private fun titlePrefixKey(line: String): Pair<String, Int>? {
+        val match = prefixRegex.find(normalizeFullWidth(line)) ?: return null
+        val text = match.value.replace(" ", "")
+        val num = if (text.startsWith("第", ignoreCase = true)) {
+            val digits = text.substring(1, text.length - 1)
+            digits.toIntOrNull() ?: ChineseNumberUtils.toInt(digits)
+        } else {
+            text.drop(CHAPTER_WORD_LENGTH).toIntOrNull()
+        } ?: return null
+        return if (text.startsWith("第", ignoreCase = true)) Pair("cn", num) else Pair("en", num)
+    }
+
+    private const val CHAPTER_WORD_LENGTH = "Chapter".length
 }
