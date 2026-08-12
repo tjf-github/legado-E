@@ -8,7 +8,7 @@ package io.legado.app.help.book
  */
 object ChapterNumberUtils {
 
-    private val patternCn = Regex("(第)(\\d+)([章回节])")
+    private val patternCn = Regex("(第)(\\d+|[一二三四五六七八九十百千万零两〇]+)([章回节])")
     private val patternEn = Regex("(Chapter\\s*)(\\d+)", RegexOption.IGNORE_CASE)
 
     /**
@@ -20,13 +20,13 @@ object ChapterNumberUtils {
         var result = title
         var rewritten = false
         patternCn.find(result)?.let { match ->
-            val num = match.groupValues[2].toIntOrNull()
+            val num = parseNumber(match.groupValues[2])
             if (num != null) {
                 val newNum = num + delta
-                if (newNum >= 1) {
+                if (newNum in 1..9999) {
                     result = result.replaceRange(
                         match.range,
-                        "${match.groupValues[1]}$newNum${match.groupValues[3]}"
+                        "${match.groupValues[1]}${formatNumber(newNum, match.groupValues[2])}${match.groupValues[3]}"
                     )
                     rewritten = true
                 }
@@ -57,11 +57,11 @@ object ChapterNumberUtils {
     fun nextNumberTitle(title: String, delta: Int): String? {
         if (delta == 0 || title.isBlank()) return null
         patternCn.find(title)?.let { match ->
-            val num = match.groupValues[2].toIntOrNull()
+            val num = parseNumber(match.groupValues[2])
             if (num != null) {
                 val newNum = num + delta
-                if (newNum >= 1) {
-                    return "${match.groupValues[1]}$newNum${match.groupValues[3]}"
+                if (newNum in 1..9999) {
+                    return "${match.groupValues[1]}${formatNumber(newNum, match.groupValues[2])}${match.groupValues[3]}"
                 }
             }
         }
@@ -76,4 +76,9 @@ object ChapterNumberUtils {
         }
         return null
     }
+
+    private fun parseNumber(raw: String): Int? = raw.toIntOrNull() ?: ChineseNumberUtils.toInt(raw)
+
+    private fun formatNumber(value: Int, raw: String): String =
+        if (raw.all { it.isDigit() }) value.toString() else ChineseNumberUtils.toChinese(value).orEmpty()
 }

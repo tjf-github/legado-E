@@ -39,6 +39,43 @@ class ChapterNumberUtilsTest {
     }
 
     @Test
+    fun rewriteCnChineseNumberPlusOne() {
+        assertEquals("第一百零一章 风雨", ChapterNumberUtils.rewriteTitle("第一百章 风雨", 1))
+        assertEquals("第十一章", ChapterNumberUtils.rewriteTitle("第十章", 1))
+        assertEquals("第一百章", ChapterNumberUtils.rewriteTitle("第九十九章", 1))
+        assertEquals("第一百零二章", ChapterNumberUtils.rewriteTitle("第一百零一章", 1))
+        assertEquals("第二百零四章", ChapterNumberUtils.rewriteTitle("第二百零三章", 1))
+    }
+
+    @Test
+    fun rewriteCnChineseNumberMinusOne() {
+        assertEquals("第一百章", ChapterNumberUtils.rewriteTitle("第一百零一章", -1))
+        assertEquals("第十章", ChapterNumberUtils.rewriteTitle("第十一章", -1))
+        assertEquals("第一章", ChapterNumberUtils.rewriteTitle("第二章", -1))
+        assertNull(ChapterNumberUtils.rewriteTitle("第一章", -1))
+    }
+
+    @Test
+    fun rewriteCnChineseNumberTwoVariant() {
+        assertEquals("第二百零一章", ChapterNumberUtils.rewriteTitle("第两百章", 1))
+        assertEquals("第九十九章", ChapterNumberUtils.rewriteTitle("第一百章", -1))
+    }
+
+    @Test
+    fun rewriteCnChineseNumberOutOfRange() {
+        assertNull(ChapterNumberUtils.rewriteTitle("第一万章", 1))
+        assertNull(ChapterNumberUtils.rewriteTitle("第九千九百九十九章", 1))
+    }
+
+    @Test
+    fun nextNumberTitleChineseNumber() {
+        assertEquals("第一百零一章", ChapterNumberUtils.nextNumberTitle("第一百章 风雨", 1))
+        assertEquals("第十一章", ChapterNumberUtils.nextNumberTitle("第十章 山雨欲来", 1))
+        assertEquals("第一章", ChapterNumberUtils.nextNumberTitle("第二章", -1))
+        assertNull(ChapterNumberUtils.nextNumberTitle("第一章", -1))
+    }
+
+    @Test
     fun nextNumberTitleReturnsPrefixOnly() {
         assertEquals("第3章", ChapterNumberUtils.nextNumberTitle("第2章 山中怪影", 1))
         assertEquals("第1章", ChapterNumberUtils.nextNumberTitle("第2章 山中怪影", -1))
