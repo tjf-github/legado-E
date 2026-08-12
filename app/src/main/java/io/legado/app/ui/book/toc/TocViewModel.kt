@@ -8,6 +8,10 @@ import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
+import io.legado.app.data.dao.BookmarkShift
+import io.legado.app.data.dao.BookmarkDelete
+import io.legado.app.data.dao.ChapterDelete
+import io.legado.app.data.dao.ChapterShift
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.exception.NoStackTraceException
@@ -85,24 +89,22 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
             }
             val insertIndex = anchor.index + 1
-            // 从后往前重排，避免 (bookUrl, index) 唯一索引中间态冲突
+            // 从后往前收集右移章节，避免 (bookUrl, index) 唯一索引中间态冲突
+            val chapterShifts = mutableListOf<ChapterShift>()
+            val bookmarkShifts = mutableListOf<BookmarkShift>()
             for (i in toc.size - 1 downTo 0) {
                 val chapter = toc[i]
                 if (chapter.index >= insertIndex) {
                     val newIndex = chapter.index + 1
                     val newTitle = ChapterNumberUtils.rewriteTitle(chapter.title, 1) ?: chapter.title
                     renameChapterFile(book, chapter, newIndex, newTitle)
-                    appDb.bookChapterDao.upIndexTitle(book.bookUrl, chapter.url, newIndex, newTitle)
-                    appDb.bookmarkDao.shiftChapter(
-                        book.name,
-                        book.author,
-                        chapter.index,
-                        newIndex,
-                        newTitle
+                    chapterShifts.add(ChapterShift(book.bookUrl, chapter.url, newIndex, newTitle))
+                    bookmarkShifts.add(
+                        BookmarkShift(book.name, book.author, chapter.index, newIndex, newTitle)
                     )
                 }
             }
-            // 构造并写入新章节
+            // 构造新章节，先写正文覆盖文件再入库，避免“有章节无正文”的坏状态
             val newChapter = BookChapter(
                 url = MD5Utils.md5Encode16(
                     "${book.originName}_edit_${anchor.index}_${System.currentTimeMillis()}"
@@ -113,21 +115,30 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 bookUrl = book.bookUrl,
                 index = insertIndex
             )
-            appDb.bookChapterDao.insert(newChapter)
             BookHelp.saveText(
                 book,
                 newChapter,
                 content.ifBlank { context.getString(R.string.chapter_content_placeholder) }
             )
-            // 更新书籍元数据与阅读位置
+            // 更新书籍元数据与阅读位置（标题取重排结果，与事务内最终状态一致）
             book.totalChapterNum += 1
             if (book.durChapterIndex > anchor.index) {
                 book.durChapterIndex += 1
-                appDb.bookChapterDao.getChapter(book.bookUrl, book.durChapterIndex)?.let {
-                    book.durChapterTitle = it.title
+                chapterShifts.firstOrNull { it.newIndex == book.durChapterIndex }?.let {
+                    book.durChapterTitle = it.newTitle
                 }
             }
-            appDb.bookDao.update(book)
+            // 数据库变更整体事务化，失败自动回滚
+            appDb.bookChapterDao.applyTocEdit(
+                bookDao = appDb.bookDao,
+                bookmarkDao = appDb.bookmarkDao,
+                book = book,
+                chapterDeletes = emptyList(),
+                chapterInserts = listOf(newChapter),
+                chapterShifts = chapterShifts,
+                bookmarkDeletes = emptyList(),
+                bookmarkShifts = bookmarkShifts
+            )
             ReadBook.onChapterListUpdated(book)
             bookData.postValue(book)
         }.onSuccess {
@@ -147,40 +158,57 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             if (toc.isEmpty()) {
                 throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
             }
-            // 删除目标章节的正文覆盖文件与书签
+            // 删除目标章节的正文覆盖文件（事务外，失败不阻断数据库操作）
             BookHelp.delContent(book, chapter)
-            appDb.bookmarkDao.delByChapterIndex(book.name, book.author, chapter.index)
-            appDb.bookChapterDao.delChapter(book.bookUrl, chapter.url)
-            // 从前往后重排后续章节
+            // 从前往后收集左移章节，避免 (bookUrl, index) 唯一索引中间态冲突
+            val chapterShifts = mutableListOf<ChapterShift>()
+            val bookmarkShifts = mutableListOf<BookmarkShift>()
             for (c in toc) {
                 if (c.index > chapter.index) {
                     val newIndex = c.index - 1
                     val newTitle = ChapterNumberUtils.rewriteTitle(c.title, -1) ?: c.title
                     renameChapterFile(book, c, newIndex, newTitle)
-                    appDb.bookChapterDao.upIndexTitle(book.bookUrl, c.url, newIndex, newTitle)
-                    appDb.bookmarkDao.shiftChapter(
-                        book.name,
-                        book.author,
-                        c.index,
-                        newIndex,
-                        newTitle
+                    chapterShifts.add(ChapterShift(book.bookUrl, c.url, newIndex, newTitle))
+                    bookmarkShifts.add(
+                        BookmarkShift(book.name, book.author, c.index, newIndex, newTitle)
                     )
                 }
             }
             // 更新书籍元数据与阅读位置
             book.totalChapterNum = (book.totalChapterNum - 1).coerceAtLeast(0)
             when {
-                book.durChapterIndex > chapter.index -> book.durChapterIndex -= 1
+                book.durChapterIndex > chapter.index -> {
+                    book.durChapterIndex -= 1
+                    chapterShifts.firstOrNull { it.newIndex == book.durChapterIndex }?.let {
+                        book.durChapterTitle = it.newTitle
+                    }
+                }
                 book.durChapterIndex == chapter.index -> {
                     book.durChapterIndex =
                         book.durChapterIndex.coerceAtMost((book.totalChapterNum - 1).coerceAtLeast(0))
                     book.durChapterPos = 0
+                    val shiftedTitle =
+                        chapterShifts.firstOrNull { it.newIndex == book.durChapterIndex }?.newTitle
+                    if (shiftedTitle != null) {
+                        book.durChapterTitle = shiftedTitle
+                    } else if (book.durChapterIndex < chapter.index) {
+                        toc.getOrNull(book.durChapterIndex)?.let {
+                            book.durChapterTitle = it.title
+                        }
+                    }
                 }
             }
-            appDb.bookChapterDao.getChapter(book.bookUrl, book.durChapterIndex)?.let {
-                book.durChapterTitle = it.title
-            }
-            appDb.bookDao.update(book)
+            // 数据库变更整体事务化，失败自动回滚
+            appDb.bookChapterDao.applyTocEdit(
+                bookDao = appDb.bookDao,
+                bookmarkDao = appDb.bookmarkDao,
+                book = book,
+                chapterDeletes = listOf(ChapterDelete(book.bookUrl, chapter.url)),
+                chapterInserts = emptyList(),
+                chapterShifts = chapterShifts,
+                bookmarkDeletes = listOf(BookmarkDelete(book.name, book.author, chapter.index)),
+                bookmarkShifts = bookmarkShifts
+            )
             ReadBook.onChapterListUpdated(book)
             bookData.postValue(book)
         }.onSuccess {
