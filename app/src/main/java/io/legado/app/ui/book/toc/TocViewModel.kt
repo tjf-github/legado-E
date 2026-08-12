@@ -226,7 +226,8 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     fun previewSplit(book: Book, chapter: BookChapter, callback: (List<SplitUnit>) -> Unit) {
         execute {
             val content = BookHelp.getContent(book, chapter).orEmpty()
-            val units = ChapterSplitter.split(content)
+            // 章节正文可能从标题行之后开始，补上本章标题以保证原章节作为第一单元保留
+            val units = ChapterSplitter.split(content, chapter.title)
             if (units.isEmpty()) {
                 throw NoStackTraceException(context.getString(R.string.split_chapter_no_title))
             }

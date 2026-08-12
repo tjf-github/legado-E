@@ -88,4 +88,52 @@ class ChapterSplitterTest {
         assertEquals("第一章 序", units[0].title)
         assertEquals("第2章 二", units[1].title)
     }
+
+    @Test
+    fun firstTitlePrependedWhenContentStartsWithBody() {
+        // 模拟解析器：章节正文从标题行之后开始
+        val content = """
+            江湖路远，少年背着一把旧剑。
+            第2回 山中怪影
+            那人影一闪而逝。
+            第3回 夜宿山庙
+            天黑之前。
+        """.trimIndent()
+        val units = ChapterSplitter.split(content, "第1章 初入江湖")
+        assertEquals(3, units.size)
+        assertEquals("第1章 初入江湖", units[0].title)
+        assertEquals("江湖路远，少年背着一把旧剑。", units[0].content)
+        assertEquals("第2回 山中怪影", units[1].title)
+        assertEquals("那人影一闪而逝。", units[1].content)
+        assertEquals("第3回 夜宿山庙", units[2].title)
+    }
+
+    @Test
+    fun firstTitleNotDuplicatedWhenContentStartsWithIt() {
+        val content = """
+            第1章 初入江湖
+            江湖路远，少年背着一把旧剑。
+            第2回 山中怪影
+            那人影一闪而逝。
+        """.trimIndent()
+        val units = ChapterSplitter.split(content, "第1章 初入江湖")
+        assertEquals(2, units.size)
+        assertEquals("第1章 初入江湖", units[0].title)
+        assertEquals("江湖路远，少年背着一把旧剑。", units[0].content)
+        assertEquals("第2回 山中怪影", units[1].title)
+    }
+
+    @Test
+    fun firstTitleWithDifferentWhitespaceNotDuplicated() {
+        val content = """
+            　　第1章 初入江湖
+            江湖路远。
+            第2回 山中怪影
+            那人影一闪而逝。
+        """.trimIndent()
+        val units = ChapterSplitter.split(content, "第1章 初入江湖")
+        assertEquals(2, units.size)
+        assertEquals("第1章 初入江湖", units[0].title)
+        assertEquals("江湖路远。", units[0].content)
+    }
 }

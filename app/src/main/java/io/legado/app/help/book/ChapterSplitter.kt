@@ -23,11 +23,21 @@ object ChapterSplitter {
 
     /**
      * @param content 整章正文（调用方传入有效正文：覆盖文件优先）
+     * @param firstTitle 本章节标题。部分解析器的章节正文从标题行之后开始，
+     *   此时把标题补到正文开头，保证原章节作为第一个拆分单元保留；
+     *   若正文首行已是该标题则不重复添加。
      * @return 拆分单元列表；内容为空或未命中任何标题规则时返回空列表
      */
-    fun split(content: String?): List<SplitUnit> {
+    fun split(content: String?, firstTitle: String? = null): List<SplitUnit> {
         if (content.isNullOrBlank()) return emptyList()
-        val lines = content.split('\n', '\r').filter { it.isNotBlank() }
+        val text = if (!firstTitle.isNullOrBlank() &&
+            content.lineSequence().firstOrNull()?.trim() != firstTitle.trim()
+        ) {
+            "$firstTitle\n$content"
+        } else {
+            content
+        }
+        val lines = text.split('\n', '\r').filter { it.isNotBlank() }
         if (lines.isEmpty()) return emptyList()
 
         val units = mutableListOf<MutableSplitUnit>()
