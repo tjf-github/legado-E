@@ -342,6 +342,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     /**
      * 多选合并冗余章节：
      * 选中的章节按 index 升序拼接正文写入第一章覆盖文件，删除其余选中章节，
+     * 后续章节正文前插入其标题行作为边界（合并结果可再次拆分，用于纠错/撤销），
      * 后续章节 index 左移且标题数字 -removalCount 重写（保持序号连续，与删除语义一致），
      * 整体单事务提交。
      * @param chapters 选中章节（≥2，可为跨章）
@@ -362,10 +363,12 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             val maxMergedIndex = mergedIndexes.maxOrNull() ?: first.index
             val removalCount = sorted.size - 1
 
-            // 1. 读取并拼接正文（覆盖文件优先）
-            val mergedContent = sorted.joinToString("\n") { chapter ->
-                BookHelp.getContent(book, chapter).orEmpty()
-            }
+            // 1. 读取并拼接正文（覆盖文件优先）；后续章节前插入其标题行作为边界，
+            //    使合并结果可通过“拆分此章节”撤销
+            val mergedContent = sorted.mapIndexed { index, chapter ->
+                val content = BookHelp.getContent(book, chapter).orEmpty()
+                if (index == 0) content else chapter.title + "\n" + content
+            }.joinToString("\n")
 
             // 2. 文件准备：第一章标题更新（如需）+ 写合并正文；被合并章清理覆盖文件
             val chapterShifts = mutableListOf<ChapterShift>()
