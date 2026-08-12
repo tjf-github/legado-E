@@ -246,13 +246,15 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
             listOf(
                 getString(R.string.add_chapter_after),
                 getString(R.string.delete_chapter),
-                getString(R.string.split_chapter)
+                getString(R.string.split_chapter),
+                getString(R.string.merge_chapter)
             )
         ) { _, index ->
             when (index) {
                 0 -> showInsertChapterDialog(book, bookChapter)
                 1 -> showDeleteChapterDialog(book, bookChapter)
                 2 -> showSplitPreviewDialog(book, bookChapter)
+                3 -> showMergeChaptersDialog(book, bookChapter)
             }
         }
     }
@@ -288,6 +290,74 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
     private fun showSplitPreviewDialog(book: Book, chapter: BookChapter) {
         viewModel.previewSplit(book, chapter) { units ->
             showSplitUnitsDialog(book, chapter, units)
+        }
+    }
+
+    private fun showMergeChaptersDialog(book: Book, anchor: BookChapter) {
+        lifecycleScope.launch {
+            val toc = withContext(IO) {
+                appDb.bookChapterDao.getChapterList(book.bookUrl)
+            }
+            val context = requireContext()
+            val checked = MutableList(toc.size) { it == anchor.index }
+            val dark = ColorUtils.isColorLight(bottomBackground)
+            val primaryColor = context.getPrimaryTextColor(dark)
+            val container = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(12.dpToPx(), 8.dpToPx(), 12.dpToPx(), 8.dpToPx())
+                addView(
+                    EditText(context).apply {
+                        hint = getString(R.string.merge_chapter_title_hint)
+                        setText(anchor.title)
+                        selectAll()
+                    }
+                )
+            }
+            toc.forEachIndexed { index, chapter ->
+                val row = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(4.dpToPx(), 4.dpToPx(), 4.dpToPx(), 4.dpToPx())
+                }
+                val checkBox = CheckBox(context).apply {
+                    isChecked = index == anchor.index
+                    setOnCheckedChangeListener { _, isChecked -> checked[index] = isChecked }
+                }
+                row.addView(
+                    checkBox,
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                )
+                row.addView(
+                    TextView(context).apply {
+                        text = chapter.title
+                        textSize = 14f
+                        setTextColor(primaryColor)
+                    },
+                    LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                )
+                container.addView(row)
+            }
+            val scroll = ScrollView(context).apply {
+                addView(container)
+            }
+            alert {
+                setTitle(R.string.merge_chapter_select)
+                setCustomView(scroll)
+                positiveButton(R.string.merge_chapter_confirm) {
+                    val mergedTitle =
+                        (container.getChildAt(0) as EditText).text?.toString()?.trim().orEmpty()
+                    val selected = toc.filterIndexed { index, _ -> checked[index] }
+                    if (selected.size < 2) {
+                        context.toastOnUi(R.string.merge_chapter_need_two)
+                    } else {
+                        viewModel.mergeChapters(book, selected, mergedTitle.ifBlank { anchor.title })
+                    }
+                }
+                cancelButton()
+            }
         }
     }
 

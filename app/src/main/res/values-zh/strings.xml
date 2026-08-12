@@ -902,6 +902,13 @@
     <string name="split_chapter_chars">%1$d 字</string>
     <string name="split_chapter_skip">跳过</string>
     <string name="split_chapter_rename">改名</string>
+    <string name="merge_chapter">合并章节</string>
+    <string name="merge_chapter_select">选择要合并的章节</string>
+    <string name="merge_chapter_title_hint">合并后标题</string>
+    <string name="merge_chapter_need_two">请至少选择两章</string>
+    <string name="merge_chapter_success">合并成功</string>
+    <string name="merge_chapter_error">合并失败</string>
+    <string name="merge_chapter_confirm">合并</string>
     <string name="show_discovery">显示发现</string>
     <string name="style">样式</string>
     <string name="group_style">分组样式</string>

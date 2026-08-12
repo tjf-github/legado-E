@@ -340,6 +340,86 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     }
 
     /**
+     * 多选合并冗余章节：
+     * 选中的章节按 index 升序拼接正文写入第一章覆盖文件，删除其余选中章节，
+     * 后续章节仅 index 左移、标题保留原文，整体单事务提交。
+     * @param chapters 选中章节（≥2，可为跨章）
+     * @param mergedTitle 合并后标题（默认第一章标题）
+     */
+    fun mergeChapters(book: Book, chapters: List<BookChapter>, mergedTitle: String) {
+        execute {
+            val sorted = chapters.sortedBy { it.index }
+            if (sorted.size < 2) {
+                throw NoStackTraceException(context.getString(R.string.merge_chapter_need_two))
+            }
+            val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            if (toc.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
+            }
+            val first = sorted.first()
+            val mergedIndexes = sorted.map { it.index }.toSet()
+            val maxMergedIndex = mergedIndexes.maxOrNull() ?: first.index
+            val removalCount = sorted.size - 1
+
+            // 1. 读取并拼接正文（覆盖文件优先）
+            val mergedContent = sorted.joinToString("\n") { chapter ->
+                BookHelp.getContent(book, chapter).orEmpty()
+            }
+
+            // 2. 文件准备：第一章标题更新（如需）+ 写合并正文；被合并章清理覆盖文件
+            val chapterShifts = mutableListOf<ChapterShift>()
+            val bookmarkShifts = mutableListOf<BookmarkShift>()
+            val updatedFirst = first.copy(title = mergedTitle)
+            collectShift(book, first, first.index, mergedTitle, chapterShifts, bookmarkShifts)
+            BookHelp.saveText(book, updatedFirst, mergedContent)
+            sorted.drop(1).forEach { BookHelp.delContent(book, it) }
+
+            // 3. 后续章节（maxMergedIndex 之后）从前往后左移 removalCount 位，标题保留
+            for (c in toc) {
+                if (c.index > maxMergedIndex) {
+                    val newIndex = c.index - removalCount
+                    collectShift(book, c, newIndex, c.title, chapterShifts, bookmarkShifts)
+                }
+            }
+
+            // 4. 更新书籍元数据与阅读位置
+            book.totalChapterNum = (book.totalChapterNum - removalCount).coerceAtLeast(0)
+            when {
+                book.durChapterIndex in mergedIndexes -> {
+                    book.durChapterIndex = first.index
+                    book.durChapterTitle = mergedTitle
+                }
+                book.durChapterIndex > maxMergedIndex -> {
+                    book.durChapterIndex -= removalCount
+                    chapterShifts.firstOrNull { it.newIndex == book.durChapterIndex }?.let {
+                        book.durChapterTitle = it.newTitle
+                    }
+                }
+            }
+
+            // 5. 数据库变更整体事务化，失败自动回滚
+            appDb.bookChapterDao.applyTocEdit(
+                bookDao = appDb.bookDao,
+                bookmarkDao = appDb.bookmarkDao,
+                book = book,
+                chapterDeletes = sorted.drop(1).map { ChapterDelete(book.bookUrl, it.url) },
+                chapterInserts = emptyList(),
+                chapterShifts = chapterShifts,
+                bookmarkDeletes =
+                    sorted.drop(1).map { BookmarkDelete(book.name, book.author, it.index) },
+                bookmarkShifts = bookmarkShifts
+            )
+            ReadBook.onChapterListUpdated(book)
+            bookData.postValue(book)
+        }.onSuccess {
+            context.toastOnUi(context.getString(R.string.merge_chapter_success))
+            chapterListCallBack?.upChapterList(searchKey)
+        }.onError {
+            AppLog.put(context.getString(R.string.merge_chapter_error), it, true)
+        }
+    }
+
+    /**
      * 章节重排后重命名正文覆盖文件，失败仅告警，不阻断数据库操作
      */
     private fun renameChapterFile(

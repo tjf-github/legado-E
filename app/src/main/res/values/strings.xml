@@ -905,6 +905,13 @@
     <string name="split_chapter_chars">%1$d chars</string>
     <string name="split_chapter_skip">Skip</string>
     <string name="split_chapter_rename">Rename</string>
+    <string name="merge_chapter">Merge chapters</string>
+    <string name="merge_chapter_select">Select chapters to merge</string>
+    <string name="merge_chapter_title_hint">Merged title</string>
+    <string name="merge_chapter_need_two">Select at least two chapters</string>
+    <string name="merge_chapter_success">Chapters merged</string>
+    <string name="merge_chapter_error">Failed to merge chapters</string>
+    <string name="merge_chapter_confirm">Merge</string>
     <string name="show_discovery">Show Discovery</string>
     <string name="style">Style</string>
     <string name="group_style">Group style</string>
