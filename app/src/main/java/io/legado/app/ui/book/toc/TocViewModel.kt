@@ -249,7 +249,9 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
 
     /**
      * 按标题规则拆分粘连章节：
-     * 原章节改写为第一个拆分单元，其余单元作为新章插入，后续章节序号与标题数字自动右移。
+     * 原章节改写为第一个拆分单元，其余单元作为新章插入，后续章节序号右移。
+     * 注意：拆分出的单元标题来自原文，后续章节标题**保留原文不改写**
+     * （与“手动新增章节”不同，后者需要级联 +1 重编号）。
      * @param units 拆分单元（可由 previewSplit 生成，并经预览勾选/改名调整）
      */
     fun splitChapter(book: Book, chapter: BookChapter, units: List<SplitUnit>) {
@@ -292,14 +294,13 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 }
             }
 
-            // 后续章节从后往前右移 insertCount 位，避免唯一索引中间态冲突
+            // 后续章节从后往前右移 insertCount 位（仅 index，标题保留原文），
+            // 避免唯一索引中间态冲突
             for (i in toc.size - 1 downTo 0) {
                 val c = toc[i]
                 if (c.index > chapter.index) {
                     val newIndex = c.index + insertCount
-                    val newTitle =
-                        ChapterNumberUtils.rewriteTitle(c.title, insertCount) ?: c.title
-                    collectShift(book, c, newIndex, newTitle, chapterShifts, bookmarkShifts)
+                    collectShift(book, c, newIndex, c.title, chapterShifts, bookmarkShifts)
                 }
             }
 
