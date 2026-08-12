@@ -17,6 +17,7 @@ import io.legado.app.data.entities.BookChapter
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ChapterNumberUtils
+import io.legado.app.help.book.ChapterSplitter
 import io.legado.app.model.ReadBook
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.utils.FileDoc
@@ -31,6 +32,12 @@ import io.legado.app.utils.writeText
 import java.io.File
 
 class TocViewModel(application: Application) : BaseViewModel(application) {
+
+    companion object {
+        /** 单次拆分章节单元数上限，超出提示分批处理 */
+        private const val SPLIT_LIMIT = 500
+    }
+
     var bookUrl: String = ""
     var bookData = MutableLiveData<Book>()
     var chapterListCallBack: ChapterListCallBack? = null
@@ -97,11 +104,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 if (chapter.index >= insertIndex) {
                     val newIndex = chapter.index + 1
                     val newTitle = ChapterNumberUtils.rewriteTitle(chapter.title, 1) ?: chapter.title
-                    renameChapterFile(book, chapter, newIndex, newTitle)
-                    chapterShifts.add(ChapterShift(book.bookUrl, chapter.url, newIndex, newTitle))
-                    bookmarkShifts.add(
-                        BookmarkShift(book.name, book.author, chapter.index, newIndex, newTitle)
-                    )
+                    collectShift(book, chapter, newIndex, newTitle, chapterShifts, bookmarkShifts)
                 }
             }
             // 构造新章节，先写正文覆盖文件再入库，避免“有章节无正文”的坏状态
@@ -167,11 +170,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 if (c.index > chapter.index) {
                     val newIndex = c.index - 1
                     val newTitle = ChapterNumberUtils.rewriteTitle(c.title, -1) ?: c.title
-                    renameChapterFile(book, c, newIndex, newTitle)
-                    chapterShifts.add(ChapterShift(book.bookUrl, c.url, newIndex, newTitle))
-                    bookmarkShifts.add(
-                        BookmarkShift(book.name, book.author, c.index, newIndex, newTitle)
-                    )
+                    collectShift(book, c, newIndex, newTitle, chapterShifts, bookmarkShifts)
                 }
             }
             // 更新书籍元数据与阅读位置
@@ -220,6 +219,101 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     }
 
     /**
+     * 按标题规则拆分粘连章节：
+     * 原章节改写为第一个拆分单元，其余单元作为新章插入，后续章节序号与标题数字自动右移。
+     */
+    fun splitChapter(book: Book, chapter: BookChapter) {
+        execute {
+            val content = BookHelp.getContent(book, chapter).orEmpty()
+            val units = ChapterSplitter.split(content)
+            if (units.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.split_chapter_no_title))
+            }
+            if (units.size < 2) {
+                throw NoStackTraceException(context.getString(R.string.split_chapter_single))
+            }
+            if (units.size > SPLIT_LIMIT) {
+                throw NoStackTraceException(
+                    context.getString(R.string.split_chapter_too_many, SPLIT_LIMIT)
+                )
+            }
+            val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            if (toc.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
+            }
+            val insertCount = units.size - 1
+            val insertIndex = chapter.index + 1
+            val first = units.first()
+
+            // 原章节改写为第一个单元：正文覆盖文件重命名/重写 + 标题更新（index 不变）
+            val chapterShifts = mutableListOf<ChapterShift>()
+            val bookmarkShifts = mutableListOf<BookmarkShift>()
+            val updatedChapter = chapter.copy(title = first.title)
+            collectShift(book, chapter, chapter.index, first.title, chapterShifts, bookmarkShifts)
+            BookHelp.saveText(book, updatedChapter, first.content)
+
+            // 其余单元作为新章节：先写正文覆盖文件，避免“有章节无正文”的坏状态
+            val stamp = System.currentTimeMillis()
+            val newChapters = units.drop(1).mapIndexed { k, unit ->
+                BookChapter(
+                    url = MD5Utils.md5Encode16(
+                        "${book.originName}_split_${chapter.index}_${stamp}_$k"
+                    ),
+                    title = unit.title,
+                    bookUrl = book.bookUrl,
+                    index = insertIndex + k
+                ).also { newChapter ->
+                    BookHelp.saveText(book, newChapter, unit.content)
+                }
+            }
+
+            // 后续章节从后往前右移 insertCount 位，避免唯一索引中间态冲突
+            for (i in toc.size - 1 downTo 0) {
+                val c = toc[i]
+                if (c.index > chapter.index) {
+                    val newIndex = c.index + insertCount
+                    val newTitle =
+                        ChapterNumberUtils.rewriteTitle(c.title, insertCount) ?: c.title
+                    collectShift(book, c, newIndex, newTitle, chapterShifts, bookmarkShifts)
+                }
+            }
+
+            // 更新书籍元数据与阅读位置（标题取重排结果，与事务内最终状态一致）
+            book.totalChapterNum += insertCount
+            when {
+                book.durChapterIndex > chapter.index -> {
+                    book.durChapterIndex += insertCount
+                    chapterShifts.firstOrNull { it.newIndex == book.durChapterIndex }?.let {
+                        book.durChapterTitle = it.newTitle
+                    }
+                }
+                book.durChapterIndex == chapter.index -> {
+                    book.durChapterTitle = first.title
+                }
+            }
+
+            // 数据库变更整体事务化，失败自动回滚
+            appDb.bookChapterDao.applyTocEdit(
+                bookDao = appDb.bookDao,
+                bookmarkDao = appDb.bookmarkDao,
+                book = book,
+                chapterDeletes = emptyList(),
+                chapterInserts = newChapters,
+                chapterShifts = chapterShifts,
+                bookmarkDeletes = emptyList(),
+                bookmarkShifts = bookmarkShifts
+            )
+            ReadBook.onChapterListUpdated(book)
+            bookData.postValue(book)
+        }.onSuccess {
+            context.toastOnUi(context.getString(R.string.split_chapter_success))
+            chapterListCallBack?.upChapterList(searchKey)
+        }.onError {
+            AppLog.put(context.getString(R.string.split_chapter_error), it, true)
+        }
+    }
+
+    /**
      * 章节重排后重命名正文覆盖文件，失败仅告警，不阻断数据库操作
      */
     private fun renameChapterFile(
@@ -248,6 +342,23 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
         }.onFailure {
             AppLog.put("重命名章节正文文件失败\n${it.localizedMessage}", it)
         }
+    }
+
+    /**
+     * 收集单章重排操作：文件改名（best-effort）＋章节 shift ＋书签 shift。
+     * 调用方须保证传入顺序满足唯一索引约束（右移从后往前、左移从前往后）。
+     */
+    private fun collectShift(
+        book: Book,
+        chapter: BookChapter,
+        newIndex: Int,
+        newTitle: String,
+        chapterShifts: MutableList<ChapterShift>,
+        bookmarkShifts: MutableList<BookmarkShift>
+    ) {
+        renameChapterFile(book, chapter, newIndex, newTitle)
+        chapterShifts.add(ChapterShift(book.bookUrl, chapter.url, newIndex, newTitle))
+        bookmarkShifts.add(BookmarkShift(book.name, book.author, chapter.index, newIndex, newTitle))
     }
 
     fun startChapterListSearch(newText: String?) {
