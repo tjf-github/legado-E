@@ -1410,5 +1410,10 @@
     <string name="import_manga_summary">Will import %1$d book(s), %2$d image(s)</string>
     <string name="local_manga">Local manga</string>
     <string name="net_book">Source books</string>
-    <string name="image_no_gap">No gap in vertical view</string>
+    <string name="image_gap">Image gap</string>
+    <string name="image_gap_title">Image gap: %1$s</string>
+    <string name="image_gap_none">None (no gap)</string>
+    <string name="image_gap_small">Small</string>
+    <string name="image_gap_medium">Medium</string>
+    <string name="image_gap_large">Large</string>
 </resources>

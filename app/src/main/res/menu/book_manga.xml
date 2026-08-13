@@ -87,10 +87,8 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/menu_image_no_gap"
-        android:checkable="true"
-        android:checked="true"
-        android:title="@string/image_no_gap"
+        android:id="@+id/menu_image_gap"
+        android:title="@string/image_gap"
         app:showAsAction="never" />
 
     <item

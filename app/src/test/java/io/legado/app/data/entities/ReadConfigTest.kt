@@ -18,6 +18,7 @@ class ReadConfigTest {
             reSegment = true,
             imageStyle = "cover",
             imageNoGap = false,
+            imageGap = 2,
             useReplaceRule = true,
             delTag = 123L,
             ttsEngine = "test",
@@ -58,5 +59,22 @@ class ReadConfigTest {
         assertTrue(restored.reverseToc)
         assertNull(restored.pageAnim)
         assertEquals(true, restored.splitLongChapter)
+    }
+
+    @Test
+    fun imageGapCompatibilityMapping() {
+        val book = Book(bookUrl = "test://book")
+        // 默认：无间隙（0）
+        assertEquals(0, book.getImageGap())
+        // 旧数据 imageNoGap=false（间距开启）→ 映射为中档 2
+        book.setImageNoGap(false)
+        assertEquals(2, book.getImageGap())
+        // 新档位写入时同步 imageNoGap 兼容字段
+        book.setImageGap(3)
+        assertEquals(3, book.getImageGap())
+        assertEquals(false, book.config.imageNoGap)
+        book.setImageGap(0)
+        assertEquals(0, book.getImageGap())
+        assertEquals(true, book.config.imageNoGap)
     }
 }

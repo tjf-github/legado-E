@@ -105,11 +105,15 @@ class MangaAdapter(private val context: Context) :
 
         fun onBind(item: MangaPage) {
             setImageColorFilter()
-            // 竖排无间隙开关：关闭时在页与页之间留出间距
-            val noGap = ReadManga.book?.getImageNoGap() ?: true
+            // 图片间距档位：0=无间隙 / 1=小 / 2=中 / 3=大
+            val gap = when (ReadManga.book?.getImageGap() ?: 0) {
+                1 -> 8.dpToPx()
+                2 -> 16.dpToPx()
+                3 -> 32.dpToPx()
+                else -> 0
+            }
             val lp = binding.rootView.layoutParams
             if (lp is ViewGroup.MarginLayoutParams) {
-                val gap = if (noGap) 0 else 16.dpToPx()
                 if (lp.bottomMargin != gap) {
                     lp.bottomMargin = gap
                     binding.rootView.layoutParams = lp

@@ -36,6 +36,7 @@ import io.legado.app.help.book.removeType
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.storage.Backup
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.dialogs.SelectItem
 import io.legado.app.model.ReadManga
 import io.legado.app.receiver.NetworkChangedListener
 import io.legado.app.ui.book.changesource.ChangeBookSourceDialog
@@ -612,14 +613,7 @@ class ReadMangaActivity : VMBaseActivity<ActivityMangaBinding, ReadMangaViewMode
                 }
             }
 
-            R.id.menu_image_no_gap -> {
-                item.isChecked = !item.isChecked
-                ReadManga.book?.let { book ->
-                    book.setImageNoGap(item.isChecked)
-                    book.save()
-                }
-                mAdapter.notifyDataSetChanged()
-            }
+            R.id.menu_image_gap -> showImageGapDialog()
 
             R.id.menu_gray_manga -> {
                 item.isChecked = !item.isChecked
@@ -715,8 +709,37 @@ class ReadMangaActivity : VMBaseActivity<ActivityMangaBinding, ReadMangaViewMode
             isChecked = AppConfig.disableHorizontalPageSnap || AppConfig.disableMangaPageAnim
         }
         menu.findItem(R.id.menu_disable_manga_page_anim).isChecked = AppConfig.disableMangaPageAnim
-        menu.findItem(R.id.menu_image_no_gap).isChecked = ReadManga.book?.getImageNoGap() ?: true
+        menu.findItem(R.id.menu_image_gap)?.title = getString(
+            R.string.image_gap_title,
+            when (ReadManga.book?.getImageGap() ?: 0) {
+                1 -> getString(R.string.image_gap_small)
+                2 -> getString(R.string.image_gap_medium)
+                3 -> getString(R.string.image_gap_large)
+                else -> getString(R.string.image_gap_none)
+            }
+        )
         menu.findItem(R.id.menu_gray_manga).isChecked = AppConfig.enableMangaGray
+    }
+
+    /** 图片间距档位选择：0=无间隙 / 1=小 / 2=中 / 3=大 */
+    private fun showImageGapDialog() {
+        val levels = arrayListOf(
+            SelectItem(getString(R.string.image_gap_none), 0),
+            SelectItem(getString(R.string.image_gap_small), 1),
+            SelectItem(getString(R.string.image_gap_medium), 2),
+            SelectItem(getString(R.string.image_gap_large), 3)
+        )
+        alert(getString(R.string.image_gap)) {
+            items(levels) { _, item, _ ->
+                ReadManga.book?.let { book ->
+                    book.setImageGap(item.value)
+                    book.save()
+                }
+                mAdapter.notifyDataSetChanged()
+                mMenu?.let { upMenu(it) }
+            }
+            cancelButton()
+        }
     }
 
     private fun setDisableMangaScale(disable: Boolean) {

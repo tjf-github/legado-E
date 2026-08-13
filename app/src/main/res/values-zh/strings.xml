@@ -1303,5 +1303,10 @@
     <string name="import_manga_summary">将导入 %1$d 本书，共 %2$d 张图片</string>
     <string name="local_manga">本地漫画</string>
     <string name="net_book">书源书籍</string>
-    <string name="image_no_gap">竖排无间隙</string>
+    <string name="image_gap">图片间距</string>
+    <string name="image_gap_title">图片间距：%1$s</string>
+    <string name="image_gap_none">无间隙</string>
+    <string name="image_gap_small">小</string>
+    <string name="image_gap_medium">中</string>
+    <string name="image_gap_large">大</string>
 </resources>
