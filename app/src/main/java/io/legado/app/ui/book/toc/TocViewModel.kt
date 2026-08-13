@@ -40,6 +40,17 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
         private const val SPLIT_LIMIT = 500
     }
 
+    private data class SplitUndoRecord(
+        val bookUrl: String,
+        val originalChapter: BookChapter,
+        val splitChapter: BookChapter,
+        val originalContent: String,
+        val insertedChapters: List<BookChapter>,
+        val insertCount: Int
+    )
+
+    private var lastSplitUndo: SplitUndoRecord? = null
+
     var bookUrl: String = ""
     var bookData = MutableLiveData<Book>()
     var chapterListCallBack: ChapterListCallBack? = null
@@ -57,6 +68,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
 
     fun upBookTocRule(book: Book, complete: (Throwable?) -> Unit) {
         execute {
+            lastSplitUndo = null
             appDb.bookDao.update(book)
             // 目录规则变更 = 从源文件重新解析：清理旧规则下写入的正文覆盖文件
             BookHelp.clearCache(book)
@@ -76,6 +88,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
 
     fun reverseToc(success: (book: Book) -> Unit) {
         execute {
+            lastSplitUndo = null
             bookData.value?.apply {
                 setReverseToc(!getReverseToc())
                 val toc = appDb.bookChapterDao.getChapterList(bookUrl)
@@ -95,6 +108,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
      */
     fun insertChapter(book: Book, anchor: BookChapter, title: String, content: String) {
         execute {
+            lastSplitUndo = null
             val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
             if (toc.isEmpty()) {
                 throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
@@ -161,6 +175,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
      */
     fun deleteChapter(book: Book, chapter: BookChapter) {
         execute {
+            lastSplitUndo = null
             val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
             if (toc.isEmpty()) {
                 throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
@@ -259,6 +274,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
      */
     fun splitChapter(book: Book, chapter: BookChapter, units: List<SplitUnit>) {
         execute {
+            lastSplitUndo = null
             if (units.size < 2) {
                 throw NoStackTraceException(context.getString(R.string.split_chapter_single))
             }
@@ -274,6 +290,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             val insertCount = units.size - 1
             val insertIndex = chapter.index + 1
             val first = units.first()
+            val originalContent = BookHelp.getContent(book, chapter).orEmpty()
 
             // 原章节改写为第一个单元：正文覆盖文件重命名/重写 + 标题更新（index 不变）
             val chapterShifts = mutableListOf<ChapterShift>()
@@ -341,6 +358,14 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 bookmarkDeletes = emptyList(),
                 bookmarkShifts = bookmarkShifts
             )
+            lastSplitUndo = SplitUndoRecord(
+                bookUrl = book.bookUrl,
+                originalChapter = chapter,
+                splitChapter = updatedChapter,
+                originalContent = originalContent,
+                insertedChapters = newChapters,
+                insertCount = insertCount
+            )
             ReadBook.onChapterListUpdated(book)
             bookData.postValue(book)
         }.onSuccess {
@@ -348,6 +373,96 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             chapterListCallBack?.upChapterList(searchKey)
         }.onError {
             AppLog.put(context.getString(R.string.split_chapter_error), it, true)
+        }
+    }
+
+    fun hasLastSplitUndo(bookUrl: String): Boolean = lastSplitUndo?.bookUrl == bookUrl
+
+    /**
+     * 撤销最近一次拆分：恢复原章节标题/正文，删除拆分新增章节，
+     * 后续章节 index 与书签回移，整体事务化。
+     */
+    fun undoLastSplit(book: Book) {
+        val record = lastSplitUndo
+        if (record == null || record.bookUrl != book.bookUrl) {
+            context.toastOnUi(context.getString(R.string.undo_split_none))
+            return
+        }
+        execute {
+            val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            if (toc.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
+            }
+            val original = record.originalChapter
+            val insertedUrls = record.insertedChapters.map { it.url }.toSet()
+            val chapterShifts = mutableListOf<ChapterShift>()
+            val bookmarkShifts = mutableListOf<BookmarkShift>()
+
+            // 文件层：恢复原章正文；若拆分改变了原章标题，再删除拆分后原章文件
+            BookHelp.saveText(book, original, record.originalContent)
+            if (original.getFileName() != record.splitChapter.getFileName()) {
+                BookHelp.delContent(book, record.splitChapter)
+            }
+            record.insertedChapters.forEach { BookHelp.delContent(book, it) }
+
+            // 原章 DB 恢复（index 不变，标题/字数回退）
+            chapterShifts.add(
+                ChapterShift(
+                    book.bookUrl,
+                    original.url,
+                    original.index,
+                    original.title,
+                    StringUtils.wordCountFormat(record.originalContent.length)
+                )
+            )
+
+            // 后续章节从前往后左移 insertCount 位（标题保留原文）
+            for (c in toc) {
+                if (c.index > original.index && c.url !in insertedUrls) {
+                    val newIndex = c.index - record.insertCount
+                    collectShift(book, c, newIndex, c.title, chapterShifts, bookmarkShifts)
+                }
+            }
+
+            // 更新书籍元数据与阅读位置
+            book.totalChapterNum = (book.totalChapterNum - record.insertCount).coerceAtLeast(0)
+            when {
+                book.durChapterIndex > original.index + record.insertCount -> {
+                    book.durChapterIndex -= record.insertCount
+                    chapterShifts.firstOrNull { it.newIndex == book.durChapterIndex }?.let {
+                        book.durChapterTitle = it.newTitle
+                    }
+                }
+                book.durChapterIndex in (original.index + 1)..(original.index + record.insertCount) -> {
+                    book.durChapterIndex = original.index
+                    book.durChapterTitle = original.title
+                    book.durChapterPos = 0
+                }
+                book.durChapterIndex == original.index -> {
+                    book.durChapterTitle = original.title
+                }
+            }
+
+            appDb.bookChapterDao.applyTocEdit(
+                bookDao = appDb.bookDao,
+                bookmarkDao = appDb.bookmarkDao,
+                book = book,
+                chapterDeletes = record.insertedChapters.map { ChapterDelete(book.bookUrl, it.url) },
+                chapterInserts = emptyList(),
+                chapterShifts = chapterShifts,
+                bookmarkDeletes = record.insertedChapters.map {
+                    BookmarkDelete(book.name, book.author, it.index)
+                },
+                bookmarkShifts = bookmarkShifts
+            )
+            lastSplitUndo = null
+            ReadBook.onChapterListUpdated(book)
+            bookData.postValue(book)
+        }.onSuccess {
+            context.toastOnUi(context.getString(R.string.undo_split_success))
+            chapterListCallBack?.upChapterList(searchKey)
+        }.onError {
+            AppLog.put(context.getString(R.string.undo_split_error), it, true)
         }
     }
 
@@ -362,6 +477,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
      */
     fun mergeChapters(book: Book, chapters: List<BookChapter>, mergedTitle: String) {
         execute {
+            lastSplitUndo = null
             val sorted = chapters.sortedBy { it.index }
             if (sorted.size < 2) {
                 throw NoStackTraceException(context.getString(R.string.merge_chapter_need_two))

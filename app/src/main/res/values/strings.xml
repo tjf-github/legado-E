@@ -913,6 +913,10 @@
     <string name="split_chapter_chars">%1$d chars</string>
     <string name="split_chapter_skip">Skip</string>
     <string name="split_chapter_rename">Rename</string>
+    <string name="undo_split_chapter">Undo last split</string>
+    <string name="undo_split_success">Last split undone</string>
+    <string name="undo_split_error">Failed to undo split</string>
+    <string name="undo_split_none">No split to undo</string>
     <string name="merge_chapter">Merge chapters</string>
     <string name="merge_chapter_select">Select chapters to merge</string>
     <string name="merge_chapter_title_hint">Merged title</string>

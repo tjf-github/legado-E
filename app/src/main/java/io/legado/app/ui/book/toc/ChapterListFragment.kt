@@ -242,20 +242,25 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
     override fun onChapterMenu(bookChapter: BookChapter) {
         val book = viewModel.bookData.value ?: return
         if (!book.isLocalTxt) return
+        val menuItems = mutableListOf(
+            getString(R.string.add_chapter_after),
+            getString(R.string.delete_chapter),
+            getString(R.string.split_chapter),
+            getString(R.string.merge_chapter)
+        )
+        if (viewModel.hasLastSplitUndo(book.bookUrl)) {
+            menuItems.add(getString(R.string.undo_split_chapter))
+        }
         requireContext().selector(
             R.string.chapter_menu_title,
-            listOf(
-                getString(R.string.add_chapter_after),
-                getString(R.string.delete_chapter),
-                getString(R.string.split_chapter),
-                getString(R.string.merge_chapter)
-            )
+            menuItems
         ) { _, index ->
             when (index) {
                 0 -> showInsertChapterDialog(book, bookChapter)
                 1 -> showDeleteChapterDialog(book, bookChapter)
                 2 -> showSplitPreviewDialog(book, bookChapter)
                 3 -> showMergeChaptersDialog(book, bookChapter)
+                4 -> viewModel.undoLastSplit(book)
             }
         }
     }

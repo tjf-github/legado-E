@@ -910,6 +910,10 @@
     <string name="split_chapter_chars">%1$d 字</string>
     <string name="split_chapter_skip">跳过</string>
     <string name="split_chapter_rename">改名</string>
+    <string name="undo_split_chapter">撤销上次拆分</string>
+    <string name="undo_split_success">已撤销上次拆分</string>
+    <string name="undo_split_error">撤销拆分失败</string>
+    <string name="undo_split_none">没有可撤销的拆分</string>
     <string name="merge_chapter">合并章节</string>
     <string name="merge_chapter_select">选择要合并的章节</string>
     <string name="merge_chapter_title_hint">合并后标题</string>
