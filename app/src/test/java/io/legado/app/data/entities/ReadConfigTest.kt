@@ -77,4 +77,23 @@ class ReadConfigTest {
         assertEquals(0, book.getImageGap())
         assertEquals(true, book.config.imageNoGap)
     }
+
+    @Test
+    fun readConfigLegacyStartDateFormat() {
+        // 旧数据：Gson 反射对象格式 {year,month,day}
+        val restored = GSON.fromJsonObject<Book.ReadConfig>(
+            """{"startDate":{"year":2026,"month":8,"day":13}}"""
+        ).getOrThrow()
+        assertEquals(LocalDate.of(2026, 8, 13), restored.startDate)
+    }
+
+    @Test
+    fun readConfigStartDateRoundTripStringFormat() {
+        // 新数据：ISO 字符串格式
+        val config = Book.ReadConfig(startDate = LocalDate.of(2026, 8, 13))
+        val json = GSON.toJson(config)
+        assertTrue(json.contains("2026-08-13"))
+        assertTrue(!json.contains("\"year\""))
+        assertEquals(config, GSON.fromJsonObject<Book.ReadConfig>(json).getOrThrow())
+    }
 }
