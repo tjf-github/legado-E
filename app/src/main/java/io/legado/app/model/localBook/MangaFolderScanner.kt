@@ -212,24 +212,32 @@ object MangaFolderScanner {
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             arrayOf(
                 MediaStore.Images.Media._ID,
-                MediaStore.Images.Media.BUCKET_ID,
-                MediaStore.Images.Media.BUCKET_DISPLAY_NAME
+                MediaStore.Images.Media.RELATIVE_PATH,
+                MediaStore.Images.Media.DISPLAY_NAME
             ),
             null,
             null,
-            "${MediaStore.Images.Media.BUCKET_DISPLAY_NAME} ASC"
+            "${MediaStore.Images.Media.DATE_ADDED} ASC"
         )?.use { cursor ->
             val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val bucketIdCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID)
-            val bucketNameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+            // Android 15+ 隐私限制：BUCKET_ID/BUCKET_DISPLAY_NAME 对他人媒体返回 null，
+            // 改用 RELATIVE_PATH（如 Pictures/TestAlbum/）作为相册分组依据
+            val pathCol = cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
+            val nameCol = cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
             while (cursor.moveToNext()) {
-                val bucketId = cursor.getString(bucketIdCol)
-                val bucketName = cursor.getString(bucketNameCol)
                 val imageUri = ContentUris.withAppendedId(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     cursor.getLong(idCol)
                 ).toString()
-                albums.getOrPut(bucketId) { AlbumImages(bucketId, bucketName, arrayListOf()) }
+                val relativePath = if (pathCol >= 0) cursor.getString(pathCol)?.trim('/') ?: "" else ""
+                val albumId = relativePath.ifBlank {
+                    // 无目录信息的图片（旧系统/异常媒体）：每张图独立成相册兜底
+                    "album-${cursor.getLong(idCol)}"
+                }
+                val albumName = relativePath.substringAfterLast('/').ifBlank {
+                    if (nameCol >= 0) cursor.getString(nameCol) ?: "未命名相册" else "未命名相册"
+                }
+                albums.getOrPut(albumId) { AlbumImages(albumId, albumName, arrayListOf()) }
                     .images.add(imageUri)
             }
         }

@@ -47,11 +47,11 @@ if (-not $NoTest) {
 Write-Host "[3/3] 打包 assembleDebug"
 Invoke-Gradle @(':app:assembleDebug', '--console=plain')
 
-$apk = Get-ChildItem -Path (Join-Path $root 'app\build\outputs\apk\appDebug\*.apk') -ErrorAction SilentlyContinue |
+$apk = Get-ChildItem -Path (Join-Path $root 'app\build\outputs\apk\app\debug\*.apk') -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
 if (-not $apk) {
-    Write-Error "未找到 APK 输出：app\build\outputs\apk\appDebug\*.apk"
+    Write-Error "未找到 APK 输出：app\build\outputs\apk\app\debug\*.apk"
     exit 1
 }
 Write-Host ("APK: " + $apk.FullName)
