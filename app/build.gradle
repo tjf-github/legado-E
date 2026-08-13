@@ -21,7 +21,18 @@ static def releaseTime() {
 
 def name = "legado"
 def version = "3." + releaseTime()
-def gitCommits = Integer.parseInt('git rev-list HEAD --count'.execute().text.trim())
+def gitCommits = 0
+try {
+    def proc = ['git', 'rev-list', 'HEAD', '--count'].execute(null, rootDir)
+    proc.waitFor()
+    gitCommits = Integer.parseInt(proc.text.trim())
+} catch (Exception ignored) {}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
 
 android {
     compileSdk = compile_sdk_version
@@ -33,12 +44,12 @@ android {
     }
 
     signingConfigs {
-        if (project.hasProperty("RELEASE_STORE_FILE")) {
+        if (keystoreProperties.getProperty('storeFile') || project.hasProperty("RELEASE_STORE_FILE")) {
             myConfig {
-                storeFile file(RELEASE_STORE_FILE)
-                storePassword RELEASE_STORE_PASSWORD
-                keyAlias RELEASE_KEY_ALIAS
-                keyPassword RELEASE_KEY_PASSWORD
+                storeFile file(keystoreProperties.getProperty('storeFile') ?: RELEASE_STORE_FILE)
+                storePassword keystoreProperties.getProperty('storePassword') ?: RELEASE_STORE_PASSWORD
+                keyAlias keystoreProperties.getProperty('keyAlias') ?: RELEASE_KEY_ALIAS
+                keyPassword keystoreProperties.getProperty('keyPassword') ?: RELEASE_KEY_PASSWORD
                 enableV1Signing = true
                 enableV2Signing = true
                 enableV3Signing = true
@@ -47,7 +58,7 @@ android {
         }
     }
     defaultConfig {
-        applicationId "io.legado.app"
+        applicationId "io.legado.app.tjf"
         minSdk 21
         targetSdk 36
         versionCode 10000 + gitCommits

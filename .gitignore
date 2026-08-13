@@ -12,6 +12,9 @@ node_modules/
 /app/app
 /app/google
 /app/gradle.properties
+keystore.properties
+*.keystore
+*.jks
 package-lock.json
 build.log
 .idea/
