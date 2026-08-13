@@ -23,6 +23,8 @@ data class MangaBookPreview(
     val chapterDirs: List<MangaChapterPreview> = emptyList(),
     // 书文件夹直接图片（isWhole = true 时使用）
     val wholeImages: List<String> = emptyList(),
+    // 封面图（命名含 cover/封面 的图片优先，其次首图），用于书架封面
+    var coverImage: String? = null,
 ) {
 
     /** 当前生效的章节列表 */

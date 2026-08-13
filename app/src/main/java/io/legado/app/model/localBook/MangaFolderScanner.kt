@@ -31,6 +31,20 @@ object MangaFolderScanner {
         return name.substringAfterLast('.', "").lowercase() in imageExtensions
     }
 
+    /** 封面命名判断：文件名含 cover 或 封面（大小写不敏感） */
+    fun isCoverName(name: String): Boolean {
+        val lower = name.lowercase()
+        return lower.contains("cover") || lower.contains("封面")
+    }
+
+    /**
+     * 混合结构建议角色：书文件夹直接图片数不少于各章节图片总数时，建议整本连看；
+     * 行级切换仍可覆盖该建议
+     */
+    fun suggestWholeRole(directImageCount: Int, chapterImageCount: Int): Boolean {
+        return directImageCount > 0 && directImageCount >= chapterImageCount
+    }
+
     /** 自然排序（001 < 002 < 010），按数字块数值比较，避免纯字符串序 */
     fun naturalSort(names: List<String>): List<String> {
         return names.sortedWith(naturalComparator)
@@ -52,17 +66,24 @@ object MangaFolderScanner {
     /**
      * 扫描导入根文件夹，返回书预览清单（IO 线程）
      */
-    fun scan(root: FileDoc, mode: Mode): List<MangaBookPreview> {
+    fun scan(
+        root: FileDoc,
+        mode: Mode,
+        onProgress: ((scanned: Int, total: Int) -> Unit)? = null
+    ): List<MangaBookPreview> {
         val rootChildren = root.list { !it.name.startsWith(".") }.orEmpty()
         val previews = when (mode) {
             Mode.WHOLE -> listOf(scanBook(root, rootChildren, series = null))
-            Mode.SERIES -> rootChildren
-                .filter { it.isDir }
-                .sortedWith(compareBy(naturalComparator) { it.name })
-                .map { seriesDir ->
+            Mode.SERIES -> {
+                val seriesDirs = rootChildren
+                    .filter { it.isDir }
+                    .sortedWith(compareBy(naturalComparator) { it.name })
+                seriesDirs.mapIndexed { index, seriesDir ->
+                    onProgress?.invoke(index + 1, seriesDirs.size)
                     val children = seriesDir.list { !it.name.startsWith(".") }.orEmpty()
                     scanBook(seriesDir, children, series = root.name)
                 }
+            }
         }
         return previews.map { preview ->
             preview.isDuplicate = appDb.bookDao.has(preview.dir.toString())
@@ -88,15 +109,24 @@ object MangaFolderScanner {
             val images = imagesOf(dir)
             if (images.isEmpty()) null else MangaChapterPreview(dir = dir, name = dir.name, images = images)
         }
+        // 封面：命名含 cover/封面 的图片优先，其次书文件夹首图/首章节首图
+        val coverImage = directImages.firstOrNull { isCoverName(it.name) }?.toString()
+            ?: directImages.firstOrNull()?.toString()
+            ?: chapterDirs.firstOrNull()?.images?.firstOrNull()
         return if (chapterDirs.isNotEmpty()) {
+            val suggestWhole = suggestWholeRole(
+                directImageCount = directImages.size,
+                chapterImageCount = chapterDirs.sumOf { it.images.size }
+            )
             MangaBookPreview(
                 dir = bookDir,
                 name = bookDir.name,
                 group = series,
-                isWhole = false,
+                isWhole = suggestWhole,
                 canToggleWhole = directImages.isNotEmpty(),
                 chapterDirs = chapterDirs,
-                wholeImages = directImages.map { it.toString() }
+                wholeImages = directImages.map { it.toString() },
+                coverImage = coverImage
             )
         } else if (directImages.isNotEmpty()) {
             MangaBookPreview(
@@ -105,7 +135,8 @@ object MangaFolderScanner {
                 group = series,
                 isWhole = true,
                 canToggleWhole = false,
-                wholeImages = directImages.map { it.toString() }
+                wholeImages = directImages.map { it.toString() },
+                coverImage = coverImage
             )
         } else {
             MangaBookPreview(
@@ -113,7 +144,8 @@ object MangaFolderScanner {
                 name = bookDir.name,
                 group = series,
                 enabled = false,
-                isSkipped = true
+                isSkipped = true,
+                coverImage = coverImage
             )
         }
     }

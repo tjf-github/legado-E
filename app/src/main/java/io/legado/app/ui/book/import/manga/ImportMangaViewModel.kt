@@ -24,10 +24,15 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
 
     val scanningLiveData = MutableLiveData<Boolean>()
 
+    /** 大目录扫描进度（已扫描 / 总数），仅系列模式有总数 */
+    val scanProgressLiveData = MutableLiveData<Pair<Int, Int>>()
+
     fun scan(root: FileDoc, mode: MangaFolderScanner.Mode) {
         scanningLiveData.postValue(true)
         execute {
-            MangaFolderScanner.scan(root, mode)
+            MangaFolderScanner.scan(root, mode) { scanned, total ->
+                scanProgressLiveData.postValue(scanned to total)
+            }
         }.onSuccess {
             previewLiveData.postValue(it)
         }.onError {
@@ -72,6 +77,7 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
             originName = preview.dir.name,
             name = preview.name,
             group = getGroupId(preview.group),
+            coverUrl = preview.coverImage,
             totalChapterNum = preview.chapters.size,
             latestChapterTime = System.currentTimeMillis(),
             order = appDb.bookDao.minOrder - 1

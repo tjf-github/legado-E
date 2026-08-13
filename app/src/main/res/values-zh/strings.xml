@@ -1282,6 +1282,7 @@
     <string name="import_manga_mode_whole_desc">所选文件夹=一本书，直接子文件夹=章节</string>
     <string name="import_manga_mode_series_desc">所选文件夹=系列分组，直接子文件夹=各自独立书</string>
     <string name="import_manga_scanning">正在扫描漫画文件夹…</string>
+    <string name="import_manga_progress">正在扫描 %1$d/%2$d</string>
     <string name="import_manga_preview">导入预览</string>
     <string name="import_manga_confirm">确认导入</string>
     <string name="import_manga_rename">改名</string>

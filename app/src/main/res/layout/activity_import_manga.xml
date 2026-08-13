@@ -43,6 +43,17 @@
             android:visibility="gone"
             tools:text="TextView" />
 
+        <TextView
+            android:id="@+id/tv_scan_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_margin="12dp"
+            android:textColor="@color/secondaryText"
+            android:textSize="13sp"
+            android:visibility="gone"
+            tools:text="正在扫描 3/10" />
+
     </FrameLayout>
 
     <LinearLayout

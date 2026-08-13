@@ -1389,6 +1389,7 @@
     <string name="import_manga_mode_whole_desc">Selected folder = one book; its sub-folders = chapters</string>
     <string name="import_manga_mode_series_desc">Selected folder = series; its sub-folders = individual books</string>
     <string name="import_manga_scanning">Scanning manga folders…</string>
+    <string name="import_manga_progress">Scanning %1$d/%2$d</string>
     <string name="import_manga_preview">Import preview</string>
     <string name="import_manga_confirm">Import now</string>
     <string name="import_manga_rename">Rename</string>

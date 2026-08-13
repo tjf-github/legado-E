@@ -41,6 +41,27 @@ class MangaFolderScannerTest {
     }
 
     @Test
+    fun coverNameDetection() {
+        listOf("cover.jpg", "Cover.png", "封面.png", "the_cover.webp", "COVER_01.jpg").forEach {
+            assertTrue("$it 应被识别为封面", MangaFolderScanner.isCoverName(it))
+        }
+        listOf("001.jpg", "chapter1.jpg", "intro.png", "").forEach {
+            assertTrue("$it 不应被识别为封面", !MangaFolderScanner.isCoverName(it))
+        }
+    }
+
+    @Test
+    fun suggestWholeRoleHeuristic() {
+        // 直接图片不少于章节图片总数时建议整本连看
+        assertTrue(MangaFolderScanner.suggestWholeRole(3, 3))
+        assertTrue(MangaFolderScanner.suggestWholeRole(4, 3))
+        // 无直接图片或直接图片更少时建议子文件夹作为章节
+        assertTrue(!MangaFolderScanner.suggestWholeRole(0, 3))
+        assertTrue(!MangaFolderScanner.suggestWholeRole(1, 3))
+        assertTrue(!MangaFolderScanner.suggestWholeRole(0, 0))
+    }
+
+    @Test
     fun buildImgHtmlJoinsImageTags() {
         val html = MangaFolderScanner.buildImgHtml(listOf("content://a/1.jpg", "content://a/2.jpg"))
         assertEquals(

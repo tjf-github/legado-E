@@ -57,6 +57,16 @@ class ImportMangaActivity :
                 binding.tvEmptyMsg.setText(R.string.import_manga_scanning)
             }
         }
+        viewModel.scanProgressLiveData.observe(this) { (scanned, total) ->
+            binding.tvScanProgress.apply {
+                if (total > 0 && scanned < total) {
+                    text = getString(R.string.import_manga_progress, scanned, total)
+                    visible()
+                } else {
+                    gone()
+                }
+            }
+        }
         viewModel.previewLiveData.observe(this) { list ->
             adapter.setItems(list)
             if (list.isEmpty()) {
