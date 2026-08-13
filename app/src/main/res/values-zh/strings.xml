@@ -1279,8 +1279,11 @@
     <string name="import_manga">导入本地漫画</string>
     <string name="import_manga_mode_whole">整本导入</string>
     <string name="import_manga_mode_series">系列导入</string>
+    <string name="import_manga_mode_album">相册导入</string>
     <string name="import_manga_mode_whole_desc">所选文件夹=一本书，直接子文件夹=章节</string>
     <string name="import_manga_mode_series_desc">所选文件夹=系列分组，直接子文件夹=各自独立书</string>
+    <string name="import_manga_album_permission">需要相册读取权限以导入相册，每个相册将作为一本书导入。</string>
+    <string name="import_manga_album_permission_denied">未授予相册读取权限</string>
     <string name="import_manga_scanning">正在扫描漫画文件夹…</string>
     <string name="import_manga_progress">正在扫描 %1$d/%2$d</string>
     <string name="import_manga_preview">导入预览</string>

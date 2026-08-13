@@ -9,6 +9,8 @@ import io.legado.app.databinding.ActivityImportMangaBinding
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.lib.dialogs.SelectItem
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.permission.Permissions
+import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.model.localBook.MangaBookPreview
 import io.legado.app.model.localBook.MangaFolderScanner
 import io.legado.app.ui.file.HandleFileContract
@@ -83,23 +85,46 @@ class ImportMangaActivity :
     private fun chooseMode() {
         val modes = arrayListOf(
             SelectItem(getString(R.string.import_manga_mode_whole), 0),
-            SelectItem(getString(R.string.import_manga_mode_series), 1)
+            SelectItem(getString(R.string.import_manga_mode_series), 1),
+            SelectItem(getString(R.string.import_manga_mode_album), 2)
         )
         alert(getString(R.string.import_manga)) {
             items(modes) { _, item, _ ->
-                scanMode = if (item.value == 0) {
-                    MangaFolderScanner.Mode.WHOLE
-                } else {
-                    MangaFolderScanner.Mode.SERIES
-                }
-                selectFolder.launch {
-                    title = getString(R.string.import_manga)
+                when (item.value) {
+                    0 -> {
+                        scanMode = MangaFolderScanner.Mode.WHOLE
+                        selectFolder.launch {
+                            title = getString(R.string.import_manga)
+                        }
+                    }
+                    1 -> {
+                        scanMode = MangaFolderScanner.Mode.SERIES
+                        selectFolder.launch {
+                            title = getString(R.string.import_manga)
+                        }
+                    }
+                    else -> scanAlbums()
                 }
             }
             onCancelled {
                 finish()
             }
         }
+    }
+
+    /** 相册导入：先申请读取权限，再扫描 MediaStore 相册 */
+    private fun scanAlbums() {
+        PermissionsCompat.Builder()
+            .addPermissions(*Permissions.Group.IMAGES)
+            .rationale(R.string.import_manga_album_permission)
+            .onGranted {
+                viewModel.scanAlbums()
+            }
+            .onDenied {
+                binding.tvEmptyMsg.visible()
+                binding.tvEmptyMsg.setText(R.string.import_manga_album_permission_denied)
+            }
+            .request()
     }
 
     private fun startScan(rootDoc: FileDoc) {

@@ -1386,8 +1386,11 @@
     <string name="import_manga">Import local manga</string>
     <string name="import_manga_mode_whole">Import as a book</string>
     <string name="import_manga_mode_series">Import as a series</string>
+    <string name="import_manga_mode_album">Import from photo albums</string>
     <string name="import_manga_mode_whole_desc">Selected folder = one book; its sub-folders = chapters</string>
     <string name="import_manga_mode_series_desc">Selected folder = series; its sub-folders = individual books</string>
+    <string name="import_manga_album_permission">Need photo access to import albums. Each album is imported as one book.</string>
+    <string name="import_manga_album_permission_denied">Photo access denied</string>
     <string name="import_manga_scanning">Scanning manga folders…</string>
     <string name="import_manga_progress">Scanning %1$d/%2$d</string>
     <string name="import_manga_preview">Import preview</string>

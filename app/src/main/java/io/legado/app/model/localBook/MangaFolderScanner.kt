@@ -11,6 +11,8 @@ import io.legado.app.utils.GSON
 import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.list
 import splitties.init.appCtx
+import android.content.ContentUris
+import android.provider.MediaStore
 
 /**
  * 本地漫画目录扫描器
@@ -23,6 +25,9 @@ import splitties.init.appCtx
 object MangaFolderScanner {
 
     enum class Mode { WHOLE, SERIES }
+
+    /** 相册导入书的 bookUrl 前缀（无实体目录，目录以导入时固化的章节为准） */
+    const val ALBUM_URL_PREFIX = "album://"
 
     private val imageExtensions = setOf("jpg", "jpeg", "png", "webp", "bmp", "gif")
 
@@ -86,7 +91,7 @@ object MangaFolderScanner {
             }
         }
         return previews.map { preview ->
-            preview.isDuplicate = appDb.bookDao.has(preview.dir.toString())
+            preview.isDuplicate = appDb.bookDao.has(preview.bookKey)
             preview
         }
     }
@@ -154,6 +159,14 @@ object MangaFolderScanner {
      * 重新解析本地漫画书的章节列表（阅读器打开/刷新目录时使用）
      */
     fun scanChapters(book: Book): ArrayList<BookChapter> {
+        if (book.bookUrl.startsWith(ALBUM_URL_PREFIX)) {
+            // 相册导入的书没有实体目录：直接使用导入时固化的章节
+            val dbChapters = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            if (dbChapters.isNotEmpty()) {
+                return ArrayList(dbChapters)
+            }
+            throw TocEmptyException(appCtx.getString(R.string.chapter_list_empty))
+        }
         val bookDir = kotlin.runCatching {
             FileDoc.fromDir(book.bookUrl)
         }.getOrElse {
@@ -187,6 +200,53 @@ object MangaFolderScanner {
                 variable = GSON.toJson(mapOf(IMG_KEY to images.joinToString("\n")))
             )
         })
+    }
+
+    /**
+     * 相册导入：扫描 MediaStore 图片相册，每个相册 = 一本书（整本连看单章节）
+     */
+    fun scanAlbums(): List<MangaBookPreview> {
+        data class AlbumImages(val id: String, val name: String, val images: MutableList<String>)
+        val albums = linkedMapOf<String, AlbumImages>()
+        appCtx.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.BUCKET_ID,
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME
+            ),
+            null,
+            null,
+            "${MediaStore.Images.Media.BUCKET_DISPLAY_NAME} ASC"
+        )?.use { cursor ->
+            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val bucketIdCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID)
+            val bucketNameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+            while (cursor.moveToNext()) {
+                val bucketId = cursor.getString(bucketIdCol)
+                val bucketName = cursor.getString(bucketNameCol)
+                val imageUri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    cursor.getLong(idCol)
+                ).toString()
+                albums.getOrPut(bucketId) { AlbumImages(bucketId, bucketName, arrayListOf()) }
+                    .images.add(imageUri)
+            }
+        }
+        return albums.values.sortedBy { it.name }.map { album ->
+            MangaBookPreview(
+                dir = null,
+                bookUrl = ALBUM_URL_PREFIX + album.id,
+                name = album.name,
+                isWhole = true,
+                canToggleWhole = false,
+                wholeImages = album.images,
+                coverImage = album.images.firstOrNull()
+            )
+        }.map { preview ->
+            preview.isDuplicate = appDb.bookDao.has(preview.bookKey)
+            preview
+        }
     }
 
     /** 文件夹直接含有的图片（自然排序后的 uri 列表） */

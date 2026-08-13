@@ -46,6 +46,23 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
         }
     }
 
+    fun scanAlbums() {
+        scanningLiveData.postValue(true)
+        execute {
+            MangaFolderScanner.scanAlbums()
+        }.onSuccess {
+            previewLiveData.postValue(it)
+        }.onError {
+            previewLiveData.postValue(emptyList())
+            context.toastOnUi(
+                "${context.getString(R.string.import_manga_scan_failed)}\n${it.localizedMessage}"
+            )
+            AppLog.put("导入相册扫描失败\n${it.localizedMessage}", it)
+        }.onFinally {
+            scanningLiveData.postValue(false)
+        }
+    }
+
     fun import(bookList: List<MangaBookPreview>, finally: () -> Unit) {
         execute {
             bookList.filter { it.enabled && !it.isSkipped }.forEach { preview ->
@@ -64,7 +81,7 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
     }
 
     private fun importBook(preview: MangaBookPreview) {
-        val bookUrl = preview.dir.toString()
+        val bookUrl = preview.bookKey
         appDb.bookDao.getBook(bookUrl)?.let { oldBook ->
             // 重新导入：清理旧章节与正文缓存，阅读进度重置
             BookHelp.clearCache(oldBook)
@@ -74,7 +91,7 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
             bookUrl = bookUrl,
             type = BookType.image or BookType.local,
             origin = BookType.localTag,
-            originName = preview.dir.name,
+            originName = preview.name,
             name = preview.name,
             group = getGroupId(preview.group),
             coverUrl = preview.coverImage,

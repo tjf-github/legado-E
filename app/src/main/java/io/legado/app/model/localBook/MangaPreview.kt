@@ -9,7 +9,7 @@ import io.legado.app.utils.FileDoc
  * 若书文件夹直接含图片且没有可读子文件夹，则整本连看（单章节）。
  */
 data class MangaBookPreview(
-    val dir: FileDoc,
+    val dir: FileDoc? = null,
     var name: String,
     var group: String? = null,
     // true = 整本连看（直接图片作为一章）；false = 子文件夹作为章节
@@ -25,7 +25,13 @@ data class MangaBookPreview(
     val wholeImages: List<String> = emptyList(),
     // 封面图（命名含 cover/封面 的图片优先，其次首图），用于书架封面
     var coverImage: String? = null,
+    // 无实体目录的书（相册导入）使用的稳定 bookUrl
+    var bookUrl: String? = null,
 ) {
+
+    /** 实际入库的 bookUrl：实体目录书用目录 uri，相册书用 album:// 前缀 */
+    val bookKey: String
+        get() = dir?.toString() ?: bookUrl.orEmpty()
 
     /** 当前生效的章节列表 */
     val chapters: List<MangaChapterPreview>
@@ -46,7 +52,7 @@ data class MangaBookPreview(
 }
 
 data class MangaChapterPreview(
-    val dir: FileDoc,
+    val dir: FileDoc?,
     val name: String,
     val images: List<String>,
 )
