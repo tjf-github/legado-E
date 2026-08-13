@@ -24,6 +24,7 @@ import io.legado.app.model.localBook.LocalBook
 import io.legado.app.utils.FileDoc
 import io.legado.app.utils.GSON
 import io.legado.app.utils.MD5Utils
+import io.legado.app.utils.StringUtils
 import io.legado.app.utils.createFileIfNotExist
 import io.legado.app.utils.externalFiles
 import io.legado.app.utils.getFile
@@ -111,6 +112,9 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 }
             }
             // 构造新章节，先写正文覆盖文件再入库，避免“有章节无正文”的坏状态
+            val savedContent = content.ifBlank {
+                context.getString(R.string.chapter_content_placeholder)
+            }
             val newChapter = BookChapter(
                 url = MD5Utils.md5Encode16(
                     "${book.originName}_edit_${anchor.index}_${System.currentTimeMillis()}"
@@ -119,13 +123,10 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                     context.getString(R.string.chapter_default_title, insertIndex)
                 },
                 bookUrl = book.bookUrl,
-                index = insertIndex
+                index = insertIndex,
+                wordCount = StringUtils.wordCountFormat(savedContent.length)
             )
-            BookHelp.saveText(
-                book,
-                newChapter,
-                content.ifBlank { context.getString(R.string.chapter_content_placeholder) }
-            )
+            BookHelp.saveText(book, newChapter, savedContent)
             // 更新书籍元数据与阅读位置（标题取重排结果，与事务内最终状态一致）
             book.totalChapterNum += 1
             if (book.durChapterIndex > anchor.index) {
@@ -278,7 +279,15 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             val chapterShifts = mutableListOf<ChapterShift>()
             val bookmarkShifts = mutableListOf<BookmarkShift>()
             val updatedChapter = chapter.copy(title = first.title)
-            collectShift(book, chapter, chapter.index, first.title, chapterShifts, bookmarkShifts)
+            collectShift(
+                book,
+                chapter,
+                chapter.index,
+                first.title,
+                chapterShifts,
+                bookmarkShifts,
+                StringUtils.wordCountFormat(first.content.length)
+            )
             BookHelp.saveText(book, updatedChapter, first.content)
 
             // 其余单元作为新章节：先写正文覆盖文件，避免“有章节无正文”的坏状态
@@ -290,7 +299,8 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                     ),
                     title = unit.title,
                     bookUrl = book.bookUrl,
-                    index = insertIndex + k
+                    index = insertIndex + k,
+                    wordCount = StringUtils.wordCountFormat(unit.content.length)
                 ).also { newChapter ->
                     BookHelp.saveText(book, newChapter, unit.content)
                 }
@@ -376,7 +386,15 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
             val chapterShifts = mutableListOf<ChapterShift>()
             val bookmarkShifts = mutableListOf<BookmarkShift>()
             val updatedFirst = first.copy(title = mergedTitle)
-            collectShift(book, first, first.index, mergedTitle, chapterShifts, bookmarkShifts)
+            collectShift(
+                book,
+                first,
+                first.index,
+                mergedTitle,
+                chapterShifts,
+                bookmarkShifts,
+                StringUtils.wordCountFormat(mergedContent.length)
+            )
             BookHelp.saveText(book, updatedFirst, mergedContent)
             sorted.drop(1).forEach { BookHelp.delContent(book, it) }
 
@@ -469,10 +487,11 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
         newIndex: Int,
         newTitle: String,
         chapterShifts: MutableList<ChapterShift>,
-        bookmarkShifts: MutableList<BookmarkShift>
+        bookmarkShifts: MutableList<BookmarkShift>,
+        newWordCount: String? = null
     ) {
         renameChapterFile(book, chapter, newIndex, newTitle)
-        chapterShifts.add(ChapterShift(book.bookUrl, chapter.url, newIndex, newTitle))
+        chapterShifts.add(ChapterShift(book.bookUrl, chapter.url, newIndex, newTitle, newWordCount))
         bookmarkShifts.add(BookmarkShift(book.name, book.author, chapter.index, newIndex, newTitle))
     }
 

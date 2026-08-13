@@ -46,13 +46,14 @@ object ChapterSplitter {
     fun split(content: String?, firstTitle: String? = null): List<SplitUnit> {
         if (content.isNullOrBlank()) return emptyList()
         val text = if (!firstTitle.isNullOrBlank() &&
-            !sameTitle(content.lineSequence().firstOrNull().orEmpty(), firstTitle)
+            !sameTitle(content.lineSequence().firstOrNull { it.isNotBlank() }.orEmpty(), firstTitle)
         ) {
             "$firstTitle\n$content"
         } else {
             content
         }
-        val lines = text.split('\n', '\r').filter { it.isNotBlank() }
+        // 保留正文空行（段落分隔），仅跳过开头的空行
+        val lines = text.split('\n', '\r').dropWhile { it.isBlank() }
         if (lines.isEmpty()) return emptyList()
 
         val units = mutableListOf<MutableSplitUnit>()
@@ -62,7 +63,7 @@ object ChapterSplitter {
                 units.add(MutableSplitUnit(line.trim()))
             } else if (units.isNotEmpty()) {
                 units.last().bodyLines.add(line)
-            } else {
+            } else if (line.isNotBlank()) {
                 prologue.add(line)
             }
         }

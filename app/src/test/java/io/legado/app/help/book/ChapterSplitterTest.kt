@@ -211,4 +211,35 @@ class ChapterSplitterTest {
         assertEquals("第一章 风雨", units[0].title)
         assertEquals("第二章 山雨", units[1].title)
     }
+
+    @Test
+    fun blankLinesPreservedInUnitContent() {
+        // 正文空行（段落分隔）在拆分后应保留，不被压缩
+        val content = """
+            第一章 序
+
+            正文一
+
+            第二段
+            第二章 风云
+
+            正文二
+
+            第二段
+        """.trimIndent()
+        val units = ChapterSplitter.split(content)
+        assertEquals(2, units.size)
+        assertEquals("正文一\n\n第二段", units[0].content)
+        assertEquals("正文二\n\n第二段", units[1].content)
+    }
+
+    @Test
+    fun leadingBlankLinesBeforeFirstTitleSkipped() {
+        val content = "\n\n第一章 序\n正文一\n第二章 风云\n正文二"
+        val units = ChapterSplitter.split(content)
+        assertEquals(2, units.size)
+        assertEquals("第一章 序", units[0].title)
+        assertEquals("正文一", units[0].content)
+        assertEquals("正文二", units[1].content)
+    }
 }

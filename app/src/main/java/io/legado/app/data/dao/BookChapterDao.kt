@@ -21,7 +21,9 @@ data class ChapterShift(
     val bookUrl: String,
     val url: String,
     val newIndex: Int,
-    val newTitle: String
+    val newTitle: String,
+    /** 编辑后字数（拆分/合并等重写正文的章节），null 表示不更新 */
+    val newWordCount: String? = null
 )
 
 /** 书签迁移：匹配 bookName + bookAuthor + oldIndex，更新为新序号与新标题 */
@@ -100,7 +102,10 @@ interface BookChapterDao {
         bookmarkShifts: List<BookmarkShift>
     ) {
         chapterDeletes.forEach { delChapter(it.bookUrl, it.url) }
-        chapterShifts.forEach { upIndexTitle(it.bookUrl, it.url, it.newIndex, it.newTitle) }
+        chapterShifts.forEach {
+            upIndexTitle(it.bookUrl, it.url, it.newIndex, it.newTitle)
+            it.newWordCount?.let { wc -> upWordCount(it.bookUrl, it.url, wc) }
+        }
         chapterInserts.forEach { insert(it) }
         bookmarkDeletes.forEach { bookmarkDao.delByChapterIndex(it.bookName, it.bookAuthor, it.index) }
         bookmarkShifts.forEach {
