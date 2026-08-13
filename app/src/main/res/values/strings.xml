@@ -848,6 +848,11 @@
     <string name="copy_toc_url">Copy chapters URL</string>
     <string name="export_folder">Export folder</string>
     <string name="export_charset">Exported text coding</string>
+    <string name="to_local_book">Convert to local</string>
+    <string name="to_local_book_desc">Export this book as a local file (txt/epub); only cached (already loaded) chapters are included, uncached chapters are blank. After export finishes, open Bookshelf → Import local files and pick the exported file to read it as a local book.</string>
+    <string name="to_local_book_export_txt">Export as TXT</string>
+    <string name="to_local_book_export_epub">Export as EPUB</string>
+    <string name="to_local_book_tip">Export started. When it finishes, import the exported file via Bookshelf → Import local files.</string>
     <string name="export_to_web_dav">Export to WebDav</string>
     <string name="reverse_content">Reverse content</string>
     <string name="debug">Debug</string>

@@ -844,6 +844,11 @@
     <string name="background_image_hint">0 为停用，启用范围 1~25\n半径数值越大，虚化效果越高\n.9.png背景图时此设置无效</string>
     <string name="export_folder">导出文件夹</string>
     <string name="export_charset">导出编码</string>
+    <string name="to_local_book">转本地</string>
+    <string name="to_local_book_desc">将本书导出为本地文件（txt/epub），仅包含已缓存（已加载过正文）的章节，未缓存章节为空。导出完成后，在书架「本地导入」中选择该文件，即可作为本地书阅读。</string>
+    <string name="to_local_book_export_txt">导出为 TXT</string>
+    <string name="to_local_book_export_epub">导出为 EPUB</string>
+    <string name="to_local_book_tip">已开始导出。完成后请在书架「本地导入」中选择导出的文件。</string>
     <string name="export_no_chapter_name">TXT 不导出章节名</string>
     <string name="export_to_web_dav">导出到 WebDav</string>
     <string name="reverse_content">反转内容</string>
