@@ -26,6 +26,7 @@ import io.legado.app.databinding.DialogChapterInsertBinding
 import io.legado.app.help.book.ChapterNumberUtils
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ChapterSplitter
+import io.legado.app.help.book.ChapterSplitter.RuleType
 import io.legado.app.help.book.ChapterSplitter.SplitUnit
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isLocalTxt
@@ -427,7 +428,17 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
             }
             val detailView = TextView(context).apply {
                 val firstLine = unit.content.lineSequence().firstOrNull().orEmpty()
-                text = getString(R.string.split_chapter_first_line, firstLine) +
+                val ruleText = when (unit.ruleType) {
+                    RuleType.CN_NUMBER -> getString(R.string.split_chapter_rule_cn)
+                    RuleType.CHAPTER_EN -> getString(R.string.split_chapter_rule_en)
+                }
+                val ruleLabel = if (unit.wrapped) {
+                    "$ruleText · ${getString(R.string.split_chapter_rule_wrapped)}"
+                } else {
+                    ruleText
+                }
+                text = "$ruleLabel · " +
+                    getString(R.string.split_chapter_first_line, firstLine) +
                     " · " + getString(R.string.split_chapter_chars, unit.content.length)
                 textSize = 12f
                 maxLines = 1
@@ -450,7 +461,9 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
             setCustomView(scroll)
             okButton {
                 val finalUnits = units.mapIndexedNotNull { index, unit ->
-                    if (checked[index]) SplitUnit(titles[index], unit.content) else null
+                    if (checked[index]) {
+                        SplitUnit(titles[index], unit.content, unit.ruleType, unit.wrapped)
+                    } else null
                 }
                 if (finalUnits.size < 2) {
                     context.toastOnUi(R.string.split_chapter_single)

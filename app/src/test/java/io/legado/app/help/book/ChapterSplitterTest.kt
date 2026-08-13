@@ -1,6 +1,7 @@
 package io.legado.app.help.book
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -231,6 +232,26 @@ class ChapterSplitterTest {
         assertEquals(2, units.size)
         assertEquals("正文一\n\n第二段", units[0].content)
         assertEquals("正文二\n\n第二段", units[1].content)
+    }
+
+    @Test
+    fun ruleTypeAndWrappedAreExposed() {
+        val content = """
+            【第1章 风云】
+            正文一
+            Chapter 2 Next
+            正文二
+            第3话 下
+            正文三
+        """.trimIndent()
+        val units = ChapterSplitter.split(content)
+        assertEquals(3, units.size)
+        assertEquals(ChapterSplitter.RuleType.CN_NUMBER, units[0].ruleType)
+        assertTrue(units[0].wrapped)
+        assertEquals(ChapterSplitter.RuleType.CHAPTER_EN, units[1].ruleType)
+        assertFalse(units[1].wrapped)
+        assertEquals(ChapterSplitter.RuleType.CN_NUMBER, units[2].ruleType)
+        assertFalse(units[2].wrapped)
     }
 
     @Test

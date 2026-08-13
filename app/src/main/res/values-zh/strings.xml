@@ -903,6 +903,9 @@
     <string name="split_chapter_too_many">拆分章节数超过上限（%1$d），请分批处理</string>
     <string name="split_chapter_success">拆分成功</string>
     <string name="split_chapter_error">拆分失败</string>
+    <string name="split_chapter_rule_cn">第N章</string>
+    <string name="split_chapter_rule_en">Chapter N</string>
+    <string name="split_chapter_rule_wrapped">包裹符</string>
     <string name="split_chapter_first_line">首行：%1$s</string>
     <string name="split_chapter_chars">%1$d 字</string>
     <string name="split_chapter_skip">跳过</string>

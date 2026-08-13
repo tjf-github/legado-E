@@ -906,6 +906,9 @@
     <string name="split_chapter_too_many">Too many chapters (max %1$d per run), please split in batches</string>
     <string name="split_chapter_success">Chapter split</string>
     <string name="split_chapter_error">Failed to split chapter</string>
+    <string name="split_chapter_rule_cn">第N章</string>
+    <string name="split_chapter_rule_en">Chapter N</string>
+    <string name="split_chapter_rule_wrapped">Bracketed</string>
     <string name="split_chapter_first_line">First line: %1$s</string>
     <string name="split_chapter_chars">%1$d chars</string>
     <string name="split_chapter_skip">Skip</string>

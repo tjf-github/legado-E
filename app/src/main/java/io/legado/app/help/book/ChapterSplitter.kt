@@ -8,6 +8,8 @@ package io.legado.app.help.book
  */
 object ChapterSplitter {
 
+    enum class RuleType { CN_NUMBER, CHAPTER_EN }
+
     /**
      * 标题起始行规则（匹配前先做全角转半角规范化）：
      * - 第N章/回/节/卷/集/部/篇/话：允许内部空白，数字支持阿拉伯/中文大小写/全角；
@@ -29,10 +31,22 @@ object ChapterSplitter {
         RegexOption.IGNORE_CASE
     )
 
-    /** 拆分结果单元 */
-    data class SplitUnit(val title: String, val content: String)
+    /** 行首包裹符号（用于命中来源标注） */
+    private val wrappedPrefixRegex = Regex("^[\\s\u3000]*[【〔「『［《（(]")
 
-    private data class MutableSplitUnit(val title: String) {
+    /** 拆分结果单元 */
+    data class SplitUnit(
+        val title: String,
+        val content: String,
+        val ruleType: RuleType,
+        val wrapped: Boolean = false
+    )
+
+    private data class MutableSplitUnit(
+        val title: String,
+        val ruleType: RuleType,
+        val wrapped: Boolean
+    ) {
         val bodyLines = mutableListOf<String>()
     }
 
@@ -59,8 +73,10 @@ object ChapterSplitter {
         val units = mutableListOf<MutableSplitUnit>()
         val prologue = mutableListOf<String>()
         for (line in lines) {
-            if (titleRegex.matches(normalizeFullWidth(line))) {
-                units.add(MutableSplitUnit(line.trim()))
+            val normalized = normalizeFullWidth(line)
+            if (titleRegex.matches(normalized)) {
+                val (ruleType, wrapped) = classify(normalized)
+                units.add(MutableSplitUnit(line.trim(), ruleType, wrapped))
             } else if (units.isNotEmpty()) {
                 units.last().bodyLines.add(line)
             } else if (line.isNotBlank()) {
@@ -72,8 +88,25 @@ object ChapterSplitter {
         // 前言并入第一章
         units.first().bodyLines.addAll(0, prologue)
         return units.map { unit ->
-            SplitUnit(unit.title, unit.bodyLines.joinToString("\n").trim())
+            SplitUnit(
+                unit.title,
+                unit.bodyLines.joinToString("\n").trim(),
+                unit.ruleType,
+                unit.wrapped
+            )
         }
+    }
+
+    /** 识别命中规则类型：中文编号类（第N章…）或英文编号类（Chapter N），并标记是否带包裹符 */
+    private fun classify(line: String): Pair<RuleType, Boolean> {
+        val wrapped = wrappedPrefixRegex.containsMatchIn(line)
+        val prefix = prefixRegex.find(line)?.value.orEmpty()
+        val ruleType = if (prefix.startsWith("Chapter", ignoreCase = true)) {
+            RuleType.CHAPTER_EN
+        } else {
+            RuleType.CN_NUMBER
+        }
+        return ruleType to wrapped
     }
 
     /** 全角字符转半角（数字/字母/空格），用于规则匹配与编号比较 */
