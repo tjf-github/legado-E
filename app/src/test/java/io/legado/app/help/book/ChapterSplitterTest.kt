@@ -255,6 +255,32 @@ class ChapterSplitterTest {
     }
 
     @Test
+    fun duplicateNumberHintDetected() {
+        val content = """
+            第一章 序
+            正文一
+            第1章 风云
+            正文二
+        """.trimIndent()
+        val units = ChapterSplitter.split(content)
+        assertTrue(ChapterSplitter.hasDuplicateNumber(units))
+        assertFalse(ChapterSplitter.hasNumberGap(units))
+    }
+
+    @Test
+    fun numberGapHintDetected() {
+        val content = """
+            第一章 序
+            正文一
+            第三章 山雨
+            正文二
+        """.trimIndent()
+        val units = ChapterSplitter.split(content)
+        assertFalse(ChapterSplitter.hasDuplicateNumber(units))
+        assertTrue(ChapterSplitter.hasNumberGap(units))
+    }
+
+    @Test
     fun leadingBlankLinesBeforeFirstTitleSkipped() {
         val content = "\n\n第一章 序\n正文一\n第二章 风云\n正文二"
         val units = ChapterSplitter.split(content)

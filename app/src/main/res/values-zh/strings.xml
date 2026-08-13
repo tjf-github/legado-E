@@ -910,6 +910,8 @@
     <string name="split_chapter_chars">%1$d 字</string>
     <string name="split_chapter_skip">跳过</string>
     <string name="split_chapter_rename">改名</string>
+    <string name="split_chapter_duplicate_hint">提示：检测到同编号章节，请核对是否误拆</string>
+    <string name="split_chapter_gap_hint">提示：章节编号存在跳号，请核对原文章节</string>
     <string name="undo_split_chapter">撤销上次拆分</string>
     <string name="undo_split_success">已撤销上次拆分</string>
     <string name="undo_split_error">撤销拆分失败</string>

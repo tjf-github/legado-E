@@ -913,6 +913,8 @@
     <string name="split_chapter_chars">%1$d chars</string>
     <string name="split_chapter_skip">Skip</string>
     <string name="split_chapter_rename">Rename</string>
+    <string name="split_chapter_duplicate_hint">Warning: duplicate chapter numbers detected</string>
+    <string name="split_chapter_gap_hint">Warning: chapter numbers have gaps</string>
     <string name="undo_split_chapter">Undo last split</string>
     <string name="undo_split_success">Last split undone</string>
     <string name="undo_split_error">Failed to undo split</string>

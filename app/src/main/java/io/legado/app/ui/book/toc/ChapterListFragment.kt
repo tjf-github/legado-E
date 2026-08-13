@@ -374,13 +374,22 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
         val dark = ColorUtils.isColorLight(bottomBackground)
         val primaryColor = context.getPrimaryTextColor(dark)
         val secondaryColor = context.getSecondaryTextColor(dark)
+        val warnings = mutableListOf<String>()
+        if (ChapterSplitter.hasDuplicateNumber(units)) {
+            warnings.add(getString(R.string.split_chapter_duplicate_hint))
+        }
+        if (ChapterSplitter.hasNumberGap(units)) {
+            warnings.add(getString(R.string.split_chapter_gap_hint))
+        }
+        val hintText = getString(R.string.split_chapter_rule_hint) + "\n" +
+            getString(R.string.split_chapter_preview_count, units.size) +
+            if (warnings.isNotEmpty()) "\n" + warnings.joinToString("\n") else ""
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(12.dpToPx(), 8.dpToPx(), 12.dpToPx(), 8.dpToPx())
             addView(
                 TextView(context).apply {
-                    text = getString(R.string.split_chapter_rule_hint) + "\n" +
-                        getString(R.string.split_chapter_preview_count, units.size)
+                    text = hintText
                     textSize = 13f
                     setTextColor(secondaryColor)
                     setPadding(4.dpToPx(), 4.dpToPx(), 4.dpToPx(), 8.dpToPx())

@@ -97,6 +97,22 @@ object ChapterSplitter {
         }
     }
 
+    /** 拆分单元中是否存在同编号标题（第1章 与 第一章 视为同编号） */
+    fun hasDuplicateNumber(units: List<SplitUnit>): Boolean {
+        val numbers = units.mapNotNull { titlePrefixKey(it.title)?.second }
+        return numbers.size != numbers.distinct().size
+    }
+
+    /** 拆分单元中同类型标题编号是否存在跳号（1 -> 3） */
+    fun hasNumberGap(units: List<SplitUnit>): Boolean {
+        val byType = units.mapNotNull { titlePrefixKey(it.title) }
+            .groupBy({ it.first }, { it.second })
+        return byType.values.any { numbers ->
+            val sorted = numbers.distinct().sorted()
+            sorted.size >= 2 && sorted.zipWithNext().any { (a, b) -> b - a > 1 }
+        }
+    }
+
     /** 识别命中规则类型：中文编号类（第N章…）或英文编号类（Chapter N），并标记是否带包裹符 */
     private fun classify(line: String): Pair<RuleType, Boolean> {
         val wrapped = wrappedPrefixRegex.containsMatchIn(line)
