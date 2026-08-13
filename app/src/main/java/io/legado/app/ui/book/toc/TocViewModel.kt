@@ -57,6 +57,8 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     fun upBookTocRule(book: Book, complete: (Throwable?) -> Unit) {
         execute {
             appDb.bookDao.update(book)
+            // 目录规则变更 = 从源文件重新解析：清理旧规则下写入的正文覆盖文件
+            BookHelp.clearCache(book)
             LocalBook.getChapterList(book).let {
                 appDb.bookChapterDao.delByBook(book.bookUrl)
                 appDb.bookChapterDao.insert(*it.toTypedArray())

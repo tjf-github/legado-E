@@ -227,6 +227,9 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
     ) {
         if (book.isLocal) {
             execute(scope) {
+                // 重新解析：清理旧编辑/旧拆分/旧合并写入的正文覆盖文件，
+                // 避免残留 .nb 顶替新解析的同名章节正文
+                BookHelp.clearCache(book)
                 LocalBook.getChapterList(book).let {
                     appDb.bookDao.update(book)
                     appDb.bookChapterDao.delByBook(book.bookUrl)

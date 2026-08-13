@@ -203,6 +203,12 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
 
     private suspend fun loadChapterListAwait(book: Book): Boolean {
         if (book.isLocal) {
+            // 源文件被外部修改时才丢弃覆盖文件（旧编辑/拆分/合并基于旧内容）；
+            // 冷启动（文件未变）不清缓存，保留用户已做的目录编辑
+            val localModified = book.isLocalModified()
+            if (localModified) {
+                BookHelp.clearCache(book)
+            }
             kotlin.runCatching {
                 LocalBook.getChapterList(book).let {
                     appDb.bookChapterDao.delByBook(book.bookUrl)
