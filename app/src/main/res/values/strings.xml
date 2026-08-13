@@ -1416,4 +1416,9 @@
     <string name="image_gap_small">Small</string>
     <string name="image_gap_medium">Medium</string>
     <string name="image_gap_large">Large</string>
+    <string name="manga_display_settings">Display settings</string>
+    <string name="manga_scroll_direction">Scroll direction</string>
+    <string name="manga_direction_vertical">Vertical</string>
+    <string name="manga_direction_horizontal">Horizontal</string>
+    <string name="manga_page_anim">Page animation</string>
 </resources>

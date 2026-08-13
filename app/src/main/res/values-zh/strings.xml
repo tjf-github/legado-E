@@ -1309,4 +1309,9 @@
     <string name="image_gap_small">小</string>
     <string name="image_gap_medium">中</string>
     <string name="image_gap_large">大</string>
+    <string name="manga_display_settings">显示设置</string>
+    <string name="manga_scroll_direction">阅读方向</string>
+    <string name="manga_direction_vertical">竖排</string>
+    <string name="manga_direction_horizontal">横排</string>
+    <string name="manga_page_anim">翻页动画</string>
 </resources>
