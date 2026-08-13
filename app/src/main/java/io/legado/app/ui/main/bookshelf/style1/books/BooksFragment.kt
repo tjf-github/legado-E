@@ -23,6 +23,7 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.FragmentBooksBinding
+import io.legado.app.help.book.isImage
 import io.legado.app.help.config.AppConfig
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.primaryColor
@@ -235,7 +236,12 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
                         o1.author.cnCompare(o2.author)
                     }
 
-                    else -> list.sortedByDescending { it.durChapterTime }
+                    else -> {
+                        // 漫画有阅读顺序：默认按 order 稳定排序（读完不跳动）；
+                        // 其他书按最近阅读
+                        val (manga, others) = list.partition { it.isImage }
+                        manga.sortedBy { it.order } + others.sortedByDescending { it.durChapterTime }
+                    }
                 }
             }.flowWithLifecycleAndDatabaseChangeFirst(
                 viewLifecycleOwner.lifecycle,

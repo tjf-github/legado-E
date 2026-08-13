@@ -65,8 +65,12 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
 
     fun import(bookList: List<MangaBookPreview>, finally: () -> Unit) {
         execute {
-            bookList.filter { it.enabled && !it.isSkipped }.forEach { preview ->
-                importBook(preview)
+            val list = bookList.filter { it.enabled && !it.isSkipped }
+            // 本批整体置顶，系列内按阅读顺序正排（第1话 order 最小、最上），
+            // 书架默认对漫画按 order 稳定排序，读完位置不变
+            val baseOrder = appDb.bookDao.minOrder - list.size
+            list.forEachIndexed { index, preview ->
+                importBook(preview, baseOrder + index)
             }
         }.onSuccess {
             context.toastOnUi(R.string.import_manga_import_success)
@@ -80,7 +84,7 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
         }
     }
 
-    private fun importBook(preview: MangaBookPreview) {
+    private fun importBook(preview: MangaBookPreview, order: Int) {
         val bookUrl = preview.bookKey
         appDb.bookDao.getBook(bookUrl)?.let { oldBook ->
             // 重新导入：清理旧章节与正文缓存，阅读进度重置
@@ -97,7 +101,7 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
             coverUrl = preview.coverImage,
             totalChapterNum = preview.chapters.size,
             latestChapterTime = System.currentTimeMillis(),
-            order = appDb.bookDao.minOrder - 1
+            order = order
         )
         appDb.bookDao.insert(book)
         val chapters = preview.chapters.mapIndexed { index, chapter ->
