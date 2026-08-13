@@ -917,6 +917,9 @@
     <string name="undo_split_success">Last split undone</string>
     <string name="undo_split_error">Failed to undo split</string>
     <string name="undo_split_none">No split to undo</string>
+    <string name="local_edit_discard_title">Reparse local book</string>
+    <string name="local_edit_discard_message">This book has local edits (split/merge/insert). Reparsing will discard them. Continue?</string>
+    <string name="local_edit_discard_confirm">Continue</string>
     <string name="merge_chapter">Merge chapters</string>
     <string name="merge_chapter_select">Select chapters to merge</string>
     <string name="merge_chapter_title_hint">Merged title</string>

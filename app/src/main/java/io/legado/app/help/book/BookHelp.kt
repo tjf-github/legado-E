@@ -357,6 +357,15 @@ object BookHelp {
     }
 
     /**
+     * 检测本地书是否有正文覆盖文件（本地拆分/合并/新增章节产生）。
+     * 本地 TXT 不通过 getChapterFiles 判断，这里直接看缓存目录是否非空。
+     */
+    fun hasLocalEdit(book: Book): Boolean {
+        val dir = downloadDir.getFile(cacheFolderName, book.getFolderName())
+        return dir.isDirectory && dir.listFiles()?.isNotEmpty() == true
+    }
+
+    /**
      * 检测该章节是否下载
      */
     fun hasContent(book: Book, bookChapter: BookChapter): Boolean {
