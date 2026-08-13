@@ -15,18 +15,14 @@ plugins {
 }
 apply from: 'download.gradle'
 
-static def releaseTime() {
-    return new Date().format("yy.MMddHH", TimeZone.getTimeZone("GMT+8"))
-}
-
 def name = "legado"
-def version = "3." + releaseTime()
-def gitCommits = 0
-try {
-    def proc = ['git', 'rev-list', 'HEAD', '--count'].execute(null, rootDir)
-    proc.waitFor()
-    gitCommits = Integer.parseInt(proc.text.trim())
-} catch (Exception ignored) {}
+def now = new Date()
+def timeZone = TimeZone.getTimeZone("GMT+8")
+def version = "3." + now.format("yy.MMddHH", timeZone)
+def buildVersionCode = now.format("yy", timeZone).toInteger() * 1000000
+        + now.format("MM", timeZone).toInteger() * 10000
+        + now.format("dd", timeZone).toInteger() * 100
+        + now.format("HH", timeZone).toInteger()
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('keystore.properties')
@@ -61,7 +57,7 @@ android {
         applicationId "io.legado.app.tjf"
         minSdk 21
         targetSdk 36
-        versionCode 10000 + gitCommits
+        versionCode buildVersionCode
         versionName version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         project.ext.set("archivesBaseName", name + "_" + version)
