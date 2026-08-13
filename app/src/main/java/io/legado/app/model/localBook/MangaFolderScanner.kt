@@ -206,8 +206,7 @@ object MangaFolderScanner {
      * 相册导入：扫描 MediaStore 图片相册，每个相册 = 一本书（整本连看单章节）
      */
     fun scanAlbums(): List<MangaBookPreview> {
-        data class AlbumImages(val id: String, val name: String, val images: MutableList<String>)
-        val albums = linkedMapOf<String, AlbumImages>()
+        val rows = arrayListOf<AlbumRow>()
         appCtx.contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             arrayOf(
@@ -225,21 +224,49 @@ object MangaFolderScanner {
             val pathCol = cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
             val nameCol = cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
             while (cursor.moveToNext()) {
-                val imageUri = ContentUris.withAppendedId(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    cursor.getLong(idCol)
-                ).toString()
-                val relativePath = if (pathCol >= 0) cursor.getString(pathCol)?.trim('/') ?: "" else ""
-                val albumId = relativePath.ifBlank {
-                    // 无目录信息的图片（旧系统/异常媒体）：每张图独立成相册兜底
-                    "album-${cursor.getLong(idCol)}"
-                }
-                val albumName = relativePath.substringAfterLast('/').ifBlank {
-                    if (nameCol >= 0) cursor.getString(nameCol) ?: "未命名相册" else "未命名相册"
-                }
-                albums.getOrPut(albumId) { AlbumImages(albumId, albumName, arrayListOf()) }
-                    .images.add(imageUri)
+                val id = cursor.getLong(idCol)
+                rows.add(
+                    AlbumRow(
+                        imageId = id,
+                        imageUri = ContentUris.withAppendedId(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            id
+                        ).toString(),
+                        relativePath = if (pathCol >= 0) cursor.getString(pathCol) else null,
+                        displayName = if (nameCol >= 0) cursor.getString(nameCol) else null
+                    )
+                )
             }
+        }
+        return groupAlbums(rows).map { preview ->
+            preview.isDuplicate = appDb.bookDao.has(preview.bookKey)
+            preview
+        }
+    }
+
+    /** 相册扫描原始行（抽出来便于 JVM 单测分组逻辑） */
+    data class AlbumRow(
+        val imageId: Long,
+        val imageUri: String,
+        val relativePath: String?,
+        val displayName: String?
+    )
+
+    /**
+     * 相册分组纯逻辑：按 RELATIVE_PATH 分组（Android 15+ 下 BUCKET 字段对他人媒体为 null，
+     * 必须以路径分组）；无目录信息的图片每张独立成册兜底。
+     */
+    fun groupAlbums(rows: List<AlbumRow>): List<MangaBookPreview> {
+        data class AlbumImages(val id: String, val name: String, val images: MutableList<String>)
+        val albums = linkedMapOf<String, AlbumImages>()
+        for (row in rows) {
+            val relativePath = row.relativePath?.trim('/') ?: ""
+            val albumId = relativePath.ifBlank { "image-${row.imageId}" }
+            val albumName = relativePath.substringAfterLast('/').ifBlank {
+                row.displayName ?: "未命名相册"
+            }
+            albums.getOrPut(albumId) { AlbumImages(albumId, albumName, arrayListOf()) }
+                .images.add(row.imageUri)
         }
         return albums.values.sortedBy { it.name }.map { album ->
             MangaBookPreview(
@@ -251,9 +278,6 @@ object MangaFolderScanner {
                 wholeImages = album.images,
                 coverImage = album.images.firstOrNull()
             )
-        }.map { preview ->
-            preview.isDuplicate = appDb.bookDao.has(preview.bookKey)
-            preview
         }
     }
 

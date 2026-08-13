@@ -62,6 +62,44 @@ class MangaFolderScannerTest {
     }
 
     @Test
+    fun groupAlbumsByRelativePath() {
+        val rows = listOf(
+            MangaFolderScanner.AlbumRow(1, "content://media/1", "Pictures/TestAlbum/", "001.jpg"),
+            MangaFolderScanner.AlbumRow(2, "content://media/2", "Pictures/TestAlbum/", "002.jpg"),
+            MangaFolderScanner.AlbumRow(3, "content://media/3", "Pictures/Other/", "003.jpg")
+        )
+        val albums = MangaFolderScanner.groupAlbums(rows)
+        assertEquals(2, albums.size)
+        // 按名称排序：Other 在前
+        assertEquals("Other", albums[0].name)
+        assertEquals(listOf("content://media/3"), albums[0].wholeImages)
+        assertEquals("album://Pictures/Other", albums[0].bookUrl)
+        assertEquals("TestAlbum", albums[1].name)
+        assertEquals(listOf("content://media/1", "content://media/2"), albums[1].wholeImages)
+        assertEquals("album://Pictures/TestAlbum", albums[1].bookUrl)
+        assertEquals("content://media/1", albums[1].coverImage)
+    }
+
+    @Test
+    fun groupAlbumsNullRelativePathFallsBackPerImage() {
+        val rows = listOf(
+            MangaFolderScanner.AlbumRow(10, "content://media/10", null, "shot.png"),
+            MangaFolderScanner.AlbumRow(11, "content://media/11", null, null)
+        )
+        val albums = MangaFolderScanner.groupAlbums(rows)
+        assertEquals(2, albums.size)
+        assertEquals("shot.png", albums[0].name)
+        assertEquals("album://image-10", albums[0].bookUrl)
+        assertEquals("未命名相册", albums[1].name)
+        assertEquals("album://image-11", albums[1].bookUrl)
+    }
+
+    @Test
+    fun groupAlbumsEmpty() {
+        assertTrue(MangaFolderScanner.groupAlbums(emptyList()).isEmpty())
+    }
+
+    @Test
     fun buildImgHtmlJoinsImageTags() {
         val html = MangaFolderScanner.buildImgHtml(listOf("content://a/1.jpg", "content://a/2.jpg"))
         assertEquals(
