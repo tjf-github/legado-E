@@ -7,6 +7,7 @@ import io.legado.app.api.controller.BookController
 import io.legado.app.api.controller.BookSourceController
 import io.legado.app.api.controller.ReplaceRuleController
 import io.legado.app.api.controller.RssSourceController
+import io.legado.app.help.config.AppConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.service.WebService
 import io.legado.app.utils.GSON
@@ -24,6 +25,13 @@ class HttpServer(port: Int) : NanoHTTPD(port) {
 
     override fun serve(session: IHTTPSession): Response {
         WebService.serve()
+        if (session.method != Method.OPTIONS && !checkToken(session)) {
+            return newFixedLengthResponse(
+                Response.Status.UNAUTHORIZED,
+                "text/plain",
+                "Unauthorized: invalid token"
+            )
+        }
         var returnData: ReturnData? = null
         val ct = ContentType(session.headers["content-type"]).tryUTF8()
         session.headers["content-type"] = ct.contentTypeHeader
@@ -143,6 +151,14 @@ class HttpServer(port: Int) : NanoHTTPD(port) {
             return newFixedLengthResponse(e.message)
         }
 
+    }
+
+    private fun checkToken(session: IHTTPSession): Boolean {
+        val token = AppConfig.webToken
+        if (token.isBlank()) return true
+        val auth = session.headers["authorization"]
+        if (auth == "Bearer $token") return true
+        return session.parms["token"] == token
     }
 
     companion object {

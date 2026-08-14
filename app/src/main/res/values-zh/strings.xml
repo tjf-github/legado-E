@@ -554,6 +554,9 @@
     <string name="web_menu">Web 服务</string>
     <string name="web_port_title">Web 端口</string>
     <string name="web_port_summary">当前端口 %s</string>
+    <string name="web_token_title">Web 访问令牌</string>
+    <string name="web_token_empty">未设置（无鉴权）</string>
+    <string name="web_token_set">已设置（请求需带令牌）</string>
     <string name="qr_share">二维码分享</string>
     <string name="str_share">字符串分享</string>
     <string name="wifi_share">WiFi 分享</string>

@@ -70,6 +70,7 @@ class OtherConfigFragment : PreferenceFragment(),
         upPreferenceSummary(PreferKey.preDownloadNum, AppConfig.preDownloadNum.toString())
         upPreferenceSummary(PreferKey.threadCount, AppConfig.threadCount.toString())
         upPreferenceSummary(PreferKey.webPort, AppConfig.webPort.toString())
+        upPreferenceSummary(PreferKey.webToken, AppConfig.webToken)
         AppConfig.defaultBookTreeUri?.let {
             upPreferenceSummary(PreferKey.defaultBookTreeUri, it)
         }
@@ -130,6 +131,8 @@ class OtherConfigFragment : PreferenceFragment(),
                 .show {
                     AppConfig.webPort = it
                 }
+
+            PreferKey.webToken -> showWebTokenDialog()
 
             PreferKey.cleanCache -> clearCache()
             PreferKey.uploadRule -> showDialogFragment<DirectLinkUploadConfig>()
@@ -217,6 +220,10 @@ class OtherConfigFragment : PreferenceFragment(),
                 upPreferenceSummary(PreferKey.userAgent, AppConfig.userAgent)
             }
 
+            PreferKey.webToken -> listView.post {
+                upPreferenceSummary(PreferKey.webToken, AppConfig.webToken)
+            }
+
             PreferKey.checkSource -> listView.post {
                 upPreferenceSummary(PreferKey.checkSource, CheckSource.summary)
             }
@@ -248,6 +255,8 @@ class OtherConfigFragment : PreferenceFragment(),
 
             PreferKey.threadCount -> preference.summary = getString(R.string.threads_num, value)
             PreferKey.webPort -> preference.summary = getString(R.string.web_port_summary, value)
+            PreferKey.webToken -> preference.summary = if (value.isNullOrBlank())
+                getString(R.string.web_token_empty) else getString(R.string.web_token_set)
             PreferKey.bitmapCacheSize -> preference.summary =
                 getString(R.string.bitmap_cache_size_summary, value)
             PreferKey.imageRetainNum -> preference.summary =
@@ -280,6 +289,26 @@ class OtherConfigFragment : PreferenceFragment(),
                     removePref(PreferKey.userAgent)
                 } else {
                     putPrefString(PreferKey.userAgent, userAgent)
+                }
+            }
+            cancelButton()
+        }
+    }
+
+    @SuppressLint("InflateParams")
+    private fun showWebTokenDialog() {
+        alert(getString(R.string.web_token_title)) {
+            val alertBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
+                editView.hint = getString(R.string.web_token_title)
+                editView.setText(AppConfig.webToken)
+            }
+            customView { alertBinding.root }
+            okButton {
+                val token = alertBinding.editView.text?.toString()
+                if (token.isNullOrBlank()) {
+                    removePref(PreferKey.webToken)
+                } else {
+                    putPrefString(PreferKey.webToken, token)
                 }
             }
             cancelButton()
