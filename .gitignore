@@ -26,3 +26,5 @@ build.log
 .gradle_home/
 .user_home/
 .android_prefs/
+# 签名密钥 base64（临时，配置 GitHub Secret 后删除）
+keystore-base64.txt
