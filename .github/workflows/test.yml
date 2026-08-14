@@ -252,7 +252,7 @@ jobs:
 
   prerelease:
     needs: [ prepare, build ]
-    if: github.event_name != 'pull_request' && github.repository == 'Luoyacheng/legado-E'
+    if: github.event_name != 'pull_request' && github.repository == 'tjf-github/legado-E'
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
