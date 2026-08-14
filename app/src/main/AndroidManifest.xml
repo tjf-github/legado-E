@@ -23,6 +23,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- 自定义权限：供第三方 app 通过 Content Provider 读写书源/书籍数据（需显式声明） -->
+    <permission
+        android:name="io.legado.READ_WRITE"
+        android:protectionLevel="normal" />
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -533,6 +538,8 @@
             android:authorities="${applicationId}.readerProvider"
             android:enabled="true"
             android:exported="true"
+            android:readPermission="io.legado.READ_WRITE"
+            android:writePermission="io.legado.READ_WRITE"
             tools:ignore="ExportedContentProvider" />
         <provider
             android:name="androidx.core.content.FileProvider"
