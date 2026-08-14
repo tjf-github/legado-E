@@ -1312,6 +1312,9 @@
     <string name="import_manga_empty">未找到可导入的漫画</string>
     <string name="import_manga_reimport">已存在，将重新导入</string>
     <string name="import_manga_summary">将导入 %1$d 本书，共 %2$d 张图片</string>
+    <string name="import_manga_select_all">全选</string>
+    <string name="import_manga_deselect_all">全不选</string>
+    <string name="import_manga_album_series_hint">系列名（可选，留空则各自成书）</string>
     <string name="local_manga">本地漫画</string>
     <string name="net_book">书源书籍</string>
     <string name="image_gap">图片间距</string>

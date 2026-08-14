@@ -38,6 +38,16 @@ class ImportMangaAdapter(
 
     fun getItems(): List<MangaBookPreview> = items
 
+    @SuppressLint("NotifyDataSetChanged")
+    fun setAllEnabled(enabled: Boolean) {
+        items.forEach {
+            if (!it.isSkipped) {
+                it.enabled = enabled
+            }
+        }
+        notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
             ItemImportMangaBinding.inflate(

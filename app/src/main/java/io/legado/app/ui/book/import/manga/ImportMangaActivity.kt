@@ -31,6 +31,7 @@ class ImportMangaActivity :
     override val viewModel by viewModels<ImportMangaViewModel>()
     private val adapter by lazy { ImportMangaAdapter(this) }
     private var scanMode = MangaFolderScanner.Mode.WHOLE
+    private var isAlbumMode = false
 
     private val selectFolder = registerForActivityResult(HandleFileContract()) {
         it.uri?.let { uri ->
@@ -51,6 +52,9 @@ class ImportMangaActivity :
         binding.tvEmptyMsg.setText(R.string.import_manga_scanning)
         binding.tvConfirm.setOnClickListener {
             confirmImport()
+        }
+        binding.tvSelectAll.setOnClickListener {
+            toggleSelectAll()
         }
         viewModel.scanningLiveData.observe(this) { scanning ->
             binding.refreshProgressBar.isAutoLoading = scanning
@@ -92,18 +96,24 @@ class ImportMangaActivity :
             items(modes) { _, item, _ ->
                 when (item.value) {
                     0 -> {
+                        isAlbumMode = false
                         scanMode = MangaFolderScanner.Mode.WHOLE
                         selectFolder.launch {
                             title = getString(R.string.import_manga)
                         }
                     }
                     1 -> {
+                        isAlbumMode = false
                         scanMode = MangaFolderScanner.Mode.SERIES
                         selectFolder.launch {
                             title = getString(R.string.import_manga)
                         }
                     }
-                    else -> scanAlbums()
+                    else -> {
+                        isAlbumMode = true
+                        binding.llAlbumSeries.visible()
+                        scanAlbums()
+                    }
                 }
             }
             onCancelled {
@@ -132,6 +142,12 @@ class ImportMangaActivity :
     }
 
     private fun confirmImport() {
+        if (isAlbumMode) {
+            val seriesName = binding.etSeriesName.text?.toString()?.trim().orEmpty()
+            if (seriesName.isNotEmpty()) {
+                adapter.getItems().forEach { it.group = seriesName }
+            }
+        }
         viewModel.import(adapter.getItems()) {
             finish()
         }
@@ -141,6 +157,26 @@ class ImportMangaActivity :
         val books = adapter.getItems().filter { it.enabled && !it.isSkipped }
         val imageCount = books.sumOf { it.imageCount }
         binding.tvSummary.text = getString(R.string.import_manga_summary, books.size, imageCount)
+        upSelectAllState()
+    }
+
+    private fun upSelectAllState() {
+        val items = adapter.getItems().filter { !it.isSkipped }
+        val allChecked = items.isNotEmpty() && items.all { it.enabled }
+        binding.tvSelectAll.setText(
+            if (allChecked) {
+                R.string.import_manga_deselect_all
+            } else {
+                R.string.import_manga_select_all
+            }
+        )
+    }
+
+    private fun toggleSelectAll() {
+        val items = adapter.getItems().filter { !it.isSkipped }
+        val allChecked = items.isNotEmpty() && items.all { it.enabled }
+        adapter.setAllEnabled(!allChecked)
+        upSummary()
     }
 
     override fun onCheckedChanged(preview: MangaBookPreview, checked: Boolean) {

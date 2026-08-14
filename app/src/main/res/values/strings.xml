@@ -1419,6 +1419,9 @@
     <string name="import_manga_empty">No importable manga found</string>
     <string name="import_manga_reimport">Already exists, will re-import</string>
     <string name="import_manga_summary">Will import %1$d book(s), %2$d image(s)</string>
+    <string name="import_manga_select_all">Select all</string>
+    <string name="import_manga_deselect_all">Deselect all</string>
+    <string name="import_manga_album_series_hint">Series name (optional; albums become books in this series)</string>
     <string name="local_manga">Local manga</string>
     <string name="net_book">Source books</string>
     <string name="image_gap">Image gap</string>
