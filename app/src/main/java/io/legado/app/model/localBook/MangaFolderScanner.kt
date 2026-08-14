@@ -268,7 +268,7 @@ object MangaFolderScanner {
             albums.getOrPut(albumId) { AlbumImages(albumId, albumName, arrayListOf()) }
                 .images.add(row.imageUri)
         }
-        return albums.values.sortedBy { it.name }.map { album ->
+        return albums.values.sortedWith(compareBy(naturalComparator) { it.name }).map { album ->
             MangaBookPreview(
                 dir = null,
                 bookUrl = ALBUM_URL_PREFIX + album.id,

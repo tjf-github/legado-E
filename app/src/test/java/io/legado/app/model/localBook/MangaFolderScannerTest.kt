@@ -95,6 +95,21 @@ class MangaFolderScannerTest {
     }
 
     @Test
+    fun groupAlbumsOrdersNumericPrefixNumerically() {
+        // 真机反馈：相册名 "100 第195-197" 与 "86 第167-168" 导入后顺序颠倒，
+        // 纯字符串序会让 "100" < "86"（'1' < '8'），期望数字前缀按数值排序。
+        val rows = listOf(
+            MangaFolderScanner.AlbumRow(1, "content://media/1", "Pictures/100 第195-197/", "001.jpg"),
+            MangaFolderScanner.AlbumRow(2, "content://media/2", "Pictures/86 第167-168/", "001.jpg")
+        )
+        val albums = MangaFolderScanner.groupAlbums(rows)
+        assertEquals(
+            listOf("86 第167-168", "100 第195-197"),
+            albums.map { it.name }
+        )
+    }
+
+    @Test
     fun groupAlbumsEmpty() {
         assertTrue(MangaFolderScanner.groupAlbums(emptyList()).isEmpty())
     }
