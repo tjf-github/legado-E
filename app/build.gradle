@@ -15,13 +15,15 @@ plugins {
 apply from: 'download.gradle'
 
 def name = "legado"
+// 版本号外部化：CI 通过 -PVERSION / -PVERSION_CODE 注入（确定性、可解锁配置缓存）；本地未传参时用时间戳兜底
 def now = new Date()
 def timeZone = TimeZone.getTimeZone("GMT+8")
-def version = "3." + now.format("yy.MMddHH", timeZone)
-def buildVersionCode = now.format("yy", timeZone).toInteger() * 1000000 +
-        now.format("MM", timeZone).toInteger() * 10000 +
-        now.format("dd", timeZone).toInteger() * 100 +
-        now.format("HH", timeZone).toInteger()
+def version = project.findProperty("VERSION")?.toString() ?: "3." + now.format("yy.MMddHH", timeZone)
+def buildVersionCode = project.findProperty("VERSION_CODE")?.toString()?.toInteger() ?:
+        now.format("yy", timeZone).toInteger() * 1000000 +
+                now.format("MM", timeZone).toInteger() * 10000 +
+                now.format("dd", timeZone).toInteger() * 100 +
+                now.format("HH", timeZone).toInteger()
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('keystore.properties')
