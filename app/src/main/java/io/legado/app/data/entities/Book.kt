@@ -244,6 +244,29 @@ data class Book(
         return config.imageStyle
     }
 
+    fun setImageNoGap(imageNoGap: Boolean) {
+        config.imageNoGap = imageNoGap
+    }
+
+    /**
+     * 图片间距档位：0=无间隙 / 1=小 / 2=中 / 3=大
+     * 兼容旧数据：imageNoGap=false（间距开启）映射为中档 2
+     */
+    fun getImageGap(): Int {
+        return config.imageGap ?: if (config.imageNoGap == false) 2 else 0
+    }
+
+    /** 设置间距档位；同步 imageNoGap 兼容字段（0 = 原“无间隙开启”） */
+    fun setImageGap(imageGap: Int) {
+        config.imageGap = imageGap
+        config.imageNoGap = (imageGap == 0)
+    }
+
+    /** 竖排阅读时图片上下是否无间隙，默认开启 */
+    fun getImageNoGap(): Boolean {
+        return config.imageNoGap ?: true
+    }
+
     fun setTtsEngine(ttsEngine: String?) {
         config.ttsEngine = ttsEngine
     }
@@ -455,6 +478,8 @@ data class Book(
         var pageAnim: Int? = null,
         var reSegment: Boolean = false,
         var imageStyle: String? = null,
+        var imageNoGap: Boolean? = null,
+        var imageGap: Int? = null,
         var useReplaceRule: Boolean? = null,// 正文使用净化替换规则
         var delTag: Long = 0L,//去除标签
         var ttsEngine: String? = null,

@@ -32,6 +32,7 @@ jobs:
     outputs:
       version: ${{ steps.set-ver.outputs.version }}
       versionL: ${{ steps.set-ver.outputs.versionL }}
+      versionCode: ${{ steps.set-ver.outputs.versionCode }}
       lanzou: ${{ steps.check.outputs.lanzou }}
       telegram: ${{ steps.check.outputs.telegram }}
       gitee: ${{ steps.check.outputs.gitee }}
@@ -47,6 +48,7 @@ jobs:
         run: |
           echo "version=$(date -d "8 hour" -u +3.%y.%m%d%H)" >> $GITHUB_OUTPUT
           echo "versionL=$(date -d "8 hour" -u +3.%y.%m%d%H%M)" >> $GITHUB_OUTPUT
+          echo "versionCode=$(date -d "8 hour" -u +%y%m%d%H)" >> $GITHUB_OUTPUT
       - id: check
         run: |
           if [ -n "${{ secrets.LANZOU_ID }}" ]; then
@@ -153,6 +155,7 @@ jobs:
       type: ${{ matrix.type }}
       VERSION: ${{ needs.prepare.outputs.version }}
       VERSIONL: ${{ needs.prepare.outputs.versionL }}
+      VERSION_CODE: ${{ needs.prepare.outputs.versionCode }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -168,33 +171,29 @@ jobs:
           echo "">$GITHUB_WORKSPACE/app/src/main/assets/18PlusList.txt
       - name: Release Apk Sign
         run: |
-          echo "给apk增加签名"
-          cp $GITHUB_WORKSPACE/.github/workflows/legado.jks $GITHUB_WORKSPACE/app/legado.jks
+          echo "给apk增加签名（密钥与密码从 GitHub Secrets 读取）"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $GITHUB_WORKSPACE/app/legado.jks
           cat >> $GITHUB_WORKSPACE/gradle.properties << EOF
           RELEASE_STORE_FILE=./legado.jks
-          RELEASE_KEY_ALIAS=legado
-          RELEASE_STORE_PASSWORD=gedoor_legado
-          RELEASE_KEY_PASSWORD=gedoor_legado
+          RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+          RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           EOF
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
       - name: Build With Gradle
-        continue-on-error: true
         run: |
           if [ "${{ env.type }}" == 'release' ]; then
             typeName="原包名"
           else
             typeName="共存"
             sed "s/'.release'/'.releaseS'/" $GITHUB_WORKSPACE/app/build.gradle  -i
-            # sed 's/.release/.releaseS/'     $GITHUB_WORKSPACE/app/google-services.json -i
           fi
-          echo "统一版本号"
-          sed "/def version/c def version = \"${{ env.VERSION }}\"" $GITHUB_WORKSPACE/app/build.gradle  -i
-          echo "开始${{ env.product }}$typeName构建"
+          echo "开始${{ env.product }}$typeName构建（版本号由 -P 注入：${{ env.VERSION }}）"
           chmod +x gradlew
-          ./gradlew assemble${{ env.product }}release --build-cache --parallel --daemon --warning-mode all
+          ./gradlew testAppDebugUnitTest lintAppDebug assembleAppRelease --build-cache --parallel --daemon --warning-mode all -PVERSION="${{ env.VERSION }}" -PVERSION_CODE="${{ env.VERSION_CODE }}"
           echo "修改APK文件名"
           mkdir -p ${{ github.workspace }}/apk/
           for file in `ls ${{ github.workspace }}/app/build/outputs/apk/*/*/*.apk`; do

@@ -12,9 +12,19 @@ node_modules/
 /app/app
 /app/google
 /app/gradle.properties
+keystore.properties
+*.keystore
+*.jks
 package-lock.json
+build.log
 .idea/
 # Kotlin 2.0
 .kotlin/
 .cxx
 .vscode
+# 沙箱构建临时目录（Gradle 缓存与调试签名副本）
+.gradle_home/
+.user_home/
+.android_prefs/
+# 签名密钥 base64（临时，配置 GitHub Secret 后删除）
+keystore-base64.txt

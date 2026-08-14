@@ -16,11 +16,17 @@
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- 自定义权限：供第三方 app 通过 Content Provider 读写书源/书籍数据（需显式声明） -->
+    <permission
+        android:name="io.legado.READ_WRITE"
+        android:protectionLevel="normal" />
 
     <application
         android:name=".App"
@@ -281,6 +287,10 @@
         <activity
             android:name=".ui.book.import.local.ImportBookActivity"
             android:launchMode="singleTop" />
+        <!-- 导入本地漫画 -->
+        <activity
+            android:name=".ui.book.import.manga.ImportMangaActivity"
+            android:launchMode="singleTop" />
         <!-- 添加远程 -->
         <activity
             android:name=".ui.book.import.remote.RemoteBookActivity"
@@ -528,6 +538,8 @@
             android:authorities="${applicationId}.readerProvider"
             android:enabled="true"
             android:exported="true"
+            android:readPermission="io.legado.READ_WRITE"
+            android:writePermission="io.legado.READ_WRITE"
             tools:ignore="ExportedContentProvider" />
         <provider
             android:name="androidx.core.content.FileProvider"

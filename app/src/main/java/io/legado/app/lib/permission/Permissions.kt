@@ -43,6 +43,8 @@ object Permissions {
 
     const val ACCESS_MEDIA_LOCATION = "android.permission.ACCESS_MEDIA_LOCATION"
 
+    const val READ_MEDIA_IMAGES = "android.permission.READ_MEDIA_IMAGES"
+
     const val SYSTEM_ALERT_WINDOW = "android.permission.SYSTEM_ALERT_WINDOW"
 
     const val REQUEST_IGNORE_BATTERY_OPTIMIZATIONS =
@@ -53,6 +55,13 @@ object Permissions {
             arrayOf(MANAGE_EXTERNAL_STORAGE)
         } else {
             arrayOf(READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE)
+        }
+
+        /** 相册图片读取：API 33+ 用 READ_MEDIA_IMAGES，低版本退回存储读取 */
+        val IMAGES = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(READ_MEDIA_IMAGES)
+        } else {
+            arrayOf(READ_EXTERNAL_STORAGE)
         }
 
         val CAMERA = arrayOf(Permissions.CAMERA)

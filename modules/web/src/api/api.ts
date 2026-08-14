@@ -2,7 +2,7 @@
 /** https://github.com/gedoor/legado/tree/master/app/src/main/java/io/legado/app/web */
 
 import type { webReadConfig } from '@/web'
-import ajax from './axios'
+import ajax, { resolveToken } from './axios'
 import type {
   BaseBook,
   Book,
@@ -87,15 +87,21 @@ const getBookContent = (
       chapterIndex,
   )
 
+/** 构建带 token 的 WebSocket URL */
+const wsUrl = (path: string) => {
+  const url = new URL(path, legado_webSocket_entry_point)
+  const token = resolveToken()
+  if (token) url.searchParams.set('token', token)
+  return url
+}
+
 // webSocket
 const search = (
   searchKey: string,
   onReceive: (data: SeachBook[]) => void,
   onFinish: () => void,
 ) => {
-  const socket = new WebSocket(
-    new URL('searchBook', legado_webSocket_entry_point),
-  )
+  const socket = new WebSocket(wsUrl('searchBook'))
   socket.onerror = wsOnError
 
   socket.onopen = () => {
@@ -149,12 +155,9 @@ const debug = (
   /** @type {(data: string) => void} */ onReceive: (data: string) => void,
   /** @type {() => void} */ onFinish: () => void,
 ) => {
-  const url = new URL(
-    `${isBookSource ? 'bookSource' : 'rssSource'}Debug`,
-    legado_webSocket_entry_point,
+  const socket = new WebSocket(
+    wsUrl(`${isBookSource ? 'bookSource' : 'rssSource'}Debug`),
   )
-
-  const socket = new WebSocket(url)
   socket.onerror = wsOnError
   socket.onopen = () => {
     socket.send(JSON.stringify({ tag: sourceUrl, key: searchKey }))

@@ -27,6 +27,7 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
+import io.legado.app.constant.IntentAction
 import io.legado.app.constant.Theme
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
@@ -58,6 +59,7 @@ import io.legado.app.help.webView.WebJsExtensions.Companion.nameJava
 import io.legado.app.help.webView.WebJsExtensions.Companion.nameSource
 import io.legado.app.help.webView.WebViewPool
 import io.legado.app.lib.dialogs.alert
+import io.legado.app.lib.dialogs.SelectItem
 import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.backgroundColor
@@ -76,6 +78,7 @@ import io.legado.app.ui.book.read.ReadBookActivity
 import io.legado.app.ui.book.read.ReadBookActivity.Companion.RESULT_DELETED
 import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.model.SourceCallBack
+import io.legado.app.service.ExportBookService
 import io.legado.app.ui.association.OnLineImportActivity
 import io.legado.app.ui.book.source.edit.BookSourceEditActivity
 import io.legado.app.ui.book.toc.TocActivityResult
@@ -86,6 +89,7 @@ import io.legado.app.ui.widget.dialog.PhotoDialog
 import io.legado.app.ui.widget.dialog.VariableDialog
 import io.legado.app.ui.widget.dialog.WaitDialog
 import io.legado.app.utils.ColorUtils
+import io.legado.app.utils.ACache
 import io.legado.app.utils.ConvertUtils
 import io.legado.app.utils.FileDoc
 import io.legado.app.utils.GSON
@@ -93,6 +97,7 @@ import io.legado.app.utils.StartActivityContract
 import io.legado.app.utils.applyNavigationBarPadding
 import io.legado.app.utils.dpToPx
 import io.legado.app.utils.gone
+import io.legado.app.utils.isContentScheme
 import io.legado.app.utils.longSnackbar
 import io.legado.app.utils.longToastOnUi
 import io.legado.app.utils.observeEvent
@@ -103,6 +108,7 @@ import io.legado.app.utils.setHtml
 import io.legado.app.utils.setMarkdown
 import io.legado.app.utils.showDialogFragment
 import io.legado.app.utils.startActivity
+import io.legado.app.utils.startService
 import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import io.legado.app.utils.visible
@@ -151,6 +157,24 @@ class BookInfoActivity :
             AppConfig.defaultBookTreeUri = treeUri.toString()
         }
     }
+    /** 转本地：导出目录选择（记住上次路径，与缓存导出共用） */
+    private val exportDirResult = registerForActivityResult(HandleFileContract()) { result ->
+        var dirPath = ""
+        result.uri?.let { uri ->
+            if (uri.isContentScheme()) {
+                ACache.get().put(exportBookPathKey, uri.toString())
+                dirPath = uri.toString()
+            } else {
+                uri.path?.let { path ->
+                    ACache.get().put(exportBookPathKey, path)
+                    dirPath = path
+                }
+            }
+        }
+        if (dirPath.isNotEmpty()) {
+            startExportToLocal(dirPath)
+        }
+    }
     private val readBookResult = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -192,6 +216,8 @@ class BookInfoActivity :
     private var editMenuItem: MenuItem? = null
     private var menuCustomBtn: MenuItem? = null
     private val book get() = viewModel.getBook(false)
+    private val exportBookPathKey = "exportBookPath"
+    private var pendingExportType: String? = null
 
     override val binding by viewBinding(ActivityBookInfoBinding::inflate)
     override val viewModel by viewModels<BookInfoViewModel>()
@@ -276,6 +302,8 @@ class BookInfoActivity :
             viewModel.bookData.value?.isLocalTxt ?: false
         menu.findItem(R.id.menu_upload)?.isVisible =
             viewModel.bookData.value?.isLocal ?: false
+        menu.findItem(R.id.menu_to_local)?.isVisible =
+            viewModel.bookData.value?.let { !it.isLocal && !it.isAudio && !it.isVideo } ?: false
         menu.findItem(R.id.menu_delete_alert)?.isChecked =
             LocalConfig.bookInfoDeleteAlert
         return super.onMenuOpened(featureId, menu)
@@ -408,8 +436,45 @@ class BookInfoActivity :
                     } ?: upLoadBook(book)
                 }
             }
+
+            R.id.menu_to_local -> showToLocalGuide()
         }
         return super.onCompatOptionsItemSelected(item)
+    }
+
+    /** 转本地引导：说明 → 选择导出格式 → 选择目录 → 导出 */
+    private fun showToLocalGuide() {
+        val modes = arrayListOf(
+            SelectItem(getString(R.string.to_local_book_export_txt), "txt"),
+            SelectItem(getString(R.string.to_local_book_export_epub), "epub")
+        )
+        alert(getString(R.string.to_local_book), getString(R.string.to_local_book_desc)) {
+            items(modes) { _, item, _ ->
+                pendingExportType = item.value
+                val default = arrayListOf<SelectItem<Int>>()
+                val path = ACache.get().getAsString(exportBookPathKey)
+                if (!path.isNullOrEmpty()) {
+                    default.add(SelectItem(path, -1))
+                }
+                exportDirResult.launch {
+                    otherActions = default
+                }
+            }
+            cancelButton()
+        }
+    }
+
+    private fun startExportToLocal(path: String) {
+        viewModel.getBook()?.let { book ->
+            val exportType = pendingExportType ?: return@let
+            startService<ExportBookService> {
+                action = IntentAction.start
+                putExtra("bookUrl", book.bookUrl)
+                putExtra("exportType", exportType)
+                putExtra("exportPath", path)
+            }
+            toastOnUi(R.string.to_local_book_tip)
+        }
     }
 
     override fun observeLiveBus() {
@@ -1096,7 +1161,7 @@ class BookInfoActivity :
             else -> readBookResult.launch(
                 Intent(
                     this,
-                    if (!book.isLocal && book.isImage && AppConfig.showMangaUi) ReadMangaActivity::class.java
+                    if (book.isImage && AppConfig.showMangaUi) ReadMangaActivity::class.java
                     else ReadBookActivity::class.java
                 )
                     .putExtra("bookUrl", book.bookUrl)

@@ -17,6 +17,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.help.book.BookContent
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.book.isImage
 import io.legado.app.help.book.getBookSource
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
@@ -93,7 +94,9 @@ class TextChapterLayout(
     private val titleTopSpacing = ChapterProvider.titleTopSpacing
     private val titleBottomSpacing = ChapterProvider.titleBottomSpacing
     private val lineSpacingExtra = ChapterProvider.lineSpacingExtra
-    private val paragraphSpacing = ChapterProvider.paragraphSpacing
+    // 图片书竖排阅读时可去掉段间距让图片紧贴，是否无间隙由书籍设置控制
+    private val paragraphSpacing
+        get() = if (book.isImage && book.getImageNoGap()) 0 else ChapterProvider.paragraphSpacing
 
     private val visibleHeight = ChapterProvider.visibleHeight
     private val visibleWidth = ChapterProvider.visibleWidth

@@ -129,6 +129,8 @@ object BookController {
             val book = appDb.bookDao.getBook(bookUrl)
                 ?: return returnData.setErrorMsg("未在数据库找到对应书籍，请先添加")
             if (book.isLocal) {
+                // 刷新目录 = 从源文件重新解析：清理旧覆盖文件，避免残留顶替新正文
+                BookHelp.clearCache(book)
                 val toc = LocalBook.getChapterList(book)
                 appDb.bookChapterDao.delByBook(book.bookUrl)
                 appDb.bookChapterDao.insert(*toc.toTypedArray())

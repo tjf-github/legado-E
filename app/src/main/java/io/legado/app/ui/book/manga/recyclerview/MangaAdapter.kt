@@ -105,6 +105,20 @@ class MangaAdapter(private val context: Context) :
 
         fun onBind(item: MangaPage) {
             setImageColorFilter()
+            // 图片间距档位：0=无间隙 / 1=小 / 2=中 / 3=大
+            val gap = when (ReadManga.book?.getImageGap() ?: 0) {
+                1 -> 8.dpToPx()
+                2 -> 16.dpToPx()
+                3 -> 32.dpToPx()
+                else -> 0
+            }
+            val lp = binding.rootView.layoutParams
+            if (lp is ViewGroup.MarginLayoutParams) {
+                if (lp.bottomMargin != gap) {
+                    lp.bottomMargin = gap
+                    binding.rootView.layoutParams = lp
+                }
+            }
             val isLastImage = item.imageCount > 0 && item.index == item.imageCount - 1
             loadImageWithRetry(item.mImageUrl, isHorizontal, isLastImage, mTransformation)
         }

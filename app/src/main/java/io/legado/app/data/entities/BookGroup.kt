@@ -33,6 +33,8 @@ data class BookGroup(
         const val IdRoot = -100L
         const val IdAll = -1L
         const val IdLocal = -2L
+        const val IdLocalManga = -12L
+        const val IdNetBook = -13L
         const val IdAudio = -3L
         const val IdNetNone = -4L
         const val IdLocalNone = -5L
@@ -45,6 +47,8 @@ data class BookGroup(
             IdAll -> "$groupName(${context.getString(R.string.all)})"
             IdAudio -> "$groupName(${context.getString(R.string.audio)})"
             IdLocal -> "$groupName(${context.getString(R.string.local)})"
+            IdLocalManga -> "$groupName(${context.getString(R.string.local_manga)})"
+            IdNetBook -> "$groupName(${context.getString(R.string.net_book)})"
             IdNetNone -> "$groupName(${context.getString(R.string.net_no_group)})"
             IdLocalNone -> "$groupName(${context.getString(R.string.local_no_group)})"
             IdVideo -> "$groupName(${context.getString(R.string.video)})"

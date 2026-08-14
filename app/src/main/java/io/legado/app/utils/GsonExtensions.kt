@@ -6,6 +6,9 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import com.google.gson.JsonSyntaxException
 import com.google.gson.Strictness
 import com.google.gson.ToNumberPolicy
@@ -23,6 +26,9 @@ import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.lang.reflect.Type
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import kotlin.math.ceil
 
 val INITIAL_GSON: Gson by lazy {
@@ -33,6 +39,9 @@ val INITIAL_GSON: Gson by lazy {
         )
         .registerTypeAdapter(Int::class.java, IntJsonDeserializer())
         .registerTypeAdapter(String::class.java, StringJsonDeserializer())
+        .registerTypeAdapter(LocalDate::class.java, LocalDateAdapter())
+        .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
+        .registerTypeAdapter(LocalTime::class.java, LocalTimeAdapter())
         .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
         .disableHtmlEscaping()
         .setPrettyPrinting()
@@ -241,4 +250,115 @@ class MapDeserializerDoubleAsIntFix :
         return null
     }
 
+}
+
+/**
+ * java.time 适配器：序列化为 ISO 字符串，反序列化兼容旧数据（Gson 反射对象格式）与新数据。
+ * 避免反射 java.time 私有字段（Java 17+ 模块系统下会被拦截，Android 上也不依赖碰巧可用）。
+ */
+class LocalDateAdapter : JsonSerializer<LocalDate>, JsonDeserializer<LocalDate?> {
+
+    override fun serialize(
+        src: LocalDate,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ): JsonElement = JsonPrimitive(src.toString())
+
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type,
+        context: JsonDeserializationContext
+    ): LocalDate? {
+        return when {
+            json.isJsonNull -> null
+            json.isJsonPrimitive -> LocalDate.parse(json.asString)
+            json.isJsonObject -> {
+                val obj = json.asJsonObject
+                LocalDate.of(
+                    obj.get("year").asInt,
+                    obj.get("month").asInt,
+                    obj.get("day").asInt
+                )
+            }
+            else -> throw JsonParseException("无法解析 LocalDate: $json")
+        }
+    }
+}
+
+class LocalTimeAdapter : JsonSerializer<LocalTime>, JsonDeserializer<LocalTime?> {
+
+    override fun serialize(
+        src: LocalTime,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ): JsonElement = JsonPrimitive(src.toString())
+
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type,
+        context: JsonDeserializationContext
+    ): LocalTime? {
+        return when {
+            json.isJsonNull -> null
+            json.isJsonPrimitive -> LocalTime.parse(json.asString)
+            json.isJsonObject -> {
+                val obj = json.asJsonObject
+                LocalTime.of(
+                    obj.get("hour").asInt,
+                    obj.get("minute").asInt,
+                    obj.get("second")?.takeUnless { it.isJsonNull }?.asInt ?: 0,
+                    obj.get("nano")?.takeUnless { it.isJsonNull }?.asInt ?: 0
+                )
+            }
+            else -> throw JsonParseException("无法解析 LocalTime: $json")
+        }
+    }
+}
+
+class LocalDateTimeAdapter : JsonSerializer<LocalDateTime>, JsonDeserializer<LocalDateTime?> {
+
+    override fun serialize(
+        src: LocalDateTime,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ): JsonElement = JsonPrimitive(src.toString())
+
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type,
+        context: JsonDeserializationContext
+    ): LocalDateTime? {
+        return when {
+            json.isJsonNull -> null
+            json.isJsonPrimitive -> LocalDateTime.parse(json.asString.replace(' ', 'T'))
+            json.isJsonObject -> {
+                val obj = json.asJsonObject
+                val date = obj.get("date")?.let {
+                    if (it.isJsonPrimitive) {
+                        LocalDate.parse(it.asString)
+                    } else {
+                        LocalDate.of(
+                            it.asJsonObject.get("year").asInt,
+                            it.asJsonObject.get("month").asInt,
+                            it.asJsonObject.get("day").asInt
+                        )
+                    }
+                } ?: throw JsonParseException("LocalDateTime 缺少 date 字段: $json")
+                val time = obj.get("time")?.let {
+                    if (it.isJsonPrimitive) {
+                        LocalTime.parse(it.asString)
+                    } else {
+                        LocalTime.of(
+                            it.asJsonObject.get("hour").asInt,
+                            it.asJsonObject.get("minute").asInt,
+                            it.asJsonObject.get("second")?.takeUnless { it.isJsonNull }?.asInt ?: 0,
+                            it.asJsonObject.get("nano")?.takeUnless { it.isJsonNull }?.asInt ?: 0
+                        )
+                    }
+                } ?: throw JsonParseException("LocalDateTime 缺少 time 字段: $json")
+                LocalDateTime.of(date, time)
+            }
+            else -> throw JsonParseException("无法解析 LocalDateTime: $json")
+        }
+    }
 }

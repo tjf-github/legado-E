@@ -70,7 +70,7 @@ object AppConst {
                     it.packageName.contains("releaseS") -> AppVariant.BETA_RELEASES
                     isBeta -> AppVariant.BETA_RELEASE
                     isOfficial -> AppVariant.OFFICIAL
-                    else -> AppVariant.UNKNOWN
+                    else -> AppVariant.OFFICIAL
                 }
 
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {

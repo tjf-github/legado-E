@@ -183,12 +183,32 @@ abstract class AppDatabase : RoomDatabase() {
                 """.trimIndent()
                 db.execSQL(insertBookGroupAllSql)
                 @Language("sql")
+                val insertBookGroupNetBookSql = """
+                    insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
+                    select ${BookGroup.IdNetBook}, '书源书籍', -11, 1, 1
+                    where not exists (select * from book_groups where groupId = ${BookGroup.IdNetBook})
+                """.trimIndent()
+                db.execSQL(insertBookGroupNetBookSql)
+                @Language("sql")
                 val insertBookGroupLocalSql = """
                     insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
                     select ${BookGroup.IdLocal}, '本地', -9, 0, 1
                     where not exists (select * from book_groups where groupId = ${BookGroup.IdLocal})
                 """.trimIndent()
                 db.execSQL(insertBookGroupLocalSql)
+                @Language("sql")
+                val insertBookGroupLocalMangaSql = """
+                    insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
+                    select ${BookGroup.IdLocalManga}, '本地漫画', -9, 0, 1
+                    where not exists (select * from book_groups where groupId = ${BookGroup.IdLocalManga})
+                """.trimIndent()
+                db.execSQL(insertBookGroupLocalMangaSql)
+                @Language("sql")
+                val upBookGroupLocalNameSql = """
+                    update book_groups set groupName = '本地小说' 
+                    where groupId = ${BookGroup.IdLocal} and groupName = '本地'
+                """.trimIndent()
+                db.execSQL(upBookGroupLocalNameSql)
                 @Language("sql")
                 val insertBookGroupMusicSql = """
                     insert into book_groups(groupId, groupName, 'order', show) 

@@ -19,11 +19,13 @@ import io.legado.app.help.AppWebDav
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.isLocal
+import io.legado.app.help.book.isLocalTxt
 import io.legado.app.help.book.isLocalModified
 import io.legado.app.help.book.removeType
 import io.legado.app.help.book.simulatedTotalChapterNum
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.lib.dialogs.alert
 import io.legado.app.model.ImageProvider
 import io.legado.app.model.ReadAloud
 import io.legado.app.model.ReadBook
@@ -40,6 +42,7 @@ import io.legado.app.utils.mapParallelSafe
 import io.legado.app.utils.postEvent
 import io.legado.app.utils.toStringArray
 import io.legado.app.utils.toastOnUi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.catch
@@ -50,6 +53,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onEmpty
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -203,6 +210,14 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
 
     private suspend fun loadChapterListAwait(book: Book): Boolean {
         if (book.isLocal) {
+            // 源文件被外部修改时才丢弃覆盖文件（旧编辑/拆分/合并基于旧内容）；
+            // 冷启动（文件未变）不清缓存，保留用户已做的目录编辑
+            if (book.isLocalModified()) {
+                if (!confirmDiscardLocalEdits(book)) {
+                    return false
+                }
+                BookHelp.clearCache(book)
+            }
             kotlin.runCatching {
                 LocalBook.getChapterList(book).let {
                     appDb.bookChapterDao.delByBook(book.bookUrl)
@@ -247,6 +262,40 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             }
         }
         return true
+    }
+
+    /**
+     * 源文件外部修改触发重解析前，若本地书存在正文覆盖文件（本地编辑），
+     * 先弹窗确认是否丢弃这些编辑，避免静默清理。
+     */
+    private suspend fun confirmDiscardLocalEdits(book: Book): Boolean {
+        if (!book.isLocalTxt || !book.isLocalModified() || !BookHelp.hasLocalEdit(book)) {
+            return true
+        }
+        return withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { continuation ->
+                context.alert(
+                    titleResource = R.string.local_edit_discard_title,
+                    messageResource = R.string.local_edit_discard_message
+                ) {
+                    positiveButton(R.string.local_edit_discard_confirm) {
+                        if (continuation.isActive) {
+                            continuation.resume(true)
+                        }
+                    }
+                    cancelButton {
+                        if (continuation.isActive) {
+                            continuation.resume(false)
+                        }
+                    }
+                    onDismiss {
+                        if (continuation.isActive) {
+                            continuation.resume(false)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

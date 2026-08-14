@@ -84,6 +84,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/menu_to_local"
+        android:title="@string/to_local_book"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_log"
         android:title="@string/log"
         app:showAsAction="never" />

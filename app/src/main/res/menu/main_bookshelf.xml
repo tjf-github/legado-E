@@ -23,6 +23,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/menu_import_manga"
+        android:icon="@drawable/ic_add"
+        android:title="@string/import_manga"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_remote"
         android:icon="@drawable/ic_add"
         android:title="@string/add_remote_book"
