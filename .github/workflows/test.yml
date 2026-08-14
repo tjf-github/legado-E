@@ -32,6 +32,7 @@ jobs:
     outputs:
       version: ${{ steps.set-ver.outputs.version }}
       versionL: ${{ steps.set-ver.outputs.versionL }}
+      versionCode: ${{ steps.set-ver.outputs.versionCode }}
       lanzou: ${{ steps.check.outputs.lanzou }}
       telegram: ${{ steps.check.outputs.telegram }}
       gitee: ${{ steps.check.outputs.gitee }}

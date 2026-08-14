@@ -19,8 +19,10 @@ def name = "legado"
 def now = new Date()
 def timeZone = TimeZone.getTimeZone("GMT+8")
 def version = project.findProperty("VERSION")?.toString() ?: "3." + now.format("yy.MMddHH", timeZone)
-def buildVersionCode = project.findProperty("VERSION_CODE")?.toString()?.toInteger() ?:
-        now.format("yy", timeZone).toInteger() * 1000000 +
+def versionCodeStr = project.findProperty("VERSION_CODE")?.toString()
+def buildVersionCode = versionCodeStr?.isInteger()
+        ? versionCodeStr.toInteger()
+        : now.format("yy", timeZone).toInteger() * 1000000 +
                 now.format("MM", timeZone).toInteger() * 10000 +
                 now.format("dd", timeZone).toInteger() * 100 +
                 now.format("HH", timeZone).toInteger()
