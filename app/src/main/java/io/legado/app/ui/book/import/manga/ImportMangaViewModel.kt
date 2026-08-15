@@ -86,10 +86,17 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
 
     private fun importBook(preview: MangaBookPreview, order: Int) {
         val bookUrl = preview.bookKey
-        appDb.bookDao.getBook(bookUrl)?.let { oldBook ->
+        val oldBook = appDb.bookDao.getBook(bookUrl)
+        oldBook?.let {
             // 重新导入：清理旧章节与正文缓存，阅读进度重置
-            BookHelp.clearCache(oldBook)
+            BookHelp.clearCache(it)
             appDb.bookChapterDao.delByBook(bookUrl)
+        }
+        // 重新导入且未显式选分组时保留旧分组，避免整本/相册更新后被踢回未分组
+        val group = if (oldBook != null && preview.group.isNullOrBlank()) {
+            oldBook.group
+        } else {
+            getGroupId(preview.group)
         }
         val book = Book(
             bookUrl = bookUrl,
@@ -97,7 +104,7 @@ class ImportMangaViewModel(application: Application) : BaseViewModel(application
             origin = BookType.localTag,
             originName = preview.name,
             name = preview.name,
-            group = getGroupId(preview.group),
+            group = group,
             coverUrl = preview.coverImage,
             totalChapterNum = preview.chapters.size,
             latestChapterTime = System.currentTimeMillis(),

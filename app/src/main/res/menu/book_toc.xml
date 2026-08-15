@@ -37,6 +37,11 @@
             app:showAsAction="never" />
 
         <item
+            android:id="@+id/menu_delete_chapters"
+            android:title="@string/delete_select_chapters"
+            app:showAsAction="never" />
+
+        <item
             android:id="@+id/menu_use_replace"
             android:checkable="true"
             android:title="@string/use_replace"

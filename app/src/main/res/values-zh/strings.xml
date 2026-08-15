@@ -895,6 +895,8 @@
     <string name="add_chapter_error">新增章节失败</string>
     <string name="delete_chapter_success">删除章节成功</string>
     <string name="delete_chapter_error">删除章节失败</string>
+    <string name="delete_select_chapters">删除所选章节</string>
+    <string name="delete_chapter_select_none">未选择要删除的章节</string>
     <string name="split_chapter">拆分此章节</string>
     <string name="split_chapter_title">拆分章节</string>
     <string name="split_chapter_rule_hint">将按「第N章/回/节」「Chapter N」标题识别拆分点。</string>

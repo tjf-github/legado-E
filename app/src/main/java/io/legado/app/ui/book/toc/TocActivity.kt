@@ -15,6 +15,7 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.data.entities.Book
 import io.legado.app.databinding.ActivityChapterListBinding
+import io.legado.app.help.book.isImage
 import io.legado.app.help.book.isLocalTxt
 import io.legado.app.help.config.AppConfig
 import io.legado.app.lib.theme.accentColor
@@ -114,6 +115,8 @@ class TocActivity : VMBaseActivity<ActivityChapterListBinding, TocViewModel>(),
             menu.setGroupVisible(R.id.menu_group_bookmark, false)
             menu.setGroupVisible(R.id.menu_group_toc, true)
             menu.setGroupVisible(R.id.menu_group_text, viewModel.bookData.value?.isLocalTxt == true)
+            menu.findItem(R.id.menu_delete_chapters)?.isVisible =
+                viewModel.bookData.value?.isImage == true
         }
         menu.findItem(R.id.menu_use_replace)?.isChecked =
             AppConfig.tocUiUseReplace
@@ -145,6 +148,8 @@ class TocActivity : VMBaseActivity<ActivityChapterListBinding, TocViewModel>(),
                     putExtra("chapterPos", 0)
                 })
             }
+
+            R.id.menu_delete_chapters -> viewModel.chapterListCallBack?.showDeleteChapters()
 
             R.id.menu_use_replace -> {
                 AppConfig.tocUiUseReplace = !item.isChecked

@@ -238,6 +238,77 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
     }
 
     /**
+     * 多选删除章节：从目录移除（保留源文件，漫画重新扫描可恢复），
+     * 后续章节 index 左移、标题数字 -shift 重写，整体单事务提交。
+     * @param chapters 选中章节（可跨章/非相邻）
+     */
+    fun deleteChapters(book: Book, chapters: List<BookChapter>) {
+        execute {
+            lastSplitUndo = null
+            val sorted = chapters.sortedBy { it.index }
+            if (sorted.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.delete_chapter_select_none))
+            }
+            val toc = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            if (toc.isEmpty()) {
+                throw NoStackTraceException(context.getString(R.string.chapter_list_empty))
+            }
+            val deleteIndexes = sorted.map { it.index }.toSet()
+            val removalCount = sorted.size
+
+            // 文件层：删除被删章节的正文覆盖文件（漫画无覆盖文件，仅删 DB）
+            sorted.forEach { BookHelp.delContent(book, it) }
+
+            // 保留章节左移，左移位数 = 其之前被删章节数
+            val chapterShifts = mutableListOf<ChapterShift>()
+            val bookmarkShifts = mutableListOf<BookmarkShift>()
+            val remaining = toc.filter { it.index !in deleteIndexes }
+            for (c in remaining) {
+                val shift = deleteIndexes.count { it < c.index }
+                if (shift > 0) {
+                    val newIndex = c.index - shift
+                    val newTitle = ChapterNumberUtils.rewriteTitle(c.title, -shift) ?: c.title
+                    collectShift(book, c, newIndex, newTitle, chapterShifts, bookmarkShifts)
+                }
+            }
+
+            // 更新书籍元数据与阅读位置
+            book.totalChapterNum = (book.totalChapterNum - removalCount).coerceAtLeast(0)
+            val oldDur = book.durChapterIndex
+            val target = if (oldDur in deleteIndexes) {
+                remaining.firstOrNull { it.index > oldDur } ?: remaining.lastOrNull()
+            } else {
+                remaining.firstOrNull { it.index >= oldDur } ?: remaining.lastOrNull()
+            }
+            val targetShift = deleteIndexes.count { it < (target?.index ?: oldDur) }
+            book.durChapterIndex = ((target?.index ?: oldDur) - targetShift)
+                .coerceIn(0, (book.totalChapterNum - 1).coerceAtLeast(0))
+            book.durChapterTitle = chapterShifts.firstOrNull { it.newIndex == book.durChapterIndex }?.newTitle
+                ?: target?.title
+                ?: book.durChapterTitle
+
+            // 数据库变更整体事务化，失败自动回滚
+            appDb.bookChapterDao.applyTocEdit(
+                bookDao = appDb.bookDao,
+                bookmarkDao = appDb.bookmarkDao,
+                book = book,
+                chapterDeletes = sorted.map { ChapterDelete(book.bookUrl, it.url) },
+                chapterInserts = emptyList(),
+                chapterShifts = chapterShifts,
+                bookmarkDeletes = sorted.map { BookmarkDelete(book.name, book.author, it.index) },
+                bookmarkShifts = bookmarkShifts
+            )
+            ReadBook.onChapterListUpdated(book)
+            bookData.postValue(book)
+        }.onSuccess {
+            context.toastOnUi(context.getString(R.string.delete_chapter_success))
+            chapterListCallBack?.upChapterList(searchKey)
+        }.onError {
+            AppLog.put(context.getString(R.string.delete_chapter_error), it, true)
+        }
+    }
+
+    /**
      * 读取章节有效正文并生成拆分预览单元（IO 线程）。
      * 未命中标题 / 仅一章 / 超上限时抛出带提示的异常，由 onError toast。
      */
@@ -671,6 +742,8 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
         fun clearDisplayTitle()
 
         fun upAdapter()
+
+        fun showDeleteChapters()
     }
 
     interface BookmarkCallBack {
