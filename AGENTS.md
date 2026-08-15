@@ -23,16 +23,6 @@
 - 数据库不加表不加列；本地 TXT/EPUB 导入与阅读路径零侵入。
 - 提交信息用 conventional commits（`fix/feat/docs/chore/test`）；PowerShell 下中文提交信息用 `git commit -F <临时文件>`，避免引号/尖括号把参数拆散。
 
-## 沙箱与提权（本机特有，别的 agent 直接照做）
-
-默认 workspace-write 沙箱会拦截三类操作，需带 `sandbox_permissions: danger-full-access` 重试一次：
-
-1. 工作区内**文件删除/unlink**（`git checkout` 切分支、`git clean` 报 `unable to unlink ... Invalid argument`）；
-2. Gradle 写 `D:\gradle_home`（wrapper 报 `zip.lck 拒绝访问`）；
-3. git 走 HTTPS 推送/拉取（凭据库被拦，报 `SEC_E_NO_CREDENTIALS`）。**本机 SChannel 后端不可用**：提权后若仍报 schannel 错，加 `-c http.sslBackend=openssl`，如 `git -c http.sslBackend=openssl push origin main`。
-
-另：git 的正常信息写在 stderr，PowerShell 会显示 `NativeCommandError` + `exit code 1`，**属假失败**——看到 `xxxx..yyyy  branch -> branch` 就是成功，不要只看 exit code。
-
 ## 本地专属文件（勿删、勿提交）
 
 `app/release.keystore`、`keystore.properties`、`keystore-base64.txt`、`build.log` 被 .gitignore，是本地构建/签名材料；任何 `git clean` 之前先备份它们。
