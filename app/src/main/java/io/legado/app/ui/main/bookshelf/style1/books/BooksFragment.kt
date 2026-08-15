@@ -29,7 +29,7 @@ import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.main.MainViewModel
-import io.legado.app.utils.cnCompare
+import io.legado.app.utils.naturalCompare
 import io.legado.app.utils.flowWithLifecycleAndDatabaseChangeFirst
 import io.legado.app.utils.observeEvent
 import io.legado.app.utils.setEdgeEffectColor
@@ -222,7 +222,7 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
                 when (bookSort) {
                     1 -> list.sortedByDescending { it.latestChapterTime }
                     2 -> list.sortedWith { o1, o2 ->
-                        o1.name.cnCompare(o2.name)
+                        o1.name.naturalCompare(o2.name)
                     }
 
                     3 -> list.sortedBy { it.order }
@@ -233,7 +233,7 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
                     }
                     // 按作者排序
                     5 -> list.sortedWith { o1, o2 ->
-                        o1.author.cnCompare(o2.author)
+                        o1.author.naturalCompare(o2.author)
                     }
 
                     else -> {

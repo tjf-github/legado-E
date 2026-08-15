@@ -2,6 +2,7 @@ package io.legado.app.ui.book.import.manga
 
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
@@ -11,10 +12,12 @@ import io.legado.app.lib.dialogs.SelectItem
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.permission.Permissions
 import io.legado.app.lib.permission.PermissionsCompat
+import io.legado.app.lib.theme.primaryTextColor
 import io.legado.app.model.localBook.MangaBookPreview
 import io.legado.app.model.localBook.MangaFolderScanner
 import io.legado.app.ui.file.HandleFileContract
 import io.legado.app.utils.FileDoc
+import io.legado.app.utils.applyTint
 import io.legado.app.utils.gone
 import io.legado.app.utils.toastOnUi
 import io.legado.app.utils.visible
@@ -32,6 +35,12 @@ class ImportMangaActivity :
     private val adapter by lazy { ImportMangaAdapter(this) }
     private var scanMode = MangaFolderScanner.Mode.WHOLE
     private var isAlbumMode = false
+    private var allPreviews: List<MangaBookPreview> = emptyList()
+    private var filterKey: String = ""
+
+    private val searchView: SearchView by lazy {
+        binding.titleBar.findViewById(R.id.search_view)
+    }
 
     private val selectFolder = registerForActivityResult(HandleFileContract()) {
         it.uri?.let { uri ->
@@ -49,6 +58,7 @@ class ImportMangaActivity :
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
+        initSearchView()
         binding.tvEmptyMsg.setText(R.string.import_manga_scanning)
         binding.tvConfirm.setOnClickListener {
             confirmImport()
@@ -74,7 +84,8 @@ class ImportMangaActivity :
             }
         }
         viewModel.previewLiveData.observe(this) { list ->
-            adapter.setItems(list)
+            allPreviews = list
+            applyFilter()
             if (list.isEmpty()) {
                 binding.tvEmptyMsg.visible()
                 binding.tvEmptyMsg.setText(R.string.import_manga_empty)
@@ -84,6 +95,32 @@ class ImportMangaActivity :
             upSummary()
         }
         chooseMode()
+    }
+
+    private fun initSearchView() {
+        searchView.applyTint(primaryTextColor)
+        searchView.queryHint = getString(R.string.search)
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterKey = newText.orEmpty()
+                applyFilter()
+                return false
+            }
+        })
+    }
+
+    private fun applyFilter() {
+        val key = filterKey.trim()
+        val filtered = if (key.isEmpty()) {
+            allPreviews
+        } else {
+            allPreviews.filter { it.name.contains(key, ignoreCase = true) }
+        }
+        adapter.setItems(filtered)
     }
 
     private fun chooseMode() {
@@ -145,23 +182,23 @@ class ImportMangaActivity :
         if (isAlbumMode) {
             val seriesName = binding.etSeriesName.text?.toString()?.trim().orEmpty()
             if (seriesName.isNotEmpty()) {
-                adapter.getItems().forEach { it.group = seriesName }
+                allPreviews.forEach { it.group = seriesName }
             }
         }
-        viewModel.import(adapter.getItems()) {
+        viewModel.import(allPreviews) {
             finish()
         }
     }
 
     private fun upSummary() {
-        val books = adapter.getItems().filter { it.enabled && !it.isSkipped }
+        val books = allPreviews.filter { it.enabled && !it.isSkipped }
         val imageCount = books.sumOf { it.imageCount }
         binding.tvSummary.text = getString(R.string.import_manga_summary, books.size, imageCount)
         upSelectAllState()
     }
 
     private fun upSelectAllState() {
-        val items = adapter.getItems().filter { !it.isSkipped }
+        val items = allPreviews.filter { !it.isSkipped }
         val allChecked = items.isNotEmpty() && items.all { it.enabled }
         binding.tvSelectAll.setText(
             if (allChecked) {
@@ -173,9 +210,10 @@ class ImportMangaActivity :
     }
 
     private fun toggleSelectAll() {
-        val items = adapter.getItems().filter { !it.isSkipped }
+        val items = allPreviews.filter { !it.isSkipped }
         val allChecked = items.isNotEmpty() && items.all { it.enabled }
-        adapter.setAllEnabled(!allChecked)
+        allPreviews.filter { !it.isSkipped }.forEach { it.enabled = !allChecked }
+        adapter.notifyListChanged()
         upSummary()
     }
 

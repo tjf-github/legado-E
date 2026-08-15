@@ -22,7 +22,7 @@ import io.legado.app.model.ReadBook
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.utils.GSON
-import io.legado.app.utils.cnCompare
+import io.legado.app.utils.naturalCompare
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.printOnDebug
 import io.legado.app.utils.stackTraceStr
@@ -53,7 +53,7 @@ object BookController {
                 val data = when (AppConfig.bookshelfSort) {
                     1 -> books.sortedByDescending { it.latestChapterTime }
                     2 -> books.sortedWith { o1, o2 ->
-                        o1.name.cnCompare(o2.name)
+                        o1.name.naturalCompare(o2.name)
                     }
 
                     3 -> books.sortedBy { it.order }
