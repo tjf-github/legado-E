@@ -110,6 +110,23 @@ class MangaFolderScannerTest {
     }
 
     @Test
+    fun groupAlbumsSortsImagesByName() {
+        // 真机反馈：相册内各页乱序 —— MediaStore 按 DATE_ADDED 返回，需按文件名自然排序
+        val rows = listOf(
+            MangaFolderScanner.AlbumRow(1, "content://media/1", "Pictures/Manga/", "010.jpg"),
+            MangaFolderScanner.AlbumRow(2, "content://media/2", "Pictures/Manga/", "2.jpg"),
+            MangaFolderScanner.AlbumRow(3, "content://media/3", "Pictures/Manga/", "001.jpg"),
+            MangaFolderScanner.AlbumRow(4, "content://media/4", "Pictures/Manga/", "1.jpg")
+        )
+        val albums = MangaFolderScanner.groupAlbums(rows)
+        assertEquals(1, albums.size)
+        assertEquals(
+            listOf("content://media/4", "content://media/3", "content://media/2", "content://media/1"),
+            albums[0].wholeImages
+        )
+    }
+
+    @Test
     fun groupAlbumsEmpty() {
         assertTrue(MangaFolderScanner.groupAlbums(emptyList()).isEmpty())
     }

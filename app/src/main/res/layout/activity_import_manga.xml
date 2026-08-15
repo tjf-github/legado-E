@@ -10,7 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/import_manga" />
+        app:title="@string/import_manga"
+        app:contentInsetStartWithNavigation="0dp"
+        app:contentLayout="@layout/view_search" />
 
     <io.legado.app.ui.widget.anima.RefreshProgressBar
         android:id="@+id/refresh_progress_bar"

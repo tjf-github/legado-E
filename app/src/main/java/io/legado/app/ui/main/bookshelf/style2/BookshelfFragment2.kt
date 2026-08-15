@@ -27,7 +27,7 @@ import io.legado.app.ui.book.group.GroupEditDialog
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.main.bookshelf.BaseBookshelfFragment
-import io.legado.app.utils.cnCompare
+import io.legado.app.utils.naturalCompare
 import io.legado.app.utils.flowWithLifecycleAndDatabaseChangeFirst
 import io.legado.app.utils.observeEvent
 import io.legado.app.utils.setEdgeEffectColor
@@ -186,7 +186,7 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
                     }
 
                     2 -> list.sortedWith { o1, o2 ->
-                        o1.name.cnCompare(o2.name)
+                        o1.name.naturalCompare(o2.name)
                     }
 
                     3 -> list.sortedBy {

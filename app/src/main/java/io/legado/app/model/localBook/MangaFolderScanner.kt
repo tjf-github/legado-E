@@ -257,7 +257,7 @@ object MangaFolderScanner {
      * 必须以路径分组）；无目录信息的图片每张独立成册兜底。
      */
     fun groupAlbums(rows: List<AlbumRow>): List<MangaBookPreview> {
-        data class AlbumImages(val id: String, val name: String, val images: MutableList<String>)
+        data class AlbumImages(val id: String, val name: String, val rows: MutableList<AlbumRow>)
         val albums = linkedMapOf<String, AlbumImages>()
         for (row in rows) {
             val relativePath = row.relativePath?.trim('/') ?: ""
@@ -266,17 +266,22 @@ object MangaFolderScanner {
                 row.displayName ?: "未命名相册"
             }
             albums.getOrPut(albumId) { AlbumImages(albumId, albumName, arrayListOf()) }
-                .images.add(row.imageUri)
+                .rows.add(row)
         }
         return albums.values.sortedWith(compareBy(naturalComparator) { it.name }).map { album ->
+            // 相册内图片按文件名自然排序（001 < 002 < 010），
+            // 避免 MediaStore 的 DATE_ADDED 顺序导致各页乱序
+            val images = album.rows
+                .sortedWith(compareBy(naturalComparator) { it.displayName.orEmpty() })
+                .map { it.imageUri }
             MangaBookPreview(
                 dir = null,
                 bookUrl = ALBUM_URL_PREFIX + album.id,
                 name = album.name,
                 isWhole = true,
                 canToggleWhole = false,
-                wholeImages = album.images,
-                coverImage = album.images.firstOrNull()
+                wholeImages = images,
+                coverImage = images.firstOrNull()
             )
         }
     }

@@ -105,6 +105,54 @@ fun String.cnCompare(other: String): Int {
 }
 
 /**
+ * 自然排序比较：数字块按数值比较（1 < 2 < 10），非数字块按中文排序规则（拼音）。
+ * 用于书架按书名/作者排序，避免纯字典序出现的 1,10,11,2,3 顺序。
+ */
+fun String.naturalCompare(other: String): Int {
+    return naturalCompareWith(this, other) { a, b -> a.cnCompare(b) }
+}
+
+/**
+ * 自然排序纯逻辑：数字块按数值比较，非数字块交给 textCompare 比较。
+ * 抽成可注入文本比较器的纯函数，便于 JVM 单测（避免依赖 Android 的 ICU Collator）。
+ */
+internal fun naturalCompareWith(
+    a: String,
+    b: String,
+    textCompare: (String, String) -> Int
+): Int {
+    var i = 0
+    var j = 0
+    while (i < a.length && j < b.length) {
+        val ci = a[i]
+        val cj = b[j]
+        if (ci.isDigit() && cj.isDigit()) {
+            val si = i
+            while (i < a.length && a[i].isDigit()) i++
+            val sj = j
+            while (j < b.length && b[j].isDigit()) j++
+            val ni = a.substring(si, i).trimStart('0').ifEmpty { "0" }
+            val nj = b.substring(sj, j).trimStart('0').ifEmpty { "0" }
+            val cmpLen = ni.length.compareTo(nj.length)
+            if (cmpLen != 0) return cmpLen
+            val cmpVal = ni.compareTo(nj)
+            if (cmpVal != 0) return cmpVal
+            // 数值相同但补零位数不同：位数少者优先（1 < 001）
+            val cmpPad = (i - si).compareTo(j - sj)
+            if (cmpPad != 0) return cmpPad
+        } else {
+            val si = i
+            while (i < a.length && !a[i].isDigit()) i++
+            val sj = j
+            while (j < b.length && !b[j].isDigit()) j++
+            val cmp = textCompare(a.substring(si, i), b.substring(sj, j))
+            if (cmp != 0) return cmp
+        }
+    }
+    return a.length - b.length
+}
+
+/**
  * 字符串所占内存大小
  */
 fun String?.memorySize(): Int {
