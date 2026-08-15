@@ -179,6 +179,11 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
         adapter.notifyItemRangeChanged(0, adapter.itemCount)
     }
 
+    override fun showDeleteChapters() {
+        val book = viewModel.bookData.value ?: return
+        showDeleteChaptersDialog(book)
+    }
+
     override val scope: CoroutineScope
         get() = lifecycleScope
 
@@ -360,6 +365,64 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
                         context.toastOnUi(R.string.merge_chapter_need_two)
                     } else {
                         viewModel.mergeChapters(book, selected, mergedTitle.ifBlank { anchor.title })
+                    }
+                }
+                cancelButton()
+            }
+        }
+    }
+
+    private fun showDeleteChaptersDialog(book: Book) {
+        lifecycleScope.launch {
+            val toc = withContext(IO) {
+                appDb.bookChapterDao.getChapterList(book.bookUrl)
+            }
+            val context = requireContext()
+            val checked = MutableList(toc.size) { false }
+            val primaryColor = context.getPrimaryTextColor(ColorUtils.isColorLight(bottomBackground))
+            val container = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(12.dpToPx(), 8.dpToPx(), 12.dpToPx(), 8.dpToPx())
+            }
+            toc.forEachIndexed { index, chapter ->
+                val row = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(4.dpToPx(), 4.dpToPx(), 4.dpToPx(), 4.dpToPx())
+                }
+                val checkBox = CheckBox(context).apply {
+                    isChecked = false
+                    setOnCheckedChangeListener { _, isChecked -> checked[index] = isChecked }
+                }
+                row.addView(
+                    checkBox,
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                )
+                row.addView(
+                    TextView(context).apply {
+                        text = chapter.title
+                        textSize = 14f
+                        setTextColor(primaryColor)
+                    },
+                    LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                )
+                container.addView(row)
+            }
+            val scroll = ScrollView(context).apply {
+                addView(container)
+            }
+            alert {
+                setTitle(R.string.delete_select_chapters)
+                setCustomView(scroll)
+                okButton {
+                    val selected = toc.filterIndexed { index, _ -> checked[index] }
+                    if (selected.isEmpty()) {
+                        context.toastOnUi(R.string.delete_chapter_select_none)
+                    } else {
+                        viewModel.deleteChapters(book, selected)
                     }
                 }
                 cancelButton()

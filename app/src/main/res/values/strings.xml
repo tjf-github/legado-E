@@ -898,6 +898,8 @@
     <string name="add_chapter_error">Failed to insert chapter</string>
     <string name="delete_chapter_success">Chapter deleted</string>
     <string name="delete_chapter_error">Failed to delete chapter</string>
+    <string name="delete_select_chapters">Delete select chapters</string>
+    <string name="delete_chapter_select_none">No chapter selected</string>
     <string name="split_chapter">Split this chapter</string>
     <string name="split_chapter_title">Split chapter</string>
     <string name="split_chapter_rule_hint">Chapters will be recognized by titles like \"第N章/回/节\" or \"Chapter N\".</string>
