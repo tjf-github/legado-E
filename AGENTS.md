@@ -29,7 +29,7 @@
 
 1. 工作区内**文件删除/unlink**（`git checkout` 切分支、`git clean` 报 `unable to unlink ... Invalid argument`）；
 2. Gradle 写 `D:\gradle_home`（wrapper 报 `zip.lck 拒绝访问`）；
-3. git 走 HTTPS 推送/拉取（凭据库被拦，报 `SEC_E_NO_CREDENTIALS`）。
+3. git 走 HTTPS 推送/拉取（凭据库被拦，报 `SEC_E_NO_CREDENTIALS`）。**本机 SChannel 后端不可用**：提权后若仍报 schannel 错，加 `-c http.sslBackend=openssl`，如 `git -c http.sslBackend=openssl push origin main`。
 
 另：git 的正常信息写在 stderr，PowerShell 会显示 `NativeCommandError` + `exit code 1`，**属假失败**——看到 `xxxx..yyyy  branch -> branch` 就是成功，不要只看 exit code。
 
@@ -48,4 +48,6 @@
 
 - 动任何模块前，先读对应计划书与该模块代码注释；
 - 改 bug 先写复现测试（JVM 单测在 `app/src/test`），后修代码，全量单测通过再提交；
-- 功能改动只提交到 `codex/manga-import`；发布动作只发生在 main 合并环节（走流程书 §4）。
+- 功能改动只提交到 `codex/manga-import`；发布动作只发生在 main 合并环节（走流程书 §4）；
+- **接「发布/构建/CI」类任务前**，先读《发布推送流程书.md》并核对 `.github/workflows/*.yml` 的 `on:` 触发条件（发版是 `push main` 自动触发，不是 `workflow_dispatch`），别凭 workflow 文件名或第一印象下结论；
+- **多窗口共享同一 git 仓库**：关键 git 操作前先 `git status -sb` + `git log --oneline -3` 核对最新状态（别的窗口可能已推进 HEAD，别拿旧状态决策）。
