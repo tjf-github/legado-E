@@ -205,6 +205,7 @@ abstract class BaseBookshelfFragment(layoutId: Int) : VMBaseFragment<BookshelfVi
                             bookNameChoice.visibility = if (index > 1) View.VISIBLE else View.GONE
                         }
                         rgSort.checkByIndex(bookshelfSort)
+                        swReverseSort.isChecked = AppConfig.bookshelfSortReverse
                         margin.progress = AppConfig.bookshelfMargin
                     }
             customView { alertBinding.root }
@@ -242,6 +243,10 @@ abstract class BaseBookshelfFragment(layoutId: Int) : VMBaseFragment<BookshelfVi
                     }
                     if (bookshelfSort != rgSort.getCheckedIndex()) {
                         AppConfig.bookshelfSort = rgSort.getCheckedIndex()
+                        upSort()
+                    }
+                    if (AppConfig.bookshelfSortReverse != swReverseSort.isChecked) {
+                        AppConfig.bookshelfSortReverse = swReverseSort.isChecked
                         upSort()
                     }
                     if (bookshelfLayout != rgLayout.getCheckedIndex()) {

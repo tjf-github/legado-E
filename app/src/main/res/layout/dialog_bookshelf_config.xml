@@ -198,6 +198,14 @@
 
             </RadioGroup>
 
+            <io.legado.app.lib.theme.view.ThemeSwitch
+                android:id="@+id/sw_reverse_sort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="6dp"
+                android:text="@string/sort_desc"
+                tools:ignore="TouchTargetSizeCheck" />
+
         </LinearLayout>
 
         <LinearLayout
