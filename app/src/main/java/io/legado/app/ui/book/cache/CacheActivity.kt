@@ -27,6 +27,7 @@ import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.databinding.DialogSelectSectionExportBinding
 import io.legado.app.help.book.getExportFileName
 import io.legado.app.help.book.isAudio
+import io.legado.app.help.book.sortByBookshelf
 import io.legado.app.help.book.tryParesExportFileName
 import io.legado.app.help.config.AppConfig
 import io.legado.app.lib.dialogs.SelectItem
@@ -42,7 +43,6 @@ import io.legado.app.utils.applyNavigationBarPadding
 import io.legado.app.utils.applyOpenTint
 import io.legado.app.utils.applyTint
 import io.legado.app.utils.checkWrite
-import io.legado.app.utils.cnCompare
 import io.legado.app.utils.enableCustomExport
 import io.legado.app.utils.flowWithLifecycleAndDatabaseChange
 import io.legado.app.utils.iconItemOnLongClick
@@ -63,7 +63,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import splitties.init.appCtx
-import kotlin.math.max
 
 /**
  * cache/download 缓存界面
@@ -243,19 +242,12 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
                 val booksDownload = books.filter {
                     !it.isAudio
                 }
-                when (AppConfig.getBookSortByGroupId(groupId)) {
-                    1 -> booksDownload.sortedByDescending { it.latestChapterTime }
-                    2 -> booksDownload.sortedWith { o1, o2 ->
-                        o1.name.cnCompare(o2.name)
-                    }
-
-                    3 -> booksDownload.sortedBy { it.order }
-                    4 -> booksDownload.sortedByDescending {
-                        max(it.latestChapterTime, it.durChapterTime)
-                    }
-
-                    else -> booksDownload.sortedByDescending { it.durChapterTime }
-                }
+                //排序：六种排序 + 逆序
+                booksDownload.sortByBookshelf(
+                    AppConfig.getBookSortByGroupId(groupId),
+                    reverse = AppConfig.bookshelfSortReverse,
+                    mangaStable = false
+                )
             }.flowWithLifecycleAndDatabaseChange(
                 lifecycle, table = AppDatabase.BOOK_TABLE_NAME
             ).catch {

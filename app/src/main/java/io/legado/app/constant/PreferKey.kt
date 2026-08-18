@@ -45,6 +45,7 @@ object PreferKey {
     const val showRss = "showRss"
     const val bookshelfLayout = "bookshelfLayout"
     const val bookshelfSort = "bookshelfSort"
+    const val bookshelfSortReverse = "bookshelfSortReverse"
     const val bookExportFileName = "bookExportFileName"
     const val bookImportFileName = "bookImportFileName"
     const val episodeExportFileName = "episodeExportFileName"

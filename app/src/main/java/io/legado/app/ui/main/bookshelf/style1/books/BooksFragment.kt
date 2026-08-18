@@ -23,13 +23,12 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.databinding.FragmentBooksBinding
-import io.legado.app.help.book.isImage
+import io.legado.app.help.book.sortByBookshelf
 import io.legado.app.help.config.AppConfig
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.book.info.BookInfoActivity
 import io.legado.app.ui.main.MainViewModel
-import io.legado.app.utils.naturalCompare
 import io.legado.app.utils.flowWithLifecycleAndDatabaseChangeFirst
 import io.legado.app.utils.observeEvent
 import io.legado.app.utils.setEdgeEffectColor
@@ -45,7 +44,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.max
 
 /**
  * 书架界面
@@ -218,31 +216,11 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
         booksFlowJob?.cancel()
         booksFlowJob = viewLifecycleOwner.lifecycleScope.launch {
             appDb.bookDao.flowByGroup(groupId).map { list ->
-                //排序
-                when (bookSort) {
-                    1 -> list.sortedByDescending { it.latestChapterTime }
-                    2 -> list.sortedWith { o1, o2 ->
-                        o1.name.naturalCompare(o2.name)
-                    }
-
-                    3 -> list.sortedBy { it.order }
-
-                    // 综合排序 issue #3192
-                    4 -> list.sortedByDescending {
-                        max(it.latestChapterTime, it.durChapterTime)
-                    }
-                    // 按作者排序
-                    5 -> list.sortedWith { o1, o2 ->
-                        o1.author.naturalCompare(o2.author)
-                    }
-
-                    else -> {
-                        // 漫画有阅读顺序：默认按 order 稳定排序（读完不跳动）；
-                        // 其他书按最近阅读
-                        val (manga, others) = list.partition { it.isImage }
-                        manga.sortedBy { it.order } + others.sortedByDescending { it.durChapterTime }
-                    }
-                }
+                //排序：六种排序 + 逆序
+                list.sortByBookshelf(
+                    bookSort,
+                    reverse = AppConfig.bookshelfSortReverse
+                )
             }.flowWithLifecycleAndDatabaseChangeFirst(
                 viewLifecycleOwner.lifecycle,
                 Lifecycle.State.RESUMED,
