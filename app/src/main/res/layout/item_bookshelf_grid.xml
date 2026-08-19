@@ -64,6 +64,18 @@
                 app:loading_width="2dp"
                 tools:ignore="RtlHardcoded" />
 
+            <io.legado.app.lib.theme.view.ThemeCheckBox
+                android:id="@+id/cb_select"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_margin="6dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:visibility="gone"
+                app:layout_constraintLeft_toLeftOf="@id/iv_cover"
+                app:layout_constraintTop_toTopOf="@id/iv_cover"
+                tools:visibility="visible" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView

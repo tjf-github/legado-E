@@ -1,5 +1,6 @@
 package io.legado.app.ui.main.bookshelf.style2
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Parcelable
 import android.view.LayoutInflater
@@ -120,6 +121,68 @@ abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
         }
     }
 
+    /**
+     * 多选模式：按 bookUrl 记录选中项（书架列表经 DB flow 每次发出新对象，不能用对象相等性）
+     * 仅在进入分组后（列表全为 Book）生效
+     */
+    private val selectedBooks = hashSetOf<String>()
+
+    var isSelectionMode = false
+        private set
+
+    val selection: List<Book>
+        get() = getItems().filterIsInstance<Book>().filter { selectedBooks.contains(it.bookUrl) }
+
+    fun isSelected(book: Book): Boolean = selectedBooks.contains(book.bookUrl)
+
+    /**
+     * 长按进入多选模式并默认选中该书
+     */
+    fun enterSelectionMode(book: Book) {
+        isSelectionMode = true
+        selectedBooks.add(book.bookUrl)
+        notifyDataSetChanged()
+    }
+
+    fun exitSelectionMode() {
+        if (!isSelectionMode && selectedBooks.isEmpty()) return
+        isSelectionMode = false
+        selectedBooks.clear()
+        notifyDataSetChanged()
+    }
+
+    fun toggle(book: Book) {
+        if (selectedBooks.contains(book.bookUrl)) {
+            selectedBooks.remove(book.bookUrl)
+        } else {
+            selectedBooks.add(book.bookUrl)
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun selectAll(selectAll: Boolean) {
+        if (selectAll) {
+            getItems().filterIsInstance<Book>().forEach {
+                selectedBooks.add(it.bookUrl)
+            }
+        } else {
+            selectedBooks.clear()
+        }
+        notifyDataSetChanged()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun revertSelection() {
+        getItems().filterIsInstance<Book>().forEach {
+            if (selectedBooks.contains(it.bookUrl)) {
+                selectedBooks.remove(it.bookUrl)
+            } else {
+                selectedBooks.add(it.bookUrl)
+            }
+        }
+        notifyDataSetChanged()
+    }
+
     fun updateItems(groupId: Long) {
         currentGroupId?.let {
             layoutStates[it] = layoutManager?.onSaveInstanceState()
@@ -162,5 +225,10 @@ abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
         fun onItemLongClick(item: Any)
         fun isUpdate(bookUrl: String): Boolean
         fun getItems(): List<Any>
+
+        /**
+         * 多选数量变化（单项切换/全选/反选）后回调
+         */
+        fun onSelectionChanged()
     }
 }

@@ -48,4 +48,11 @@
         app:layout_constraintRight_toRightOf="parent"
         tools:text="TextView" />
 
+    <io.legado.app.ui.widget.SelectActionBar
+        android:id="@+id/select_action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

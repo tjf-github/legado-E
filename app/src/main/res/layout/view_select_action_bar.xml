@@ -13,6 +13,18 @@
     android:paddingBottom="6dp"
     tools:ignore="RtlHardcoded">
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iv_close"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/exit_select_mode"
+        android:padding="10dp"
+        android:src="@drawable/ic_baseline_close"
+        android:tint="@color/primaryText"
+        android:visibility="gone"
+        tools:ignore="RtlHardcoded,UnusedAttribute" />
+
     <io.legado.app.lib.theme.view.ThemeCheckBox
         android:id="@+id/cb_selected_all"
         android:layout_width="0dp"

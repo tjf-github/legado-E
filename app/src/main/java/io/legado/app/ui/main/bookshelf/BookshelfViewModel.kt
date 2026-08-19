@@ -11,13 +11,16 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.exception.NoStackTraceException
+import io.legado.app.help.book.isLocal
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.http.decompressed
 import io.legado.app.help.http.newCallResponseBody
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.help.http.text
+import io.legado.app.model.SourceCallBack
 import io.legado.app.model.analyzeRule.AnalyzeUrl
+import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.GSON
@@ -37,6 +40,30 @@ import java.io.OutputStreamWriter
 class BookshelfViewModel(application: Application) : BaseViewModel(application) {
     val addBookProgressLiveData = MutableLiveData(-1)
     var addBookJob: Coroutine<*>? = null
+
+    /**
+     * 分组页多选批量删除，语义与书架管理一致：
+     * 删数据库记录；本地书清缓存/删封面（可选删源文件）；在线书回调书源
+     */
+    fun deleteBook(books: List<Book>, deleteOriginal: Boolean = false) {
+        execute {
+            appDb.bookDao.delete(*books.toTypedArray())
+            books.forEach {
+                if (it.isLocal) {
+                    LocalBook.deleteBook(it, deleteOriginal)
+                } else {
+                    val source = appDb.bookSourceDao.getBookSource(it.origin)
+                    SourceCallBack.callBackBook(SourceCallBack.DEL_BOOK_SHELF, source, it)
+                }
+            }
+        }
+    }
+
+    fun updateBook(vararg book: Book) {
+        execute {
+            appDb.bookDao.update(*book)
+        }
+    }
 
     fun addBookByUrl(bookUrls: String) {
         var successCount = 0

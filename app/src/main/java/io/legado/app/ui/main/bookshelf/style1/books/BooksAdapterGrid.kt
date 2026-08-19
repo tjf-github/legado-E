@@ -3,6 +3,7 @@ package io.legado.app.ui.main.bookshelf.style1.books
 import android.content.Context
 import android.os.Bundle
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.viewbinding.ViewBinding
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.data.entities.Book
@@ -42,6 +43,7 @@ class BooksAdapterGrid(context: Context, private val callBack: CallBack) :
                     }
                     ivCover.load(item, false)
                     upRefresh(binding, item)
+                    upSelectState(this, item)
                 } else {
                     for (i in payloads.indices) {
                         val bundle = payloads[i] as Bundle
@@ -54,6 +56,7 @@ class BooksAdapterGrid(context: Context, private val callBack: CallBack) :
                                 )
 
                                 "refresh" -> upRefresh(binding, item)
+                                "select" -> cbSelect.isChecked = isSelected(item)
                             }
                         }
                     }
@@ -64,6 +67,7 @@ class BooksAdapterGrid(context: Context, private val callBack: CallBack) :
                     tvName.text = item.name
                     ivCover.load(item, false)
                     upRefresh(binding, item)
+                    upSelectState(this, item)
                 } else {
                     for (i in payloads.indices) {
                         val bundle = payloads[i] as Bundle
@@ -76,6 +80,7 @@ class BooksAdapterGrid(context: Context, private val callBack: CallBack) :
                                 )
 
                                 "refresh" -> upRefresh(binding, item)
+                                "select" -> cbSelect.isChecked = isSelected(item)
                             }
                         }
                     }
@@ -83,6 +88,20 @@ class BooksAdapterGrid(context: Context, private val callBack: CallBack) :
             }
         }
 
+    }
+
+    private fun upSelectState(binding: ItemBookshelfGridBinding, item: Book) {
+        binding.cbSelect.apply {
+            if (isSelectionMode) visible() else gone()
+            isChecked = isSelected(item)
+        }
+    }
+
+    private fun upSelectState(binding: ItemBookshelfGrid2Binding, item: Book) {
+        binding.cbSelect.apply {
+            if (isSelectionMode) visible() else gone()
+            isChecked = isSelected(item)
+        }
     }
 
     private fun upRefresh(binding: ViewBinding, item: Book) {
@@ -122,13 +141,25 @@ class BooksAdapterGrid(context: Context, private val callBack: CallBack) :
         holder.itemView.apply {
             setOnClickListener {
                 getItem(holder.layoutPosition)?.let {
-                    callBack.open(it)
+                    if (isSelectionMode) {
+                        toggle(it)
+                        updateItem(holder.layoutPosition, bundleOf(Pair("select", null)))
+                        callBack.onSelectionChanged()
+                    } else {
+                        callBack.open(it)
+                    }
                 }
             }
 
             onLongClick {
                 getItem(holder.layoutPosition)?.let {
-                    callBack.openBookInfo(it)
+                    if (isSelectionMode) {
+                        toggle(it)
+                        updateItem(holder.layoutPosition, bundleOf(Pair("select", null)))
+                        callBack.onSelectionChanged()
+                    } else {
+                        callBack.onLongPressBook(it)
+                    }
                 }
             }
         }

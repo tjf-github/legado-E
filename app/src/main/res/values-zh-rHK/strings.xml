@@ -28,6 +28,9 @@
     <string name="draw">提醒</string>
     <string name="edit">編輯</string>
     <string name="delete">刪除</string>
+    <string name="done_select">完成</string>
+    <string name="exit_select_mode">完成多選</string>
+    <string name="select_group_first">請先選擇分組</string>
     <string name="delete_select_group">刪除當前分組</string>
     <string name="replace">替換</string>
     <string name="replace_purify">替換淨化</string>

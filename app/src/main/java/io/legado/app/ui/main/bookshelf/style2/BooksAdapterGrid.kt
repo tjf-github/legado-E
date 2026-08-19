@@ -3,6 +3,7 @@ package io.legado.app.ui.main.bookshelf.style2
 import android.content.Context
 import android.os.Bundle
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
@@ -82,6 +83,7 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
             }
             ivCover.load(item, false)
             upRefresh(this, item)
+            upSelectState(this, item)
         }
 
         fun onBind(item: Book, position: Int, payloads: MutableList<Any>) = binding.run {
@@ -99,18 +101,38 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
                             )
 
                             "refresh" -> upRefresh(this, item)
+                            "select" -> cbSelect.isChecked = isSelected(item)
                         }
                     }
                 }
             }
         }
 
+        private fun upSelectState(binding: ItemBookshelfGridBinding, item: Book) {
+            binding.cbSelect.apply {
+                if (isSelectionMode) visible() else gone()
+                isChecked = isSelected(item)
+            }
+        }
+
         fun registerListener(item: Any) {
             binding.root.setOnClickListener {
-                callBack.onItemClick(item)
+                if (item is Book && isSelectionMode) {
+                    toggle(item)
+                    notifyItemChanged(bindingAdapterPosition, bundleOf("select" to null))
+                    callBack.onSelectionChanged()
+                } else {
+                    callBack.onItemClick(item)
+                }
             }
             binding.root.onLongClick {
-                callBack.onItemLongClick(item)
+                if (item is Book && isSelectionMode) {
+                    toggle(item)
+                    notifyItemChanged(bindingAdapterPosition, bundleOf("select" to null))
+                    callBack.onSelectionChanged()
+                } else {
+                    callBack.onItemLongClick(item)
+                }
             }
         }
 
@@ -138,6 +160,7 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
             tvName.text = item.name
             ivCover.load(item, false)
             upRefresh(this, item)
+            upSelectState(this, item)
         }
 
         fun onBind(item: Book, position: Int, payloads: MutableList<Any>) = binding.run {
@@ -155,18 +178,38 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
                             )
 
                             "refresh" -> upRefresh(this, item)
+                            "select" -> cbSelect.isChecked = isSelected(item)
                         }
                     }
                 }
             }
         }
 
+        private fun upSelectState(binding: ItemBookshelfGrid2Binding, item: Book) {
+            binding.cbSelect.apply {
+                if (isSelectionMode) visible() else gone()
+                isChecked = isSelected(item)
+            }
+        }
+
         fun registerListener(item: Any) {
             binding.root.setOnClickListener {
-                callBack.onItemClick(item)
+                if (item is Book && isSelectionMode) {
+                    toggle(item)
+                    notifyItemChanged(bindingAdapterPosition, bundleOf("select" to null))
+                    callBack.onSelectionChanged()
+                } else {
+                    callBack.onItemClick(item)
+                }
             }
             binding.root.onLongClick {
-                callBack.onItemLongClick(item)
+                if (item is Book && isSelectionMode) {
+                    toggle(item)
+                    notifyItemChanged(bindingAdapterPosition, bundleOf("select" to null))
+                    callBack.onSelectionChanged()
+                } else {
+                    callBack.onItemLongClick(item)
+                }
             }
         }
 
