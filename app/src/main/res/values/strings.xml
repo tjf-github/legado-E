@@ -36,6 +36,9 @@
     <string name="draw">Warning</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
+    <string name="done_select">Done</string>
+    <string name="exit_select_mode">Done selecting</string>
+    <string name="select_group_first">Select group first</string>
     <string name="delete_select_group">Delete Select Group</string>
     <string name="delete_all">Delete all</string>
     <string name="custom_export_section">Custom export chapter of epub</string>

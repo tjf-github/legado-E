@@ -3,6 +3,7 @@ package io.legado.app.ui.main.bookshelf.style1.books
 import android.content.Context
 import android.os.Bundle
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import io.legado.app.base.adapter.ItemViewHolder
@@ -10,8 +11,10 @@ import io.legado.app.data.entities.Book
 import io.legado.app.databinding.ItemBookshelfListBinding
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.config.AppConfig
+import io.legado.app.utils.gone
 import io.legado.app.utils.invisible
 import io.legado.app.utils.toTimeAgo
+import io.legado.app.utils.visible
 import splitties.views.onLongClick
 
 class BooksAdapterList(
@@ -39,6 +42,7 @@ class BooksAdapterList(
             ivCover.load(item, false)
             upRefresh(binding, item)
             upLastUpdateTime(binding, item)
+            upSelectState(binding, item)
         } else {
             for (i in payloads.indices) {
                 val bundle = payloads[i] as Bundle
@@ -57,9 +61,17 @@ class BooksAdapterList(
 
                         "refresh" -> upRefresh(binding, item)
                         "lastUpdateTime" -> upLastUpdateTime(binding, item)
+                        "select" -> cbSelect.isChecked = isSelected(item)
                     }
                 }
             }
+        }
+    }
+
+    private fun upSelectState(binding: ItemBookshelfListBinding, item: Book) {
+        binding.cbSelect.apply {
+            if (isSelectionMode) visible() else gone()
+            isChecked = isSelected(item)
         }
     }
 
@@ -93,13 +105,25 @@ class BooksAdapterList(
         holder.itemView.apply {
             setOnClickListener {
                 getItem(holder.layoutPosition)?.let {
-                    callBack.open(it)
+                    if (isSelectionMode) {
+                        toggle(it)
+                        updateItem(holder.layoutPosition, bundleOf(Pair("select", null)))
+                        callBack.onSelectionChanged()
+                    } else {
+                        callBack.open(it)
+                    }
                 }
             }
 
             onLongClick {
                 getItem(holder.layoutPosition)?.let {
-                    callBack.openBookInfo(it)
+                    if (isSelectionMode) {
+                        toggle(it)
+                        updateItem(holder.layoutPosition, bundleOf(Pair("select", null)))
+                        callBack.onSelectionChanged()
+                    } else {
+                        callBack.onLongPressBook(it)
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package io.legado.app.ui.main.bookshelf.style1.books
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.DiffUtil
@@ -12,6 +13,67 @@ abstract class BaseBooksAdapter<VB : ViewBinding>(context: Context) :
     DiffRecyclerAdapter<Book, VB>(context) {
 
     override val keepScrollPosition = true
+
+    /**
+     * 多选模式：按 bookUrl 记录选中项（书架列表经 DB flow 每次发出新对象，不能用对象相等性）
+     */
+    private val selectedBooks = hashSetOf<String>()
+
+    var isSelectionMode = false
+        private set
+
+    val selection: List<Book>
+        get() = getItems().filter { selectedBooks.contains(it.bookUrl) }
+
+    fun isSelected(book: Book): Boolean = selectedBooks.contains(book.bookUrl)
+
+    /**
+     * 长按进入多选模式并默认选中该书
+     */
+    fun enterSelectionMode(book: Book) {
+        isSelectionMode = true
+        selectedBooks.add(book.bookUrl)
+        notifyDataSetChanged()
+    }
+
+    fun exitSelectionMode() {
+        if (!isSelectionMode && selectedBooks.isEmpty()) return
+        isSelectionMode = false
+        selectedBooks.clear()
+        notifyDataSetChanged()
+    }
+
+    fun toggle(book: Book) {
+        if (selectedBooks.contains(book.bookUrl)) {
+            selectedBooks.remove(book.bookUrl)
+        } else {
+            selectedBooks.add(book.bookUrl)
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun selectAll(selectAll: Boolean) {
+        if (selectAll) {
+            getItems().forEach {
+                selectedBooks.add(it.bookUrl)
+            }
+        } else {
+            selectedBooks.clear()
+        }
+        notifyDataSetChanged()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun revertSelection() {
+        getItems().forEach {
+            if (selectedBooks.contains(it.bookUrl)) {
+                selectedBooks.remove(it.bookUrl)
+            } else {
+                selectedBooks.add(it.bookUrl)
+            }
+        }
+        notifyDataSetChanged()
+    }
 
     override val diffItemCallback: DiffUtil.ItemCallback<Book> =
         object : DiffUtil.ItemCallback<Book>() {
@@ -91,5 +153,15 @@ abstract class BaseBooksAdapter<VB : ViewBinding>(context: Context) :
         fun open(book: Book)
         fun openBookInfo(book: Book)
         fun isUpdate(bookUrl: String): Boolean
+
+        /**
+         * 多选数量变化（单项切换/全选/反选）后回调
+         */
+        fun onSelectionChanged()
+
+        /**
+         * 非多选态长按书籍：请求进入多选模式
+         */
+        fun onLongPressBook(book: Book)
     }
 }

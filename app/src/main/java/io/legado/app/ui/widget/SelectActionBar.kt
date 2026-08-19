@@ -21,6 +21,7 @@ import io.legado.app.lib.theme.getSecondaryDisabledTextColor
 import io.legado.app.lib.theme.transparentNavBar
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.applyNavigationBarPadding
+import io.legado.app.utils.gone
 import io.legado.app.utils.visible
 
 
@@ -36,6 +37,7 @@ class SelectActionBar @JvmOverloads constructor(
 
     private var callBack: CallBack? = null
     private var selMenu: PopupMenu? = null
+    private var closeListener: (() -> Unit)? = null
     private val binding = ViewSelectActionBarBinding
         .inflate(LayoutInflater.from(context), this, true)
 
@@ -57,8 +59,23 @@ class SelectActionBar @JvmOverloads constructor(
             binding.btnRevertSelection.setOnClickListener { callBack?.revertSelection() }
             binding.btnSelectActionMain.setOnClickListener { callBack?.onClickSelectBarMainAction() }
             binding.ivMenuMore.setOnClickListener { selMenu?.show() }
+            binding.ivClose.setOnClickListener { closeListener?.invoke() }
             applyNavigationBarPadding()
         }
+    }
+
+    fun setCloseIconVisible(visible: Boolean) {
+        binding.ivClose.run {
+            if (visible) {
+                this.visible()
+            } else {
+                gone()
+            }
+        }
+    }
+
+    fun setOnCloseListener(listener: () -> Unit) {
+        closeListener = listener
     }
 
     fun setMainActionText(text: String) = binding.run {
