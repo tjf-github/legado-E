@@ -1,7 +1,9 @@
 package io.legado.app.help.ai
 
 sealed class AiValidationResult {
-    data class Valid(val protectedText: String) : AiValidationResult()
+    data class Valid(val protectedText: String) : AiValidationResult() {
+        override fun toString(): String = "Valid(protectedText=[REDACTED])"
+    }
     data class Invalid(val reason: String) : AiValidationResult()
 }
 

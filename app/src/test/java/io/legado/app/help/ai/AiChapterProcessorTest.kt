@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class AiChapterProcessorTest {
     private val config = AiProviderConfig("fake", "https://example.invalid", "fake-model")
+    private val apiKey = AiApiKey.from("test-only-key")
 
     @Test
     fun providerCallsAreSerialAcrossDifferentKeys() = runBlocking {
@@ -20,7 +21,7 @@ class AiChapterProcessorTest {
         val releaseFirst = CompletableDeferred<Unit>()
         val entered = CompletableDeferred<Unit>()
         val provider = object : AiTextProvider {
-            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig): AiChunkOutput {
+            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig, apiKey: AiApiKey): AiChunkOutput {
                 val now = active.incrementAndGet()
                 maxActive.updateAndGet { maxOf(it, now) }
                 entered.complete(Unit)
@@ -30,9 +31,9 @@ class AiChapterProcessorTest {
             }
         }
         val processor = AiChapterProcessor(provider)
-        val first = async { processor.process("a", AiTextChunker.chunk("甲", nonce = "a"), config) }
+        val first = async { processor.process("a", AiTextChunker.chunk("甲", nonce = "a"), config, apiKey) }
         entered.await()
-        val second = async { processor.process("b", AiTextChunker.chunk("乙", nonce = "b"), config) }
+        val second = async { processor.process("b", AiTextChunker.chunk("乙", nonce = "b"), config, apiKey) }
         releaseFirst.complete(Unit)
 
         assertTrue(first.await() is AiProcessResult.Completed)
@@ -46,7 +47,7 @@ class AiChapterProcessorTest {
         val entered = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
         val provider = object : AiTextProvider {
-            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig): AiChunkOutput {
+            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig, apiKey: AiApiKey): AiChunkOutput {
                 calls.incrementAndGet()
                 entered.complete(Unit)
                 release.await()
@@ -55,9 +56,9 @@ class AiChapterProcessorTest {
         }
         val processor = AiChapterProcessor(provider)
         val chunking = AiTextChunker.chunk("甲乙", nonce = "single")
-        val first = async { processor.process("same", chunking, config) }
+        val first = async { processor.process("same", chunking, config, apiKey) }
         entered.await()
-        val second = async { processor.process("same", chunking, config) }
+        val second = async { processor.process("same", chunking, config, apiKey) }
         yield()
         release.complete(Unit)
 
@@ -69,7 +70,7 @@ class AiChapterProcessorTest {
     fun invalidChunkStopsLaterCallsAndReturnsNoPartialText() = runBlocking {
         val calls = AtomicInteger()
         val provider = object : AiTextProvider {
-            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig): AiChunkOutput {
+            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig, apiKey: AiApiKey): AiChunkOutput {
                 val call = calls.incrementAndGet()
                 return if (call == 2) {
                     AiChunkOutput("wrong", emptyList())
@@ -81,7 +82,7 @@ class AiChapterProcessorTest {
         val processor = AiChapterProcessor(provider)
         val chunking = AiTextChunker.chunk("甲乙丙丁戊己", maxChunkCodePoints = 2, nonce = "failure")
 
-        val result = processor.process("failure", chunking, config)
+        val result = processor.process("failure", chunking, config, apiKey)
         assertTrue(result is AiProcessResult.Failed)
         assertEquals(2, calls.get())
     }
@@ -91,16 +92,35 @@ class AiChapterProcessorTest {
         val entered = CompletableDeferred<Unit>()
         val never = CompletableDeferred<Unit>()
         val provider = object : AiTextProvider {
-            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig): AiChunkOutput {
+            override suspend fun processChunk(request: AiChunkRequest, config: AiProviderConfig, apiKey: AiApiKey): AiChunkOutput {
                 entered.complete(Unit)
                 never.await()
                 return AiChunkOutput(request.chunkId, emptyList())
             }
         }
         val processor = AiChapterProcessor(provider)
-        val job = async { processor.process("cancel", AiTextChunker.chunk("甲", nonce = "cancel"), config) }
+        val job = async { processor.process("cancel", AiTextChunker.chunk("甲", nonce = "cancel"), config, apiKey) }
         entered.await()
         job.cancelAndJoin()
         assertTrue(job.isCancelled)
+    }
+
+    @Test
+    fun arbitraryProviderMessageIsNotExposed() = runBlocking {
+        val provider = object : AiTextProvider {
+            override suspend fun processChunk(
+                request: AiChunkRequest,
+                config: AiProviderConfig,
+                apiKey: AiApiKey
+            ): AiChunkOutput = error("stage-b-secret-47 private chapter text")
+        }
+        val result = AiChapterProcessor(provider).process(
+            "safe-error",
+            AiTextChunker.chunk("正文", nonce = "safe"),
+            config,
+            apiKey
+        ) as AiProcessResult.Failed
+
+        assertEquals("provider_failure", result.reason)
     }
 }

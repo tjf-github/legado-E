@@ -17,7 +17,8 @@ class AiCacheKeyTest {
         model = "model-a",
         chunkingVersion = "chunk-v1",
         validationVersion = "validator-v1",
-        configGeneration = 3
+        configGeneration = 3,
+        configFingerprint = "config-a"
     )
 
     @Test
@@ -26,6 +27,7 @@ class AiCacheKeyTest {
         assertNotEquals(AiCacheKey.create(base), AiCacheKey.create(base.copy(model = "model-b")))
         assertNotEquals(AiCacheKey.create(base), AiCacheKey.create(base.copy(inputTextSha256 = "changed")))
         assertNotEquals(AiCacheKey.create(base), AiCacheKey.create(base.copy(configGeneration = 4)))
+        assertNotEquals(AiCacheKey.create(base), AiCacheKey.create(base.copy(configFingerprint = "config-b")))
     }
 
     @Test

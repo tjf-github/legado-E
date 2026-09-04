@@ -6,7 +6,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 sealed class AiProcessResult {
-    data class Completed(val text: String, val requestCount: Int) : AiProcessResult()
+    data class Completed(val text: String, val requestCount: Int) : AiProcessResult() {
+        override fun toString(): String = "Completed(text=[REDACTED], requestCount=$requestCount)"
+    }
     data class Failed(val reason: String, val requestCount: Int) : AiProcessResult()
 }
 
@@ -24,7 +26,8 @@ class AiChapterProcessor(
     suspend fun process(
         cacheKey: String,
         chunking: AiChunkingResult,
-        config: AiProviderConfig
+        config: AiProviderConfig,
+        apiKey: AiApiKey
     ): AiProcessResult {
         var owner = false
         val shared = stateMutex.withLock {
@@ -36,14 +39,14 @@ class AiChapterProcessor(
         if (!owner) return shared.await()
 
         try {
-            val result = requestMutex.withLock { execute(chunking, config) }
+            val result = requestMutex.withLock { execute(chunking, config, apiKey) }
             shared.complete(result)
             return result
         } catch (error: CancellationException) {
             shared.cancel(error)
             throw error
-        } catch (error: Throwable) {
-            val result = AiProcessResult.Failed(error.message ?: error::class.java.simpleName, 0)
+        } catch (_: Throwable) {
+            val result = AiProcessResult.Failed("processor_failure", 0)
             shared.complete(result)
             return result
         } finally {
@@ -55,7 +58,8 @@ class AiChapterProcessor(
 
     private suspend fun execute(
         chunking: AiChunkingResult,
-        config: AiProviderConfig
+        config: AiProviderConfig,
+        apiKey: AiApiKey
     ): AiProcessResult {
         val processed = ArrayList<String>(chunking.chunks.size)
         var requestCount = 0
@@ -64,13 +68,14 @@ class AiChapterProcessor(
                 requestCount++
                 provider.processChunk(
                     AiChunkRequest(chunk.id, chunk.text, chunk.contextOnly),
-                    config
+                    config,
+                    apiKey
                 )
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
                 return AiProcessResult.Failed(
-                    error.message ?: error::class.java.simpleName,
+                    (error as? AiProviderException)?.error?.name ?: "provider_failure",
                     requestCount
                 )
             }

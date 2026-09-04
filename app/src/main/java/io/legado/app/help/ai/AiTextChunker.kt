@@ -7,6 +7,9 @@ data class AiProtectedText(
     val protected: String,
     val sentinels: Map<String, String>
 ) {
+    override fun toString(): String =
+        "AiProtectedText(original=[REDACTED], protected=[REDACTED], sentinelCount=${sentinels.size})"
+
     fun restore(value: String): String {
         var restored = value
         sentinels.forEach { (sentinel, originalValue) ->
@@ -26,12 +29,18 @@ data class AiTextChunk(
     val id: String,
     val text: String,
     val contextOnly: String?
-)
+) {
+    override fun toString(): String =
+        "AiTextChunk(id=$id, text=[REDACTED], contextOnly=[REDACTED])"
+}
 
 data class AiChunkingResult(
     val protectedText: AiProtectedText,
     val chunks: List<AiTextChunk>
-)
+) {
+    override fun toString(): String =
+        "AiChunkingResult(protectedText=[REDACTED], chunkCount=${chunks.size})"
+}
 
 object AiTextChunker {
     internal const val SENTINEL_START = '\uE000'

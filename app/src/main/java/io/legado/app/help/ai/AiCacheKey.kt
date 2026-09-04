@@ -14,7 +14,8 @@ data class AiCacheIdentity(
     val model: String,
     val chunkingVersion: String,
     val validationVersion: String,
-    val configGeneration: Long
+    val configGeneration: Long,
+    val configFingerprint: String = ""
 )
 
 object AiCacheKey {
@@ -30,7 +31,8 @@ object AiCacheKey {
             identity.model,
             identity.chunkingVersion,
             identity.validationVersion,
-            identity.configGeneration.toString()
+            identity.configGeneration.toString(),
+            identity.configFingerprint
         )
         val canonical = fields.joinToString("") { "${it.length}:$it" }
         return sha256(canonical)
