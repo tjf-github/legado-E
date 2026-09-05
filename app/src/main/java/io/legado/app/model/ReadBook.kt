@@ -11,6 +11,7 @@ import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.ReadRecord
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.book.BookContent
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.isImage
 import io.legado.app.help.book.isLocal
@@ -686,6 +687,21 @@ object ReadBook : CoroutineScope by MainScope() {
         loadingChapters.remove(index)
     }
 
+    /** Both loading paths must prepare exactly the same title and original body before layout. */
+    private suspend fun prepareDisplayContent(
+        book: Book,
+        chapter: BookChapter,
+        content: String
+    ): Pair<String, BookContent> {
+        val processor = ContentProcessor.get(book.name, book.origin)
+        val title = chapter.getDisplayTitle(
+            processor.getTitleReplaceRules(),
+            book.getUseReplaceRule(),
+            replaceBook = book.toReplaceBook()
+        )
+        return title to processor.getContent(book, chapter, content, includeTitle = false)
+    }
+
     /**
      * 内容加载完成
      */
@@ -705,14 +721,7 @@ object ReadBook : CoroutineScope by MainScope() {
         }
         chapterLoadingJobs[chapter.index]?.cancel()
         val job = Coroutine.async(this, start = CoroutineStart.LAZY) {
-            val contentProcessor = ContentProcessor.get(book.name, book.origin)
-            val displayTitle = chapter.getDisplayTitle(
-                contentProcessor.getTitleReplaceRules(),
-                book.getUseReplaceRule(),
-                replaceBook = book.toReplaceBook()
-            )
-            val contents = contentProcessor
-                .getContent(book, chapter, content, includeTitle = false)
+            val (displayTitle, contents) = prepareDisplayContent(book, chapter, content)
             ensureActive()
             val textChapter = ChapterProvider.getTextChapterAsync(
                 this, book, chapter, displayTitle, contents, simulatedChapterSize
@@ -794,14 +803,7 @@ object ReadBook : CoroutineScope by MainScope() {
             return
         }
         kotlin.runCatching {
-            val contentProcessor = ContentProcessor.get(book.name, book.origin)
-            val displayTitle = chapter.getDisplayTitle(
-                contentProcessor.getTitleReplaceRules(),
-                book.getUseReplaceRule(),
-                replaceBook = book.toReplaceBook()
-            )
-            val contents = contentProcessor
-                .getContent(book, chapter, content, includeTitle = false)
+            val (displayTitle, contents) = prepareDisplayContent(book, chapter, content)
             val textChapter = ChapterProvider.getTextChapterAsync(
                 this@ReadBook, book, chapter, displayTitle, contents, simulatedChapterSize
             )
