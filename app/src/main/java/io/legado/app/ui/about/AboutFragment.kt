@@ -18,7 +18,6 @@ import io.legado.app.help.update.AppUpdate
 import io.legado.app.ui.widget.dialog.TextDialog
 import io.legado.app.ui.widget.dialog.WaitDialog
 import io.legado.app.utils.FileDoc
-import io.legado.app.utils.compress.ZipUtils
 import io.legado.app.utils.createFileIfNotExist
 import io.legado.app.utils.createFolderIfNotExist
 import io.legado.app.utils.delete
@@ -132,7 +131,7 @@ class AboutFragment : PreferenceFragmentCompat() {
                 delay(3000)
             }
             val doc = FileDoc.fromUri(Uri.parse(backupPath), true)
-            copyLogs(doc)
+            LogExport.copyLogs(doc)
             copyHeapDump(doc)
             appCtx.toastOnUi("已保存至备份目录")
         }.onError {
@@ -164,28 +163,6 @@ class AboutFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun copyLogs(doc: FileDoc) {
-        val cacheDir = appCtx.externalCache
-        val logFiles = File(cacheDir, "logs")
-        val crashFiles = File(cacheDir, "crash")
-        val logcatFile = File(cacheDir, "logcat.txt")
-
-        dumpLogcat(logcatFile)
-
-        val zipFile = File(cacheDir, "logs.zip")
-        ZipUtils.zipFiles(arrayListOf(logFiles, crashFiles, logcatFile), zipFile)
-
-        doc.find("logs.zip")?.delete()
-
-        zipFile.inputStream().use { input ->
-            doc.createFileIfNotExist("logs.zip").openOutputStream().getOrNull()
-                ?.use {
-                    input.copyTo(it)
-                }
-        }
-        zipFile.delete()
-    }
-
     private fun copyHeapDump(doc: FileDoc): Boolean {
         val heapFile = FileDoc.fromFile(File(appCtx.externalCache, "heapDump")).list()
             ?.firstOrNull() ?: return false
@@ -198,17 +175,6 @@ class AboutFragment : PreferenceFragmentCompat() {
                 }
         }
         return true
-    }
-
-    private fun dumpLogcat(file: File) {
-        try {
-            val process = Runtime.getRuntime().exec("logcat -d")
-            file.outputStream().use {
-                process.inputStream.copyTo(it)
-            }
-        } catch (e: Exception) {
-            AppLog.put("保存Logcat失败\n$e", e)
-        }
     }
 
 }

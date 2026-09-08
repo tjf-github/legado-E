@@ -18,7 +18,7 @@
 
 ## 硬性规则
 
-- 编译/单测门槛：改动后必须 `.\gradlew.bat :app:compileAppDebugKotlin` 与 `:app:testAppDebugUnitTest` 通过再提交（flavor 是 `app`，任务名不是 legado）。
+- 编译/单测门槛：改动后必须 `.\gradlew.bat :app:compileAppDebugKotlin` 与 `:app:testAppDebugUnitTest` 通过再提交（flavor 是 `app`，任务名不是 legado）；**发版前**再补跑 `:app:lintAppDebug`（CI `Test Build` 实际跑 test + lint + assembleRelease，别只跑 compile+test 就发版）。
 - 跑 Gradle 前 `$env:GRADLE_USER_HOME = "D:\gradle_home"`。
 - 数据库不加表不加列；本地 TXT/EPUB 导入与阅读路径零侵入。
 - 提交信息用 conventional commits（`fix/feat/docs/chore/test`）；PowerShell 下中文提交信息用 `git commit -F <临时文件>`，避免引号/尖括号把参数拆散。
@@ -32,6 +32,8 @@
 - `发布推送流程书.md` —— 发布/推送全流程 + 踩坑记录（遇到发布问题首选）；
 - `双平台开发环境流程书.md` —— Windows + WSL 双端环境事实、本地改动（-Xmx3g/skip-worktree）、网络踩坑、同步约定；
 - `维护计划书-后续修复与增强.md` —— 当前待办与已知问题（**活文档**，新反馈都记这里）；
+- `优化预处理计划书.md` —— 稳定基线后的技术优化候选、测量和排期，不替代维护计划；
+- `AI正文净化功能计划书.md` —— AI 正文后处理范围与安全边界（阶段 A/B 已验收，唯一下一步为阶段 C：分块、校验与缓存）；
 - `复盘总结.md` —— 各期成果、手测记录与提交清单；
 - `第N期计划书*.md`、`构建优化书.md` —— 一~五期功能设计与构建方案（**历史归档，已完成，不再维护**）。
 
@@ -42,3 +44,4 @@
 - 功能改动只提交到 `codex/manga-import`；发布动作只发生在 main 合并环节（走流程书 §4）；
 - **接「发布/构建/CI」类任务前**，先读《发布推送流程书.md》并核对 `.github/workflows/*.yml` 的 `on:` 触发条件（发版是 `push main` 自动触发，不是 `workflow_dispatch`），别凭 workflow 文件名或第一印象下结论；
 - **多窗口共享同一 git 仓库**：关键 git 操作前先 `git status -sb` + `git log --oneline -3` 核对最新状态（别的窗口可能已推进 HEAD，别拿旧状态决策）。
+- **对话框回调绑定 Activity**：`GroupSelectDialog`/`GroupManageDialog` 等 CallBack 取 `activity as? CallBack`，Fragment 内（如书架分组页）无法直达，需内联自建弹窗（示例见 `BooksFragment.selectGroup`）。
