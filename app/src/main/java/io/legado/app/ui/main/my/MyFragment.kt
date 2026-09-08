@@ -8,6 +8,7 @@ import android.view.View
 import androidx.preference.Preference
 import io.legado.app.R
 import io.legado.app.base.BaseFragment
+import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.FragmentMyConfigBinding
@@ -29,7 +30,6 @@ import io.legado.app.ui.dict.rule.DictRuleActivity
 import io.legado.app.ui.file.FileManageActivity
 import io.legado.app.ui.main.MainFragmentInterface
 import io.legado.app.ui.replace.ReplaceRuleActivity
-import io.legado.app.utils.LogUtils
 import io.legado.app.utils.getPrefBoolean
 import io.legado.app.utils.observeEventSticky
 import io.legado.app.utils.openUrl
@@ -138,7 +138,7 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
                     }
                 }
 
-                "recordLog" -> LogUtils.upLevel()
+                "recordLog" -> AppLog.onRecordLogChanged()
             }
         }
 

@@ -65,11 +65,26 @@ object AiOutputValidator {
         return AiValidationResult.Valid(result.toString())
     }
 
-    private fun coreCharacters(value: String): List<Int> = value.codePoints().toArray()
-        .filter { Character.isLetterOrDigit(it) }
+    private fun coreCharacters(value: String): List<Int> {
+        val result = mutableListOf<Int>()
+        var i = 0
+        while (i < value.length) {
+            val cp = value.codePointAt(i)
+            if (Character.isLetterOrDigit(cp)) result.add(cp)
+            i += Character.charCount(cp)
+        }
+        return result
+    }
 
-    private fun hasLetterOrDigit(value: String): Boolean =
-        value.codePoints().anyMatch { Character.isLetterOrDigit(it) }
+    private fun hasLetterOrDigit(value: String): Boolean {
+        var i = 0
+        while (i < value.length) {
+            val cp = value.codePointAt(i)
+            if (Character.isLetterOrDigit(cp)) return true
+            i += Character.charCount(cp)
+        }
+        return false
+    }
 
     private fun containsSentinelSyntax(value: String, sentinels: Set<String>): Boolean =
         value.contains(AiTextChunker.SENTINEL_START) || sentinels.any(value::contains)
