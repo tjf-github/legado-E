@@ -1336,4 +1336,21 @@
     <string name="manga_direction_vertical">竖排</string>
     <string name="manga_direction_horizontal">横排</string>
     <string name="manga_page_anim">翻页动画</string>
+    <string name="log_source">日志来源</string>
+    <string name="log_source_memory">内存</string>
+    <string name="log_source_file">文件</string>
+    <string name="log_level">日志级别</string>
+    <string name="log_level_all">全部级别</string>
+    <string name="log_tag">日志标签</string>
+    <string name="log_tag_all">全部标签</string>
+    <string name="log_keyword_hint">按关键词筛选</string>
+    <string name="log_copy_filtered">复制当前筛选结果</string>
+    <string name="log_export_all">导出全部日志</string>
+    <string name="log_clear_memory">清空内存日志</string>
+    <string name="log_memory_cleared">已清空内存日志，文件日志未删除</string>
+    <string name="log_no_results">没有符合条件的日志</string>
+    <string name="log_recording_disabled">日志记录已关闭；当前显示已有文件。请开启“记录日志”以记录新内容。</string>
+    <string name="log_exported">日志已导出至备份目录</string>
+    <string name="log_export_failed">导出日志失败：%1$s</string>
+    <string name="log_backup_not_set">请先设置备份目录再导出日志</string>
 </resources>

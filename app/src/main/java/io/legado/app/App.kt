@@ -19,6 +19,8 @@ import io.legado.app.base.AppContextWrapper
 import io.legado.app.constant.AppConst.channelIdDownload
 import io.legado.app.constant.AppConst.channelIdReadAloud
 import io.legado.app.constant.AppConst.channelIdWeb
+import io.legado.app.constant.AppLog
+import io.legado.app.constant.LogTag
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
@@ -51,7 +53,6 @@ import io.legado.app.help.source.SourceHelp
 import io.legado.app.help.storage.Backup
 import io.legado.app.model.BookCover
 import io.legado.app.utils.ChineseUtils
-import io.legado.app.utils.LogUtils
 import io.legado.app.utils.defaultSharedPreferences
 import io.legado.app.utils.getPrefBoolean
 import io.legado.app.utils.isDebuggable
@@ -78,9 +79,9 @@ class App : Application() {
         registerActivityLifecycleCallbacks(LifecycleHelp)
         defaultSharedPreferences.registerOnSharedPreferenceChangeListener(AppConfig)
         Coroutine.async {
-            LogUtils.init(this@App)
-            LogUtils.d("App", "onCreate")
-            LogUtils.logDeviceInfo()
+            AppLog.init(this@App)
+            AppLog.i(LogTag.APP, "onCreate")
+            AppLog.logDeviceInfo()
             //预下载Cronet so
             Cronet.preDownload()
             createNotificationChannels()
@@ -237,16 +238,24 @@ class App : Application() {
 
         override fun log(level: Level, msg: String) {
             super.log(level, msg)
-            LogUtils.d(TAG, msg)
+            logToApp(level, msg)
         }
 
         override fun log(level: Level, msg: String, th: Throwable?) {
             super.log(level, msg, th)
-            LogUtils.d(TAG, "$msg\n${th?.stackTraceToString()}")
+            logToApp(level, msg, th)
         }
 
-        companion object {
-            private const val TAG = "[LiveEventBus]"
+        private fun logToApp(level: Level, msg: String, throwable: Throwable? = null) {
+            when {
+                level.intValue() >= Level.SEVERE.intValue() ->
+                    AppLog.e(LogTag.LIVE_EVENT_BUS, msg, throwable)
+
+                level.intValue() >= Level.WARNING.intValue() ->
+                    AppLog.w(LogTag.LIVE_EVENT_BUS, msg, throwable)
+
+                else -> AppLog.i(LogTag.LIVE_EVENT_BUS, msg, throwable)
+            }
         }
     }
 

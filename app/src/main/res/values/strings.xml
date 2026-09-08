@@ -1443,4 +1443,22 @@
     <string name="manga_direction_vertical">Vertical</string>
     <string name="manga_direction_horizontal">Horizontal</string>
     <string name="manga_page_anim">Page animation</string>
+
+    <string name="log_source">Log source</string>
+    <string name="log_source_memory">Memory</string>
+    <string name="log_source_file">Files</string>
+    <string name="log_level">Log level</string>
+    <string name="log_level_all">All levels</string>
+    <string name="log_tag">Log tag</string>
+    <string name="log_tag_all">All tags</string>
+    <string name="log_keyword_hint">Filter by keyword</string>
+    <string name="log_copy_filtered">Copy filtered results</string>
+    <string name="log_export_all">Export all logs</string>
+    <string name="log_clear_memory">Clear memory logs</string>
+    <string name="log_memory_cleared">Memory logs cleared; files were not deleted</string>
+    <string name="log_no_results">No matching logs</string>
+    <string name="log_recording_disabled">Log recording is off; showing existing files. Enable Record log to capture new entries.</string>
+    <string name="log_exported">Logs exported to the backup directory</string>
+    <string name="log_export_failed">Failed to export logs: %1$s</string>
+    <string name="log_backup_not_set">Set a backup directory before exporting logs</string>
 </resources>

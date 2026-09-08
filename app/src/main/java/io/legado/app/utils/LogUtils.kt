@@ -4,14 +4,9 @@ package io.legado.app.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
-import android.webkit.WebSettings
 import io.legado.app.BuildConfig
-import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppLog
-import io.legado.app.help.config.AppConfig
 import io.legado.app.help.globalExecutor
-import splitties.init.appCtx
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.logging.FileHandler
@@ -22,19 +17,19 @@ import kotlin.time.Duration.Companion.days
 
 @SuppressLint("SimpleDateFormat")
 @Suppress("unused")
-object LogUtils {
+internal object LogUtils {
     const val TIME_PATTERN = "yy-MM-dd HH:mm:ss.SSS"
     val logTimeFormat by lazy { SimpleDateFormat(TIME_PATTERN) }
 
-    fun init(context: Context) {
-        fileHandler = createFileHandler(context)?.also {
+    internal fun init(context: Context, enabled: Boolean) {
+        fileHandler = createFileHandler(context, enabled)?.also {
             logger.addHandler(it)
         }
     }
 
     @JvmStatic
     fun d(tag: String, msg: String) {
-        logger.log(Level.INFO, "$tag $msg")
+        log(Level.INFO, tag, msg)
     }
 
     inline fun d(tag: String, lazyMsg: () -> String) {
@@ -45,7 +40,16 @@ object LogUtils {
 
     @JvmStatic
     fun e(tag: String, msg: String) {
-        logger.log(Level.WARNING, "$tag $msg")
+        log(Level.SEVERE, tag, msg)
+    }
+
+    internal fun log(level: Level, tag: String, msg: String, throwable: Throwable? = null) {
+        val text = if (throwable == null) {
+            "$tag $msg"
+        } else {
+            "$tag $msg\n${throwable.stackTraceToString()}"
+        }
+        logger.log(level, text)
     }
 
     val logger: Logger by lazy {
@@ -54,7 +58,7 @@ object LogUtils {
 
     private var fileHandler: FileHandler? = null
 
-    private fun createFileHandler(context: Context): FileHandler? {
+    private fun createFileHandler(context: Context, enabled: Boolean): FileHandler? {
         try {
             val root = context.externalCacheDir ?: return null
             val logFolder = FileUtils.createFolderIfNotExist(root, "logs")
@@ -71,11 +75,10 @@ object LogUtils {
             return AsyncFileHandler(logPath).apply {
                 formatter = object : java.util.logging.Formatter() {
                     override fun format(record: LogRecord): String {
-                        // 设置文件输出格式
-                        return getCurrentDateStr(TIME_PATTERN) + ": " + record.message + "\n"
+                        return formatLogLine(getCurrentDateStr(TIME_PATTERN), record)
                     }
                 }
-                level = if (AppConfig.recordLog) {
+                level = if (enabled) {
                     Level.INFO
                 } else {
                     Level.OFF
@@ -88,8 +91,8 @@ object LogUtils {
         }
     }
 
-    fun upLevel() {
-        val level = if (AppConfig.recordLog) {
+    internal fun setEnabled(enabled: Boolean) {
+        val level = if (enabled) {
             Level.INFO
         } else {
             Level.OFF
@@ -107,34 +110,15 @@ object LogUtils {
         return sdf.format(date)
     }
 
-    fun logDeviceInfo() {
-        d("DeviceInfo") {
-            buildString {
-                kotlin.runCatching {
-                    //获取系统信息
-                    append("MANUFACTURER=").append(Build.MANUFACTURER).append("\n")
-                    append("BRAND=").append(Build.BRAND).append("\n")
-                    append("MODEL=").append(Build.MODEL).append("\n")
-                    append("SDK_INT=").append(Build.VERSION.SDK_INT).append("\n")
-                    append("RELEASE=").append(Build.VERSION.RELEASE).append("\n")
-                    val userAgent = try {
-                        WebSettings.getDefaultUserAgent(appCtx)
-                    } catch (e: Throwable) {
-                        e.toString()
-                    }
-                    append("WebViewUserAgent=").append(userAgent).append("\n")
-                    append("packageName=").append(appCtx.packageName).append("\n")
-                    append("heapSize=").append(Runtime.getRuntime().maxMemory()).append("\n")
-                    //获取app版本信息
-                    AppConst.appInfo.let {
-                        append("versionName=").append(it.versionName).append("\n")
-                        append("versionCode=").append(it.versionCode).append("\n")
-                    }
-                }
-            }
-        }
-    }
+}
 
+internal fun formatLogLine(timestamp: String, record: LogRecord): String {
+    val level = when {
+        record.level.intValue() >= Level.SEVERE.intValue() -> "ERROR"
+        record.level.intValue() >= Level.WARNING.intValue() -> "WARN"
+        else -> "INFO"
+    }
+    return "$timestamp [$level] ${record.message}\n"
 }
 
 fun Throwable.printOnDebug() {

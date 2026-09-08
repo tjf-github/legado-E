@@ -9,6 +9,7 @@ import android.os.Looper
 import android.webkit.WebSettings
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppLog
+import io.legado.app.constant.LogTag
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.LocalConfig
@@ -151,7 +152,13 @@ class CrashHandler(val context: Context) : Thread.UncaughtExceptionHandler {
                 val fileDoc = FileDoc.fromUri(uri, true)
                 fileDoc.createFileIfNotExist(fileName, "crash")
                     .writeText(crashLog)
-            } catch (_: Exception) {
+            } catch (backupError: Exception) {
+                AppLog.e(
+                    LogTag.CRASH,
+                    "写入备份崩溃日志失败: " +
+                        "${backupError::class.java.simpleName}: ${backupError.message ?: "无错误信息"}",
+                    backupError
+                )
             }
             kotlin.runCatching {
                 appCtx.externalCacheDir?.let { rootFile ->

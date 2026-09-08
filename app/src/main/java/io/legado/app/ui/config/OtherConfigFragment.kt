@@ -12,6 +12,7 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import com.jeremyliao.liveeventbus.LiveEventBus
 import io.legado.app.R
+import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.DialogEditCodeBinding
@@ -31,7 +32,6 @@ import io.legado.app.ui.file.HandleFileContract
 import io.legado.app.ui.video.config.SettingsDialog
 import io.legado.app.ui.widget.code.addJsonPattern
 import io.legado.app.ui.widget.number.NumberPickerDialog
-import io.legado.app.utils.LogUtils
 import io.legado.app.utils.getPrefBoolean
 import io.legado.app.utils.isJsonObject
 import io.legado.app.utils.postEvent
@@ -200,8 +200,8 @@ class OtherConfigFragment : PreferenceFragment(),
 
             PreferKey.recordLog -> {
                 AppConfig.recordLog = appCtx.getPrefBoolean(PreferKey.recordLog)
-                LogUtils.upLevel()
-                LogUtils.logDeviceInfo()
+                AppLog.onRecordLogChanged()
+                AppLog.logDeviceInfo()
                 LiveEventBus.config().enableLogger(AppConfig.recordLog)
                 AppFreezeMonitor.init(appCtx)
                 DispatchersMonitor.init()
