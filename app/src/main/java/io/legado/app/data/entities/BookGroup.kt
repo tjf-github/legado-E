@@ -40,6 +40,12 @@ data class BookGroup(
         const val IdLocalNone = -5L
         const val IdVideo = -6L
         const val IdError = -11L
+
+        // 书架内置分类的默认展示顺序：文字书分类在“全部”左侧，漫画在右侧。
+        const val OrderNetBook = -12
+        const val OrderLocal = -11
+        const val OrderAll = -10
+        const val OrderLocalManga = -9
     }
 
     fun getManageName(context: Context): String {

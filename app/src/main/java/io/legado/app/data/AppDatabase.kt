@@ -178,31 +178,52 @@ abstract class AppDatabase : RoomDatabase() {
                 @Language("sql")
                 val insertBookGroupAllSql = """
                     insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdAll}, '全部', -10, 1
+                    select ${BookGroup.IdAll}, '全部', ${BookGroup.OrderAll}, 1
                     where not exists (select * from book_groups where groupId = ${BookGroup.IdAll})
                 """.trimIndent()
                 db.execSQL(insertBookGroupAllSql)
                 @Language("sql")
                 val insertBookGroupNetBookSql = """
                     insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
-                    select ${BookGroup.IdNetBook}, '书源书籍', -11, 1, 1
+                    select ${BookGroup.IdNetBook}, '书源书籍', ${BookGroup.OrderNetBook}, 1, 1
                     where not exists (select * from book_groups where groupId = ${BookGroup.IdNetBook})
                 """.trimIndent()
                 db.execSQL(insertBookGroupNetBookSql)
                 @Language("sql")
                 val insertBookGroupLocalSql = """
                     insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
-                    select ${BookGroup.IdLocal}, '本地', -9, 0, 1
+                    select ${BookGroup.IdLocal}, '本地', ${BookGroup.OrderLocal}, 0, 1
                     where not exists (select * from book_groups where groupId = ${BookGroup.IdLocal})
                 """.trimIndent()
                 db.execSQL(insertBookGroupLocalSql)
                 @Language("sql")
                 val insertBookGroupLocalMangaSql = """
                     insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
-                    select ${BookGroup.IdLocalManga}, '本地漫画', -9, 0, 1
+                    select ${BookGroup.IdLocalManga}, '本地漫画', ${BookGroup.OrderLocalManga}, 0, 1
                     where not exists (select * from book_groups where groupId = ${BookGroup.IdLocalManga})
                 """.trimIndent()
                 db.execSQL(insertBookGroupLocalMangaSql)
+                @Language("sql")
+                val normalizeLegacyBookGroupOrderSql = """
+                    update book_groups
+                    set `order` = case groupId
+                        when ${BookGroup.IdNetBook} then ${BookGroup.OrderNetBook}
+                        when ${BookGroup.IdLocal} then ${BookGroup.OrderLocal}
+                        when ${BookGroup.IdAll} then ${BookGroup.OrderAll}
+                        when ${BookGroup.IdLocalManga} then ${BookGroup.OrderLocalManga}
+                    end
+                    where groupId in (
+                        ${BookGroup.IdNetBook},
+                        ${BookGroup.IdLocal},
+                        ${BookGroup.IdAll},
+                        ${BookGroup.IdLocalManga}
+                    )
+                    and (select `order` from book_groups where groupId = ${BookGroup.IdNetBook}) = -11
+                    and (select `order` from book_groups where groupId = ${BookGroup.IdLocal}) = -9
+                    and (select `order` from book_groups where groupId = ${BookGroup.IdAll}) = -10
+                    and (select `order` from book_groups where groupId = ${BookGroup.IdLocalManga}) = -9
+                """.trimIndent()
+                db.execSQL(normalizeLegacyBookGroupOrderSql)
                 @Language("sql")
                 val upBookGroupLocalNameSql = """
                     update book_groups set groupName = '本地小说' 
