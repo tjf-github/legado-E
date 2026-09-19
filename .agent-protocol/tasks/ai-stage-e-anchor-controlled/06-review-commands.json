@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "network_policy": "deny-declared-not-enforced",
+  "commands": [
+    {
+      "name": "no-business-tree-changes",
+      "file": "git",
+      "args": [
+        "status",
+        "--porcelain"
+      ],
+      "working_directory": ".",
+      "timeout_sec": 120
+    },
+    {
+      "name": "whitespace-and-conflict-check",
+      "file": "git",
+      "args": [
+        "diff",
+        "--check"
+      ],
+      "working_directory": ".",
+      "timeout_sec": 120
+    }
+  ]
+}
