@@ -1,0 +1,66 @@
+{
+  "triad": {
+    "assurance": "high",
+    "max_state": "accepted",
+    "controller": "codex",
+    "executor": "dsh",
+    "reviewer": "claude",
+    "acceptor": "codex"
+  },
+  "claude-triad": {
+    "assurance": "high",
+    "max_state": "accepted",
+    "controller": "claude",
+    "executor": "dsh",
+    "reviewer": "codex",
+    "acceptor": "claude"
+  },
+  "codex-dsh": {
+    "assurance": "standard",
+    "max_state": "accepted",
+    "controller": "codex",
+    "executor": "dsh",
+    "reviewer": "codex-fresh-review",
+    "acceptor": "codex"
+  },
+  "codex-claude": {
+    "assurance": "standard",
+    "max_state": "accepted",
+    "controller": "codex",
+    "executor": "codex",
+    "reviewer": "claude",
+    "acceptor": "codex"
+  },
+  "dsh-claude": {
+    "assurance": "standard",
+    "max_state": "accepted",
+    "controller": "dsh",
+    "executor": "dsh",
+    "reviewer": "claude",
+    "acceptor": "dsh"
+  },
+  "dsh-codex": {
+    "assurance": "standard",
+    "max_state": "accepted",
+    "controller": "dsh",
+    "executor": "dsh",
+    "reviewer": "codex-fresh-review",
+    "acceptor": "dsh"
+  },
+  "claude-codex": {
+    "assurance": "standard",
+    "max_state": "accepted",
+    "controller": "claude",
+    "executor": "claude",
+    "reviewer": "codex-fresh-review",
+    "acceptor": "claude"
+  },
+  "single": {
+    "assurance": "provisional",
+    "max_state": "provisional",
+    "controller": "current-agent",
+    "executor": "current-agent",
+    "reviewer": "NOT RUN",
+    "acceptor": "current-agent"
+  }
+}

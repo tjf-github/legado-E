@@ -11,14 +11,28 @@ data class AiProtectedText(
         "AiProtectedText(original=[REDACTED], protected=[REDACTED], sentinelCount=${sentinels.size})"
 
     fun restore(value: String): String {
+        // 校验保护项出现顺序 + 唯一性：不得重排、不得复制，也不得出现未闭合/未知哨兵。
+        val expected = sentinels.keys.toList()
+        val actual = mutableListOf<String>()
+        var i = 0
+        while (i < value.length) {
+            val cp = value.codePointAt(i)
+            if (cp == AiTextChunker.SENTINEL_START.code) {
+                val close = value.indexOf(AiTextChunker.SENTINEL_END, i + 1)
+                require(close > i) { "unterminated sentinel" }
+                actual += value.substring(i, close + 1)
+                i = close + 1
+            } else {
+                i += Character.charCount(cp)
+            }
+        }
+        require(actual == expected) { "protected values reordered or duplicated" }
+
         var restored = value
         sentinels.forEach { (sentinel, originalValue) ->
-            require(restored.windowed(sentinel.length, 1).count { it == sentinel } == 1) {
-                "protected value was changed"
-            }
             restored = restored.replace(sentinel, originalValue)
         }
-        require(!restored.contains(AiTextChunker.SENTINEL_START)) {
+        require(!restored.contains(AiTextChunker.SENTINEL_START) && !restored.contains(AiTextChunker.SENTINEL_END)) {
             "unknown sentinel in result"
         }
         return restored
@@ -42,111 +56,107 @@ data class AiChunkingResult(
         "AiChunkingResult(protectedText=[REDACTED], chunkCount=${chunks.size})"
 }
 
+/**
+ * 音节/组合记号是否应与其前一个基字符被视为同一书写单元。
+ * 涵盖组合记号（Mn/Mc/Me）、变体选择符、零宽连接/非连接符，避免把它们与基字符分离。
+ */
+internal fun isCombiningCodePoint(codePoint: Int): Boolean {
+    val type = Character.getType(codePoint)
+    return type == Character.NON_SPACING_MARK.toInt() ||
+        type == Character.COMBINING_SPACING_MARK.toInt() ||
+        type == Character.ENCLOSING_MARK.toInt() ||
+        isVariationSelector(codePoint) ||
+        codePoint == 0x200C || codePoint == 0x200D // ZWNJ / ZWJ
+}
+
+private fun isVariationSelector(codePoint: Int): Boolean =
+    codePoint in 0xFE00..0xFE0F || codePoint in 0xE0100..0xE01EF
+
 object AiTextChunker {
     internal const val SENTINEL_START = '\uE000'
-    private const val SENTINEL_END = '\uE001'
-    private val protectedValueRegex = Regex(
-        "https?://[^\\s<>\\\"']+|(?<![\\p{L}\\p{N}_])(?:\\d[\\d,._:/-]*\\d|\\d)(?![\\p{L}\\p{N}_])",
-        RegexOption.IGNORE_CASE
-    )
-    private val preferredSentenceEnds = setOf('\u3002', '\uff01', '\uff1f', '\uff1b', '.', '!', '?', ';')
+    internal const val SENTINEL_END = '\uE001'
+    private val values = Regex("https?://[^\\s<>\\\"']+|[\\p{N}]+(?:[,._:/-][\\p{N}]+)*", RegexOption.IGNORE_CASE)
+    private val sentenceEnds = setOf('。', '！', '？', '；', '.', '!', '?', ';')
+
+    internal fun protectedValues(text: String): List<String> = values.findAll(text).map { it.value }.toList()
 
     fun protect(input: String, nonce: String = UUID.randomUUID().toString().replace("-", "")): AiProtectedText {
-        require(nonce.isNotBlank())
+        require(nonce.matches(Regex("[A-Za-z0-9_-]+"))) { "invalid_nonce" }
+        require(SENTINEL_START !in input && SENTINEL_END !in input) { "reserved_character" }
         val sentinels = linkedMapOf<String, String>()
-        var index = 0
-        val protected = protectedValueRegex.replace(input) { match ->
-            val sentinel = "$SENTINEL_START$nonce:${index++}$SENTINEL_END"
-            sentinels[sentinel] = match.value
-            sentinel
+        val protected = values.replace(input) {
+            val marker = "$SENTINEL_START$nonce:${sentinels.size}$SENTINEL_END"
+            sentinels[marker] = it.value
+            marker
         }
         return AiProtectedText(input, protected, sentinels)
     }
 
-    fun chunk(
-        input: String,
-        maxChunkCodePoints: Int = 6000,
-        maxContextCodePoints: Int = 200,
-        nonce: String = UUID.randomUUID().toString().replace("-", "")
-    ): AiChunkingResult {
-        require(maxChunkCodePoints > 0)
-        require(maxContextCodePoints >= 0)
-        val protectedText = protect(input, nonce)
-        val text = protectedText.protected
-        if (text.isEmpty()) return AiChunkingResult(protectedText, emptyList())
-
-        val chunks = mutableListOf<AiTextChunk>()
-        var start = 0
-        while (start < text.length) {
-            val hardEnd = offsetByCodePoints(text, start, maxChunkCodePoints)
-            val end = if (hardEnd == text.length) {
-                hardEnd
-            } else {
-                chooseBoundary(text, start, avoidSentinelSplit(text, hardEnd))
+    /** Linear atomic-boundary scan; bodies/context are generated lazily so previous request
+     * bodies are not retained in a list. An indivisible unit over budget fails closed. */
+    fun chunk(input: String, maxChunkCodePoints: Int = 6000, maxContextCodePoints: Int = 200,
+              nonce: String = UUID.randomUUID().toString().replace("-", "")): AiChunkingResult {
+        require(maxChunkCodePoints > 0 && maxContextCodePoints in 0..200)
+        val protected = protect(input, nonce)
+        val text = protected.protected
+        val atoms = arrayListOf(0)
+        val counts = arrayListOf(0)
+        var pos = 0
+        var total = 0
+        while (pos < text.length) {
+            val start = pos
+            pos = if (text[pos] == SENTINEL_START) text.indexOf(SENTINEL_END, pos) + 1
+                else pos + Character.charCount(text.codePointAt(pos))
+            while (pos < text.length && (isCombiningCodePoint(text.codePointAt(pos)) ||
+                    text.codePointBefore(pos) == 0x200D || text.codePointAt(pos) in 0x1F3FB..0x1F3FF)) {
+                pos += Character.charCount(text.codePointAt(pos))
             }
-            val body = text.substring(start, end)
-            val context = chunks.lastOrNull()?.text?.let {
-                safeTail(it, maxContextCodePoints)
-            }?.takeIf(String::isNotEmpty)
-            chunks += AiTextChunk("chunk-${chunks.size}", body, context)
-            start = end
+            val count = text.codePointCount(start, pos)
+            require(count <= maxChunkCodePoints) { "atomic_unit_exceeds_budget" }
+            total += count
+            atoms.add(pos); counts.add(total)
         }
-
-        check(chunks.joinToString("") { it.text } == protectedText.protected)
-        check(protectedText.restore(chunks.joinToString("") { it.text }) == input)
-        return AiChunkingResult(protectedText, chunks)
-    }
-
-    private fun chooseBoundary(text: String, start: Int, hardEnd: Int): Int {
-        if (hardEnd <= start) return nextAtomicEnd(text, start)
-        var index = hardEnd
-        while (index > start) {
-            val previous = text.codePointBefore(index)
-            val previousStart = index - Character.charCount(previous)
-            if (previous == '\n'.code && previousStart > start && text.codePointBefore(previousStart) == '\n'.code) {
-                return index
+        val ends = arrayListOf(0)
+        var startAtom = 0
+        while (startAtom < atoms.lastIndex) {
+            var last = startAtom
+            var paragraph = -1
+            var line = -1
+            var sentence = -1
+            while (last < atoms.lastIndex && counts[last + 1] - counts[startAtom] <= maxChunkCodePoints) {
+                last++
+                val end = atoms[last]
+                if (text[end - 1] == '\n') {
+                    line = last
+                    if (end >= 2 && text[end - 2] == '\n') paragraph = last
+                } else if (text[end - 1] in sentenceEnds) sentence = last
             }
-            index = previousStart
+            val endAtom = if (last == atoms.lastIndex) last else when {
+                paragraph > startAtom -> paragraph
+                line > startAtom -> line
+                sentence > startAtom -> sentence
+                else -> last
+            }
+            check(endAtom > startAtom)
+            ends.add(atoms[endAtom]); startAtom = endAtom
         }
-        index = hardEnd
-        while (index > start) {
-            val previous = text.codePointBefore(index)
-            if (previous == '\n'.code || preferredSentenceEnds.contains(previous.toChar())) return index
-            index -= Character.charCount(previous)
+        val chunks = object : AbstractList<AiTextChunk>() {
+            override val size: Int get() = ends.size - 1
+            override fun get(index: Int): AiTextChunk {
+                require(index in 0 until size)
+                val body = text.substring(ends[index], ends[index + 1])
+                val context = if (index == 0 || maxContextCodePoints == 0) null else {
+                    val previousStart = ends[index - 1]
+                    val end = ends[index]
+                    val length = text.codePointCount(previousStart, end)
+                    val wanted = text.offsetByCodePoints(end, -minOf(length, maxContextCodePoints))
+                    val found = atoms.binarySearch(wanted)
+                    val safe = if (found >= 0) atoms[found] else atoms[-found - 1]
+                    text.substring(safe, end).takeIf { it.isNotEmpty() }
+                }
+                return AiTextChunk("chunk-$index", body, context)
+            }
         }
-        return hardEnd
-    }
-
-    private fun avoidSentinelSplit(text: String, proposedEnd: Int): Int {
-        val open = text.lastIndexOf(SENTINEL_START, proposedEnd - 1)
-        if (open < 0) return proposedEnd
-        val close = text.indexOf(SENTINEL_END, open)
-        return if (close >= proposedEnd) close + 1 else proposedEnd
-    }
-
-    private fun nextAtomicEnd(text: String, start: Int): Int {
-        if (text[start] == SENTINEL_START) {
-            val close = text.indexOf(SENTINEL_END, start)
-            require(close >= 0) { "unterminated sentinel" }
-            return close + 1
-        }
-        return start + Character.charCount(text.codePointAt(start))
-    }
-
-    private fun offsetByCodePoints(text: String, start: Int, count: Int): Int {
-        val available = text.codePointCount(start, text.length)
-        return text.offsetByCodePoints(start, minOf(count, available))
-    }
-
-    private fun safeTail(text: String, maxCodePoints: Int): String {
-        if (maxCodePoints == 0) return ""
-        val total = text.codePointCount(0, text.length)
-        var start = text.offsetByCodePoints(0, maxOf(0, total - maxCodePoints))
-        val open = text.lastIndexOf(SENTINEL_START, start)
-        if (open >= 0) {
-            val close = text.indexOf(SENTINEL_END, open)
-            if (close >= start) start = close + 1
-        }
-        return text.substring(start)
+        return AiChunkingResult(protected, chunks)
     }
 }

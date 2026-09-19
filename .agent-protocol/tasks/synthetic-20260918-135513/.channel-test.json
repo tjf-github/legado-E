@@ -1,0 +1,38 @@
+﻿{
+    "task_id":  "synthetic-20260918-135513",
+    "created_at":  "2026-09-18T13:55:14+08:00",
+    "expected_files":  {
+                           "executor":  "10-execution.md",
+                           "reviewer":  "20-review.md",
+                           "acceptor":  "30-acceptance.md"
+                       },
+    "baseline_status":  "current",
+    "baseline_stale_reason":  "",
+    "protocol_hashes":  {
+                            ".agent-protocol/CLOSEOUT.md":  "485d0b1970fc8024dc96bfb7bfe6e4a95f1fa1ef191685f51a233716b6b54c6c",
+                            ".agent-protocol/MIGRATION.md":  "9f2d958672872179dcdc6411d5b62a2263244c653482980e01567e65be5fdb99",
+                            ".agent-protocol/MODES.md":  "18dec93edd22162423d2b7852a18d8f670425466d62b93ebc175cfb252e45f52",
+                            ".agent-protocol/prompts/acceptor.md":  "b434350119f917bc25b5cb5ed62c6ccaa653d5859dc7ea25e785ba53953679a1",
+                            ".agent-protocol/prompts/controller.md":  "dc30e8fcbd61231fcc63f4c16742b69eb53dec75cf8030619b8641d8370ec83b",
+                            ".agent-protocol/prompts/executor.md":  "43dab49c5d2c4b9481bf2645e214ae806bb5d43314ae1636a19b11e74322fa97",
+                            ".agent-protocol/prompts/reviewer.md":  "dd41769941bb35bb6ef5033c48a44ca683b730f50348ccdd15b35178384decb2",
+                            ".agent-protocol/README.md":  "6ca26ccb5ca7dc12a4e3f743f8fcf1bb8766a46e11b7ef5a107c6af0ff79636f",
+                            ".agent-protocol/ROLES.md":  "87d4b2533192c5c87d43eaff4d8270d07bc56b9e72e8d0be826396847851a6ff",
+                            ".agent-protocol/ROUTES.json":  "ba53a62dd9ae5d9b08d95a56314d13308b65f69e175269bbcf461ae0622fb0f8",
+                            ".agent-protocol/SECURITY.md":  "f6ac3be0307bcab807e00e964df38746cf40edc263f7579253a2574d8ff2acdb",
+                            ".agent-protocol/TASK-PROFILES.json":  "7098f73c79e4eeae9da2721ad5ab31d84b5ac4e0e4df0dc0d7580d20378d8ccd",
+                            ".agent-protocol/task-template/00-task.md":  "f72f5bd058d464f6af04aad596cdd322841465e74c3984b5cc3f0d35384db8b3",
+                            ".agent-protocol/task-template/05-routing.md":  "9fdc0b46ee86db8914d814d9b3843926241a7ea590bec4f24f660318f7c3649d",
+                            ".agent-protocol/task-template/06-review-commands.json":  "0f0b95e2e6574d108f30cb5631fa8b30a17e95920be6c836b5c103d75ed989a2",
+                            ".agent-protocol/task-template/10-execution.md":  "21b8e5c940f299a0b7fa86eb036ca6eab61edc56b6132046a786756f7f094dfc",
+                            ".agent-protocol/task-template/20-review.md":  "eaceb2be9c87e3ba82b1bdf33183816a4b4fff47d76abc8fe32414a707232e62",
+                            ".agent-protocol/task-template/30-acceptance.md":  "e456197cecdb8a8666fdd03af81d8618578536948eb275de6826c3c9bf860f66"
+                        },
+    "runtime_snapshot":  {
+                             "route_revision":  "1",
+                             "current_sha256":  "ecf825b9b5b6b937238fe34b4c8a13fe858a2b5489e2d1a002ded1a6980ac219",
+                             "project_sha256":  "c5d2269b3b30b408d8f84a52a5d34d4507b7c6dabc0b0cede4d6b44e6eabeced",
+                             "note":  "仅供审计，不参与通道能力有效性；运行时状态由任务冻结快照负责。"
+                         },
+    "note":  "工具元数据，不含 nonce 或期望派生值，不是验收证据；通过本测试只证明通道与边界可用。"
+}

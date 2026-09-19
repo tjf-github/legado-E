@@ -275,6 +275,14 @@ data class Book(
         return config.ttsEngine
     }
 
+    /** 逐书 AI 正文净化开关（实验）。仅在线纯文字书显示并由用户明确开启。 */
+    fun setAiEnabled(aiEnabled: Boolean) {
+        config.aiEnabled = aiEnabled
+    }
+
+    /** 旧数据缺少字段时等价于关闭。 */
+    fun getAiEnabled(): Boolean = config.aiEnabled == true
+
     fun setSplitLongChapter(limitLongContent: Boolean) {
         config.splitLongChapter = limitLongContent
     }
@@ -456,6 +464,7 @@ data class Book(
     }
 
     fun delete() {
+        io.legado.app.help.ai.AiAndroidAccess.clearBook(this)
         if (ReadBook.book?.bookUrl == bookUrl) {
             ReadBook.book = null
         }
@@ -491,7 +500,8 @@ data class Book(
         var openCredits: Int = 0,       //音频片头
         var closeCredits: Int = 0,       //音频片尾
         var playMode: Int = 0,           //音频播放模式
-        var playSpeed: Float = 1.0f      //音频播放速度
+        var playSpeed: Float = 1.0f,     //音频播放速度
+        var aiEnabled: Boolean? = null   // 正文 AI 净化（实验）逐书开关；旧数据缺字段等价于关闭
     ) : Parcelable
 
     class Converters {

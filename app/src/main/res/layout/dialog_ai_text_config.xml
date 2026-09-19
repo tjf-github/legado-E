@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_privacy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ai_privacy_hint"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+
+        <Switch
+            android:id="@+id/sw_ai_enabled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ai_purify"
+            android:minHeight="48dp" />
+
+        <EditText
+            android:id="@+id/et_service_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/ai_service_url"
+            android:inputType="textUri"
+            android:singleLine="true" />
+
+        <EditText
+            android:id="@+id/et_model"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/ai_model"
+            android:singleLine="true" />
+
+        <EditText
+            android:id="@+id/et_api_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/ai_api_key"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:saveEnabled="false"
+            android:importantForAutofill="noExcludeDescendants" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/et_timeout"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:hint="@string/ai_timeout"
+                android:inputType="number"
+                android:singleLine="true" />
+
+            <EditText
+                android:id="@+id/et_max_chunk"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:hint="@string/ai_max_chunk"
+                android:inputType="number"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <Switch
+            android:id="@+id/sw_only_metered"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ai_only_metered"
+            android:minHeight="48dp" />
+
+        <TextView
+            android:id="@+id/tv_stats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btn_test_connection"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/ai_test_connection" />
+
+            <Button
+                android:id="@+id/btn_clear_cache"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/ai_clear_cache" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/ai_save" />
+
+    </LinearLayout>
+</ScrollView>

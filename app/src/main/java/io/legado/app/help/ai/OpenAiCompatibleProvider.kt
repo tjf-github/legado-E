@@ -3,13 +3,59 @@ package io.legado.app.help.ai
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonNull
+import com.google.gson.Strictness
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
 import io.legado.app.utils.GSON
+import io.legado.app.utils.LogUtils
 import kotlinx.coroutines.CancellationException
+import java.io.StringReader
 
 data class AiConnectionTestResult(val reachable: Boolean, val model: String)
 
+/** Provider 响应解析的固定脱敏子类；不得包含响应文本、字段值或异常 message。 */
+internal enum class AiProtocolFailureDetail {
+    blank_content,
+    outer_json_syntax,
+    outer_not_object,
+    choices_not_array,
+    choices_count,
+    choice_not_object,
+    finish_reason_not_string,
+    message_not_object,
+    no_content,
+    content_not_string,
+    payload_markdown_fence,
+    payload_json_syntax,
+    payload_json_syntax_non_json_prefix,
+    payload_json_syntax_unterminated_string,
+    payload_json_syntax_invalid_escape,
+    payload_json_syntax_raw_control,
+    payload_json_syntax_mismatched_closer,
+    payload_json_syntax_unclosed_container,
+    payload_json_syntax_trailing_data,
+    payload_not_object,
+    chunk_id_not_string,
+    no_edits_array,
+    edit_not_object,
+    kind_not_string,
+    start_not_int,
+    end_not_int,
+    original_not_string,
+    replacement_not_string,
+    context_before_not_string,
+    context_after_not_string,
+    bad_kind,
+    warnings_not_array,
+    warnings_not_string,
+    unknown
+}
+
 class OpenAiCompatibleProvider internal constructor(
-    private val transport: AiHttpTransport = OkHttpAiTransport()
+    private val transport: AiHttpTransport = OkHttpAiTransport(),
+    private val protocolReporter: (AiProtocolFailureDetail) -> Unit = { detail ->
+        LogUtils.d("AiFailure", "ai-protocol detail=${detail.name}")
+    }
 ) : AiTextProvider {
 
     override suspend fun processChunk(
@@ -102,6 +148,7 @@ class OpenAiCompatibleProvider internal constructor(
             addProperty("model", model)
             addProperty("temperature", 0)
             addProperty("max_tokens", MAX_OUTPUT_TOKENS)
+            add("response_format", JsonObject().apply { addProperty("type", "json_object") })
             add("messages", GSON.toJsonTree(listOf(
                 mapOf("role" to "system", "content" to SYSTEM_PROMPT),
                 mapOf("role" to "user", "content" to GSON.toJson(userContent))
@@ -112,66 +159,219 @@ class OpenAiCompatibleProvider internal constructor(
 
     private fun parseResponse(body: String): AiChunkOutput {
         try {
-            val root = JsonParser.parseString(body).asJsonObject
-            val choices = root.getAsJsonArray("choices")
-            if (choices == null || choices.size() != 1) throw IllegalArgumentException()
+            val outer = try {
+                JsonParser.parseString(body)
+            } catch (_: Exception) {
+                throw ProtocolDetail(AiProtocolFailureDetail.outer_json_syntax)
+            }
+            if (!outer.isJsonObject) throw ProtocolDetail(AiProtocolFailureDetail.outer_not_object)
+            val root = outer.asJsonObject
+            val choicesElement = root.get("choices")
+            if (choicesElement == null || !choicesElement.isJsonArray) {
+                throw ProtocolDetail(AiProtocolFailureDetail.choices_not_array)
+            }
+            val choices = choicesElement.asJsonArray
+            if (choices.size() != 1) throw ProtocolDetail(AiProtocolFailureDetail.choices_count)
+            if (!choices[0].isJsonObject) throw ProtocolDetail(AiProtocolFailureDetail.choice_not_object)
             val choice = choices[0].asJsonObject
-            val finishReason = normalizeFinishReason(choice.get("finish_reason")?.asString)
-            val contentElement = choice.getAsJsonObject("message")?.get("content")
-                ?: throw IllegalArgumentException()
+            val finishElement = choice.get("finish_reason")
+            if (finishElement != null && (!finishElement.isJsonPrimitive || !finishElement.asJsonPrimitive.isString)) {
+                throw ProtocolDetail(AiProtocolFailureDetail.finish_reason_not_string)
+            }
+            val finishReason = normalizeFinishReason(finishElement?.asString)
+            val messageElement = choice.get("message")
+            if (messageElement == null || !messageElement.isJsonObject) {
+                throw ProtocolDetail(AiProtocolFailureDetail.message_not_object)
+            }
+            val contentElement = messageElement.asJsonObject.get("content")
+                ?: throw ProtocolDetail(AiProtocolFailureDetail.no_content)
             if (!contentElement.isJsonPrimitive || !contentElement.asJsonPrimitive.isString) {
-                throw IllegalArgumentException()
+                throw ProtocolDetail(AiProtocolFailureDetail.content_not_string)
             }
             val content = contentElement.asString
-            val payload = JsonParser.parseString(content).asJsonObject
-            return parseOutputPayload(payload, finishReason)
-        } catch (_: Exception) {
+            // 空白 message.content 表示模型未产出合法 JSON 对象，属协议不兼容。
+            // 必须失败关闭为 PROTOCOL：严禁由客户端替服务端补造“无编辑”成功载荷，否则
+            // 一整章空白响应也会被当作 Completed 缓存，掩盖真实的协议不兼容。
+            if (content.isBlank()) throw ProtocolDetail(AiProtocolFailureDetail.blank_content)
+            if (content.trimStart().startsWith("```")) {
+                throw ProtocolDetail(AiProtocolFailureDetail.payload_markdown_fence)
+            }
+            val parsedPayload = try {
+                parseStrictJson(content)
+            } catch (_: Exception) {
+                throw ProtocolDetail(classifyPayloadJsonSyntax(content))
+            }
+            if (!parsedPayload.isJsonObject) throw ProtocolDetail(AiProtocolFailureDetail.payload_not_object)
+            return parseOutputPayload(parsedPayload.asJsonObject, finishReason)
+        } catch (e: Exception) {
+            val detail = (e as? ProtocolDetail)?.detail ?: AiProtocolFailureDetail.unknown
+            protocolReporter(detail)
             throw AiProviderException(AiProviderError.protocol)
         }
     }
 
+    private class ProtocolDetail(val detail: AiProtocolFailureDetail) : IllegalArgumentException()
+
+    private fun parseStrictJson(content: String) = JsonReader(StringReader(content)).use { reader ->
+        reader.setStrictness(Strictness.STRICT)
+        val parsed = JsonParser.parseReader(reader)
+        if (reader.peek() != JsonToken.END_DOCUMENT) throw IllegalArgumentException()
+        parsed
+    }
+
+    /**
+     * Classifies only JSON grammar shape. The result is a fixed enum: it never retains or reports
+     * payload text, offsets, lengths, hashes, parser messages, or field values.
+     */
+    private fun classifyPayloadJsonSyntax(content: String): AiProtocolFailureDetail {
+        val start = content.indexOfFirst { !it.isWhitespace() }
+        if (start < 0 || (content[start] != '{' && content[start] != '[')) {
+            return AiProtocolFailureDetail.payload_json_syntax_non_json_prefix
+        }
+
+        val containers = ArrayDeque<Char>()
+        var inString = false
+        var escaping = false
+        var unicodeDigitsRemaining = 0
+        var rootClosed = false
+        var index = start
+        while (index < content.length) {
+            val char = content[index]
+            if (rootClosed) {
+                if (!char.isWhitespace()) {
+                    return AiProtocolFailureDetail.payload_json_syntax_trailing_data
+                }
+                index++
+                continue
+            }
+            if (inString) {
+                if (unicodeDigitsRemaining > 0) {
+                    if (!char.isHexDigit()) {
+                        return AiProtocolFailureDetail.payload_json_syntax_invalid_escape
+                    }
+                    unicodeDigitsRemaining--
+                } else if (escaping) {
+                    when (char) {
+                        '"', '\\', '/', 'b', 'f', 'n', 'r', 't' -> escaping = false
+                        'u' -> {
+                            escaping = false
+                            unicodeDigitsRemaining = 4
+                        }
+                        else -> return AiProtocolFailureDetail.payload_json_syntax_invalid_escape
+                    }
+                } else {
+                    when {
+                        char == '\\' -> escaping = true
+                        char == '"' -> inString = false
+                        char.code < 0x20 -> {
+                            return AiProtocolFailureDetail.payload_json_syntax_raw_control
+                        }
+                    }
+                }
+                index++
+                continue
+            }
+
+            when (char) {
+                '"' -> inString = true
+                '{', '[' -> containers.addLast(char)
+                '}', ']' -> {
+                    val expected = if (char == '}') '{' else '['
+                    if (containers.isEmpty() || containers.removeLast() != expected) {
+                        return AiProtocolFailureDetail.payload_json_syntax_mismatched_closer
+                    }
+                    if (containers.isEmpty()) rootClosed = true
+                }
+            }
+            index++
+        }
+        return when {
+            unicodeDigitsRemaining > 0 ->
+                AiProtocolFailureDetail.payload_json_syntax_invalid_escape
+            escaping || inString ->
+                AiProtocolFailureDetail.payload_json_syntax_unterminated_string
+            containers.isNotEmpty() ->
+                AiProtocolFailureDetail.payload_json_syntax_unclosed_container
+            else -> AiProtocolFailureDetail.payload_json_syntax
+        }
+    }
+
+    private fun Char.isHexDigit(): Boolean =
+        this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
+
     private fun parseOutputPayload(payload: JsonObject, finishReason: AiFinishReason): AiChunkOutput {
-        val chunkId = requiredString(payload, "chunk_id")
+        val chunkId = requiredString(payload, "chunk_id", AiProtocolFailureDetail.chunk_id_not_string)
         val editsElement = payload.get("edits")
-        if (editsElement == null || !editsElement.isJsonArray) throw IllegalArgumentException()
+        if (editsElement == null || !editsElement.isJsonArray) {
+            throw ProtocolDetail(AiProtocolFailureDetail.no_edits_array)
+        }
         val edits = editsElement.asJsonArray.map { element ->
-            if (!element.isJsonObject) throw IllegalArgumentException()
+            if (!element.isJsonObject) throw ProtocolDetail(AiProtocolFailureDetail.edit_not_object)
             val edit = element.asJsonObject
-            val kindName = requiredString(edit, "kind")
+            val kindName = requiredString(edit, "kind", AiProtocolFailureDetail.kind_not_string)
+            val kind = AiEditKind.entries.firstOrNull { it.name == kindName }
+                ?: throw ProtocolDetail(AiProtocolFailureDetail.bad_kind)
             AiEdit(
-                requiredInt(edit, "start"),
-                requiredInt(edit, "end"),
-                requiredString(edit, "original"),
-                requiredString(edit, "replacement"),
-                AiEditKind.entries.firstOrNull { it.name == kindName } ?: throw IllegalArgumentException()
+                requiredInt(edit, "start", AiProtocolFailureDetail.start_not_int),
+                requiredInt(edit, "end", AiProtocolFailureDetail.end_not_int),
+                requiredString(edit, "original", AiProtocolFailureDetail.original_not_string),
+                requiredString(edit, "replacement", AiProtocolFailureDetail.replacement_not_string),
+                kind,
+                // 只读上下文锚点：仅在字段存在时严格解析为字符串；null 表示未提供，非法类型失败关闭。
+                optionalString(edit, "context_before", AiProtocolFailureDetail.context_before_not_string),
+                optionalString(edit, "context_after", AiProtocolFailureDetail.context_after_not_string)
             )
         }
         val warnings = payload.get("warnings")?.let { element ->
-            if (!element.isJsonArray) throw IllegalArgumentException()
+            if (!element.isJsonArray) throw ProtocolDetail(AiProtocolFailureDetail.warnings_not_array)
             element.asJsonArray.map {
-                if (!it.isJsonPrimitive || !it.asJsonPrimitive.isString) throw IllegalArgumentException()
+                if (!it.isJsonPrimitive || !it.asJsonPrimitive.isString) {
+                    throw ProtocolDetail(AiProtocolFailureDetail.warnings_not_string)
+                }
                 it.asString
             }
         } ?: emptyList()
         return AiChunkOutput(chunkId, edits, warnings, finishReason)
     }
 
-    private fun requiredString(value: JsonObject, name: String): String {
+    private fun requiredString(
+        value: JsonObject,
+        name: String,
+        detail: AiProtocolFailureDetail
+    ): String {
         val element = value.get(name)
         if (element == null || !element.isJsonPrimitive || !element.asJsonPrimitive.isString) {
-            throw IllegalArgumentException()
+            throw ProtocolDetail(detail)
         }
         return element.asString
     }
 
-    private fun requiredInt(value: JsonObject, name: String): Int {
+    /** 可选字符串字段：缺失或 null 记作“未提供”；存在但类型非法一律失败关闭。 */
+    private fun optionalString(
+        value: JsonObject,
+        name: String,
+        detail: AiProtocolFailureDetail
+    ): String? {
+        val element = value.get(name)
+        if (element == null || element.isJsonNull) return null
+        if (!element.isJsonPrimitive || !element.asJsonPrimitive.isString) {
+            throw ProtocolDetail(detail)
+        }
+        return element.asString
+    }
+
+    private fun requiredInt(
+        value: JsonObject,
+        name: String,
+        detail: AiProtocolFailureDetail
+    ): Int {
         val element = value.get(name)
         if (element == null || !element.isJsonPrimitive || !element.asJsonPrimitive.isNumber) {
-            throw IllegalArgumentException()
+            throw ProtocolDetail(detail)
         }
         val raw = element.asString
-        if (!raw.matches(Regex("-?(?:0|[1-9]\\d*)"))) throw IllegalArgumentException()
-        return raw.toIntOrNull() ?: throw IllegalArgumentException()
+        if (!raw.matches(Regex("-?(?:0|[1-9]\\d*)"))) throw ProtocolDetail(detail)
+        return raw.toIntOrNull() ?: throw ProtocolDetail(detail)
     }
 
     private fun ensureSuccessful(code: Int) {
@@ -216,9 +416,24 @@ class OpenAiCompatibleProvider internal constructor(
             null
         )
         private const val SYSTEM_PROMPT = """
-You repair only local typos, anti-theft substitutions, punctuation, and whitespace in the supplied text.
-Return one JSON object only: {"chunk_id":"...","edits":[{"start":0,"end":1,"original":"...","replacement":"...","kind":"typo|anti_theft|punctuation|whitespace"}],"warnings":[]}.
-Offsets are Unicode code points in text. context_only is read-only context and must never be edited or repeated. Do not rewrite, summarize, continue, translate, or alter sentinels, URLs, numbers, names, facts, plot, or style.
+You repair only local typos, anti-theft substitutions, de-noise of inserted decoration, punctuation, and whitespace in the supplied text.
+Return exactly one json object and no markdown or commentary.
+Rules for edits:
+- start/end are zero-based Unicode code points in text, with end exclusive.
+- edits must be sorted by start, non-overlapping, and contain the exact substring from text in original.
+- typo and anti_theft original/replacement must contain Unicode letters only, have equal code-point counts, and each contain 1..12 code points.
+- punctuation and whitespace original/replacement may be empty but may contain only Unicode punctuation or whitespace.
+- denoise removes a tiny amount (1..2) of inserted decoration inside a word: allowed noise is only ascii punctuation like * _ - ~ ., middle dots, plain/nbsp/ideographic space, and zero-width chars. The letters kept in original must be identical to replacement (only noise removed, never a letter changed); the first and last code point of original must both be letters.
+- return at most 128 edits. If any edit is uncertain, omit it instead of guessing.
+- NEVER emit a no-op edit where original equals replacement; if a span needs no change, do not include it in edits at all.
+- A correct chapter needs no changes: return an empty edits array when no repair is needed. Never invent errors to produce edits.
+- Each non-empty original must occur exactly once in text, or you must supply the context anchor fields below so that it can be located exactly.
+- context_before and context_after are optional read-only anchor fragments. Use them ONLY when original occurs more than once in text: context_before must be copied verbatim from the characters immediately left of the occurrence you mean, and context_after copied verbatim from the characters immediately right of it, inside this same text. Then they must be the exact adjacent substrings of that one occurrence, and context_before + original + context_after must occur exactly once in text.
+- Copy both fragments character for character from text. Never paraphrase, translate, normalize, or invent them; a fragment that is not in text, is not adjacent to original, or that still leaves the combination ambiguous makes the whole chapter fail. Omit the edit instead of guessing.
+- Supply BOTH context_before and context_after, each non-empty and at most 32 Unicode code points, copied from the same text. If original is already unique, omit both fields entirely; a lone or empty context on an ambiguous original is rejected. They are never edited and are never part of original or replacement.
+- context_only is read-only context and must never be edited or repeated.
+Do not rewrite, summarize, continue, translate, add or change letters, or alter sentinels, URLs, numbers, names, facts, plot, or style.
+json example: {"chunk_id":"chunk-0","edits":[{"start":0,"end":1,"original":"甲","replacement":"乙","kind":"typo"}],"warnings":[]}.
 """
     }
 }

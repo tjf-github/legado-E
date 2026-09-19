@@ -46,6 +46,13 @@ import io.legado.app.help.book.isLocalTxt
 import io.legado.app.help.book.isMobi
 import io.legado.app.help.book.removeType
 import io.legado.app.help.book.update
+import io.legado.app.help.ai.AiChapterUiState
+import io.legado.app.help.ai.AiFailureCode
+import io.legado.app.help.ai.AiConsentPolicy
+import io.legado.app.help.ai.AiDisplaySource
+import io.legado.app.help.ai.AiKeyState
+import io.legado.app.help.ai.AiReaderAccess
+import io.legado.app.help.ai.AiTextConfig
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.config.ReadTipConfig
@@ -137,6 +144,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
@@ -276,6 +284,7 @@ class ReadBookActivity : BaseReadBookActivity(),
         window.setBackgroundDrawable(null)
         upScreenTimeOut()
         ReadBook.register(this)
+        observeAiState()
         onBackPressedDispatcher.addCallback(this) {
             if (isShowingSearchResult) {
                 exitSearchMenu()
@@ -343,6 +352,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onResume() {
         super.onResume()
+        AiReaderAccess.setReaderActive(true)
         ReadBook.readStartTime = System.currentTimeMillis()
         if (bookChanged) {
             bookChanged = false
@@ -356,6 +366,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 ReadBook.webBookProgress = null
             }
         }
+        ReadBook.activateCurrentAi(reloadIfMissing = true)
         upSystemUiVisibility()
         registerReceiver(timeBatteryReceiver, timeBatteryReceiver.filter)
         binding.readView.upTime()
@@ -372,6 +383,8 @@ class ReadBookActivity : BaseReadBookActivity(),
 
     override fun onPause() {
         super.onPause()
+        AiReaderAccess.setReaderActive(false)
+        ReadBook.resetAiDisplay()
         autoPageStop()
         backupJob?.cancel()
         ReadBook.saveRead()
@@ -449,6 +462,14 @@ class ReadBookActivity : BaseReadBookActivity(),
                     R.id.menu_reverse_content -> item.isVisible = onLine
                     R.id.menu_del_ruby_tag -> item.isChecked = book.getDelTag(Book.rubyTag)
                     R.id.menu_del_h_tag -> item.isChecked = book.getDelTag(Book.hTag)
+
+                    R.id.menu_ai_book -> {
+                        item.isVisible = onLine && book.type == BookType.text
+                        item.isChecked = book.getAiEnabled()
+                        item.title = aiMenuTitle(book.getAiEnabled())
+                    }
+
+                    R.id.menu_ai_config -> item.isVisible = onLine
                 }
             }
         }
@@ -631,6 +652,11 @@ class ReadBookActivity : BaseReadBookActivity(),
 
             R.id.menu_effective_replaces -> showDialogFragment<EffectiveReplacesDialog>()
 
+            R.id.menu_ai_book -> {
+                if (ReadBook.book?.getAiEnabled() == true) showAiActions() else toggleAiBook()
+            }
+            R.id.menu_ai_config -> showDialogFragment<AiTextConfigDialog>()
+
             R.id.menu_help -> showHelp()
         }
         return super.onCompatOptionsItemSelected(item)
@@ -640,6 +666,165 @@ class ReadBookActivity : BaseReadBookActivity(),
         ReadBook.clearTextChapter()
         binding.readView.upContent()
         viewModel.refreshContentAll(book)
+    }
+
+    // ---- AI 正文净化（实验）----
+
+    private fun observeAiState() {
+        lifecycleScope.launch {
+            AiReaderAccess.coordinator.state.collect { upAiStatus() }
+        }
+        lifecycleScope.launch {
+            AiReaderAccess.coordinator.displaySource.collect { upAiStatus() }
+        }
+    }
+
+    private fun upAiStatus() {
+        val book = ReadBook.book ?: return
+        menu?.findItem(R.id.menu_ai_book)?.apply {
+            isChecked = book.getAiEnabled()
+            title = aiMenuTitle(book.getAiEnabled())
+        }
+    }
+
+    private fun aiMenuTitle(enabled: Boolean): String {
+        if (!enabled) return getString(R.string.ai_purify)
+        val coord = AiReaderAccess.coordinator
+        return when (val state = coord.state.value) {
+            is AiChapterUiState.Processing -> getString(R.string.ai_state_processing, state.done, state.total)
+            AiChapterUiState.Ready -> if (coord.completedWithoutChanges) {
+                getString(R.string.ai_state_unchanged)
+            } else if (coord.displaySource.value == AiDisplaySource.Ai) {
+                getString(R.string.ai_view_original)
+            } else {
+                getString(R.string.ai_state_ready)
+            }
+            is AiChapterUiState.Failed -> getString(R.string.ai_state_failed) + aiFailBlock(state.failedChunkIndex)
+            AiChapterUiState.Idle -> getString(R.string.ai_state_idle)
+        }
+    }
+
+    private fun showAiActions() {
+        val coord = AiReaderAccess.coordinator
+        val state = coord.state.value
+        val opts = arrayListOf<String>()
+        val actions = arrayListOf<() -> Unit>()
+        if (state is AiChapterUiState.Processing) {
+            opts += getString(R.string.ai_cancel)
+            actions += { ReadBook.resetAiDisplay() }
+        }
+        if (state is AiChapterUiState.Ready) {
+            if (coord.displaySource.value == AiDisplaySource.Ai) {
+                opts += getString(R.string.ai_view_original)
+                actions += { ReadBook.viewOriginal() }
+            } else if (!coord.completedWithoutChanges) {
+                opts += getString(R.string.ai_view_ai)
+                actions += { ReadBook.viewAi() }
+            }
+            opts += getString(R.string.ai_reprocess)
+            actions += { ReadBook.retryAi(reprocess = true) }
+        }
+        if (state is AiChapterUiState.Failed || state is AiChapterUiState.Idle) {
+            opts += getString(R.string.ai_retry)
+            actions += {
+                val book = ReadBook.book
+                if (book != null && !AiReaderAccess.deviceConsent.isConfirmed(AiReaderAccess.configs.current().config.serviceUrl)) {
+                    confirmAiBookConsent(book)
+                } else ReadBook.retryAi()
+            }
+        }
+        opts += getString(R.string.ai_disable_book)
+        actions += { toggleAiBook() }
+        opts += getString(R.string.ai_purify_config)
+        actions += { showDialogFragment<AiTextConfigDialog>() }
+        if (opts.size >= 2) {
+            val title = if (state is AiChapterUiState.Failed) {
+                getString(R.string.ai_fail_title) + "：" +
+                    aiFailDetail(state.code) + aiFailBlock(state.failedChunkIndex)
+            } else getString(R.string.ai_purify)
+            selector(title, opts) { _, index ->
+                actions.getOrNull(index)?.invoke()
+            }
+        }
+    }
+
+    /** 失败分类的脱敏文案：只暴露稳定分类，不包含正文、响应体或密钥。 */
+    private fun aiFailDetail(code: AiFailureCode): String = when (code) {
+        AiFailureCode.AUTHENTICATION -> getString(R.string.ai_fail_auth)
+        AiFailureCode.RATE_LIMITED -> getString(R.string.ai_fail_rate_limited)
+        AiFailureCode.NETWORK, AiFailureCode.TIMEOUT, AiFailureCode.SERVER,
+        AiFailureCode.HTTP, AiFailureCode.RESPONSE_TOO_LARGE -> getString(R.string.ai_fail_network)
+        AiFailureCode.UNSAFE_ENDPOINT, AiFailureCode.UNSAFE_REDIRECT -> getString(R.string.ai_fail_unsafe_endpoint)
+        else -> getString(R.string.ai_fail_validation)
+    }
+
+    /** 失败块序号（1-based）；仅当失败可明确归因于某一块时显示“第 N 块”，
+     * 章级/提交级失败（STRUCTURE/CACHE_COMMIT/CACHE_INVALIDATED/INTERNAL 等）为 null，不显示块号。 */
+    private fun aiFailBlock(failedChunkIndex: Int?): String =
+        if (failedChunkIndex != null) getString(R.string.ai_fail_block_suffix, failedChunkIndex) else ""
+
+    private fun toggleAiBook() {
+        val book = ReadBook.book ?: return
+        val enabling = !AiReaderAccess.getBookEnabled(book)
+        if (!enabling) {
+            AiReaderAccess.setBookEnabled(book, false)
+            book.update()
+            ReadBook.resetAiDisplay()
+            upAiStatus()
+            return
+        }
+        val snapshot = AiReaderAccess.configs.current()
+        if (!snapshot.config.enabled) {
+            toastOnUi(R.string.ai_purify_global_first)
+            showDialogFragment<AiTextConfigDialog>()
+            return
+        }
+        val keyState = AiReaderAccess.keyStore.load()
+        if (keyState !is AiKeyState.Available) {
+            toastOnUi(R.string.ai_key_needs_reentry)
+            showDialogFragment<AiTextConfigDialog>()
+            return
+        }
+        confirmAiBookConsent(book)
+    }
+
+    private fun confirmAiBookConsent(book: Book) {
+        val config = AiReaderAccess.configs.current().config
+        val serviceUrl = config.serviceUrl
+        val isHttp = serviceUrl.startsWith("http://", ignoreCase = true)
+        alert(R.string.ai_consent_title) {
+            setMessage(getString(R.string.ai_consent_message, serviceUrl))
+            yesButton {
+                if (isHttp) {
+                    alert(R.string.ai_consent_title) {
+                        setMessage(getString(R.string.ai_consent_http_hint))
+                        yesButton { doConfirmConsent(book, config.serviceUrl) }
+                        noButton {
+                            AiReaderAccess.setBookEnabled(book, false)
+                            book.update()
+                            ReadBook.loadContent(false)
+                        }
+                    }
+                } else {
+                    doConfirmConsent(book, config.serviceUrl)
+                }
+            }
+            noButton {
+                AiReaderAccess.setBookEnabled(book, false)
+                book.update()
+                ReadBook.loadContent(false)
+            }
+        }
+    }
+
+    private fun doConfirmConsent(book: Book, serviceUrl: String) {
+        if (book.bookUrl != ReadBook.book?.bookUrl ||
+            serviceUrl != AiReaderAccess.configs.current().config.serviceUrl) return
+        AiReaderAccess.deviceConsent.confirm(serviceUrl)
+        AiReaderAccess.setBookEnabled(book, true)
+        book.update()
+        ReadBook.retryAi()
+        upAiStatus()
     }
 
     override fun onMenuItemClick(item: MenuItem): Boolean {

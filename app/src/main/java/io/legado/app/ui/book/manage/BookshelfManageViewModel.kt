@@ -54,6 +54,7 @@ class BookshelfManageViewModel(application: Application) : BaseViewModel(applica
 
     fun deleteBook(books: List<Book>, deleteOriginal: Boolean = false) {
         execute {
+            books.forEach { io.legado.app.help.ai.AiAndroidAccess.clearBook(it) }
             appDb.bookDao.delete(*books.toTypedArray())
             books.forEach {
                 if (it.isLocal) {

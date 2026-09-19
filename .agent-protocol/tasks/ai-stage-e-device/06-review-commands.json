@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "network_policy": "deny-declared-not-enforced",
+  "commands": [
+    {
+      "name": "temporary-packaging-changes-reverted",
+      "file": "git",
+      "args": [
+        "diff",
+        "--exit-code",
+        "--",
+        "app/build.gradle",
+        "app/src/main/AndroidManifest.xml"
+      ],
+      "working_directory": ".",
+      "timeout_sec": 120
+    },
+    {
+      "name": "whitespace-and-conflict-check",
+      "file": "git",
+      "args": [
+        "diff",
+        "--check"
+      ],
+      "working_directory": ".",
+      "timeout_sec": 120
+    }
+  ]
+}

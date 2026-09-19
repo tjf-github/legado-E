@@ -119,6 +119,7 @@ class AudioPlayViewModel(application: Application) : BaseViewModel(application) 
     fun removeFromBookshelf(success: (() -> Unit)?) {
         execute {
             AudioPlay.book?.let {
+                io.legado.app.help.ai.AiAndroidAccess.clearBook(it)
                 appDb.bookDao.delete(it)
             }
         }.onSuccess {

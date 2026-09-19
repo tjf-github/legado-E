@@ -230,7 +230,13 @@ abstract class BaseReadAloudService : BaseService(),
     }
 
     private fun newReadAloud(play: Boolean, pageIndex: Int, startPos: Int) {
+        // 朗读必须读原文：若当前显示 AI，先切回原文并从章首重排，不启动本次朗读（用户再点一次即可）。
+        if (ReadBook.isAiDisplaying) {
+            ReadBook.viewOriginal { newReadAloud(play, 0, 0) }
+            return
+        }
         execute(executeContext = IO) {
+            if (ReadBook.isAiDisplaying) return@execute
             this@BaseReadAloudService.pageIndex = pageIndex
             textChapter = ReadBook.curTextChapter
             val textChapter = textChapter ?: return@execute

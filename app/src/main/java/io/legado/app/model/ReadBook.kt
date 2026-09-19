@@ -20,6 +20,11 @@ import io.legado.app.help.book.isSameNameAuthor
 import io.legado.app.help.book.readSimulating
 import io.legado.app.help.book.simulatedTotalChapterNum
 import io.legado.app.help.book.update
+import io.legado.app.help.ai.AiDisplayContent
+import io.legado.app.help.ai.AiDisplaySource
+import io.legado.app.help.ai.AiReaderAccess
+import io.legado.app.help.ai.AiActivationAction
+import io.legado.app.help.ai.decideAiActivation
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
@@ -65,13 +70,25 @@ object ReadBook : CoroutineScope by MainScope() {
     var inBookshelf = false
     var chapterSize = 0
     var simulatedChapterSize = 0
+    @Volatile private var aiEpoch = 0L
     var durChapterIndex = 0
+        set(value) {
+            if (field != value) {
+                aiEpoch++
+                AiReaderAccess.coordinator.reset()
+            }
+            field = value
+        }
     var durChapterPos = 0
     var isLocalBook = true
     var chapterChanged = false
     var prevTextChapter: TextChapter? = null
     var curTextChapter: TextChapter? = null
     var nextTextChapter: TextChapter? = null
+    private data class AiPrepared(val book: Book, val chapter: BookChapter, val original: BookContent)
+    private val aiPrepared = ConcurrentHashMap<Int, AiPrepared>()
+    @Volatile private var aiTextChapter: TextChapter? = null
+    private var aiActivation: Job? = null
     var bookSource: BookSource? = null
     var msg: String? = null
     private val loadingChapters = arrayListOf<Int>()
@@ -337,7 +354,8 @@ object ReadBook : CoroutineScope by MainScope() {
             durChapterPos = 0
             durChapterIndex++
             clearExpiredChapterLoadingJob()
-            prevTextChapter = curTextChapter
+            AiReaderAccess.coordinator.reset()
+            prevTextChapter = curTextChapter.takeUnless { it === aiTextChapter }
             curTextChapter = nextTextChapter
             nextTextChapter = null
             if (curTextChapter == null) {
@@ -368,7 +386,8 @@ object ReadBook : CoroutineScope by MainScope() {
             durChapterPos = 0
             durChapterIndex++
             clearExpiredChapterLoadingJob()
-            prevTextChapter = curTextChapter
+            AiReaderAccess.coordinator.reset()
+            prevTextChapter = curTextChapter.takeUnless { it === aiTextChapter }
             curTextChapter = nextTextChapter
             nextTextChapter = null
             if (curTextChapter == null) {
@@ -400,7 +419,8 @@ object ReadBook : CoroutineScope by MainScope() {
             durChapterPos = if (toLast) prevTextChapter?.lastReadLength ?: Int.MAX_VALUE else 0
             durChapterIndex--
             clearExpiredChapterLoadingJob()
-            nextTextChapter = curTextChapter
+            AiReaderAccess.coordinator.reset()
+            nextTextChapter = curTextChapter.takeUnless { it === aiTextChapter }
             curTextChapter = prevTextChapter
             prevTextChapter = null
             if (curTextChapter == null) {
@@ -458,6 +478,7 @@ object ReadBook : CoroutineScope by MainScope() {
     ) {
         if (index < chapterSize) {
             clearTextChapter()
+            AiReaderAccess.coordinator.reset()
             if (upContent) callBack?.upContent()
             durChapterIndex = index
             ReadBook.durChapterPos = durChapterPos
@@ -472,6 +493,7 @@ object ReadBook : CoroutineScope by MainScope() {
      * 当前页面变化
      */
     private fun curPageChanged(pageChanged: Boolean = false) {
+        activateCurrentAi()
         callBack?.pageChanged()
         curTextChapter?.let {
             if (BaseReadAloudService.isRun && it.isCompleted) {
@@ -492,9 +514,98 @@ object ReadBook : CoroutineScope by MainScope() {
      */
     fun readAloud(play: Boolean = true, startPos: Int = 0) {
         book ?: return
+        // 朗读必须读原文：若当前显示 AI，先回原文并从章首重排后再朗读，避免 TTS 悄悄读 AI。
+        if (isAiDisplaying) {
+            viewOriginal {
+                startReadAloud(play, startPos)
+            }
+            return
+        }
+        startReadAloud(play, startPos)
+    }
+
+    private fun startReadAloud(play: Boolean, startPos: Int) {
         val textChapter = curTextChapter ?: return
         if (textChapter.isCompleted) {
             ReadAloud.play(appCtx, play, startPos = startPos)
+        }
+    }
+
+    /** 当前是否显示 AI 正文（供 UI / 朗读安全判断）。 */
+    val isAiDisplaying: Boolean
+        get() = aiTextChapter != null && curTextChapter === aiTextChapter
+
+    /** 阅读页主动切回原文并从章首重排。 */
+    fun viewOriginal(success: (() -> Unit)? = null) {
+        AiReaderAccess.coordinator.showOriginal()
+        if (!isAiDisplaying) { success?.invoke(); return }
+        durChapterPos = 0
+        val epoch = aiEpoch
+        loadContent(durChapterIndex, upContent = true, resetPageOffset = true) {
+            if (epoch == aiEpoch && !isAiDisplaying) success?.invoke()
+        }
+    }
+
+    /** 阅读页主动查看 AI 正文：仅当候选存在；朗读中不切换，避免 TTS 读 AI。 */
+    fun viewAi() {
+        if (isAiDisplaying) return
+        if (!AiReaderAccess.coordinator.hasCompleted) return
+        if (BaseReadAloudService.isRun) {
+            appCtx.toastOnUi("朗读中，请先停止朗读再切换 AI 正文")
+            return
+        }
+        AiReaderAccess.coordinator.showAi()
+        durChapterPos = 0
+        loadContent(durChapterIndex, upContent = true, resetPageOffset = true)
+    }
+
+    /** Cancel without restarting during the original-text re-layout. */
+    fun resetAiDisplay() {
+        AiReaderAccess.coordinator.cancel()
+        viewOriginal()
+    }
+
+    fun activateCurrentAi(reloadIfMissing: Boolean = false) {
+        if (!AiReaderAccess.readerActive) return
+        val prepared = aiPrepared[durChapterIndex]
+        when (decideAiActivation(prepared != null, curTextChapter != null, reloadIfMissing)) {
+            AiActivationAction.RELOAD_CURRENT -> {
+                clearTextChapter()
+                callBack?.upContent()
+                loadContent(resetPageOffset = false)
+                return
+            }
+            AiActivationAction.WAIT_FOR_CONTENT -> return
+            AiActivationAction.ACTIVATE_PREPARED -> Unit
+        }
+        prepared ?: return
+        if (prepared.book.bookUrl != book?.bookUrl) return
+        val epoch = aiEpoch
+        aiActivation?.cancel()
+        aiActivation = launch {
+            val scope = withContext(IO) {
+                AiReaderAccess.buildScope(prepared.book, prepared.chapter.url, prepared.chapter.index, prepared.original)
+            }
+            if (epoch != aiEpoch || prepared.book.bookUrl != book?.bookUrl || !AiReaderAccess.readerActive) return@launch
+            AiReaderAccess.coordinator.resolve(prepared.original, scope, true)
+        }
+    }
+
+    fun retryAi(reprocess: Boolean = false) {
+        val prepared = aiPrepared[durChapterIndex]
+        if (prepared == null) {
+            resetAiDisplay()
+            activateCurrentAi(reloadIfMissing = true)
+            return
+        }
+        val epoch = aiEpoch
+        resetAiDisplay()
+        launch {
+            if (reprocess) AiReaderAccess.deleteChapter(prepared.book, prepared.chapter.url,
+                prepared.chapter.index, prepared.original)
+            if (epoch != aiEpoch || !AiReaderAccess.readerActive) return@launch
+            AiReaderAccess.coordinator.reset()
+            activateCurrentAi()
         }
     }
 
@@ -687,19 +798,36 @@ object ReadBook : CoroutineScope by MainScope() {
         loadingChapters.remove(index)
     }
 
-    /** Both loading paths must prepare exactly the same title and original body before layout. */
+    /** Both loading paths must prepare exactly the same title and display body before layout.
+     *  Only the current chapter (offset == 0) may involve the AI coordinator; adjacent pre-load
+     *  chapters always keep original. */
     private suspend fun prepareDisplayContent(
         book: Book,
         chapter: BookChapter,
-        content: String
-    ): Pair<String, BookContent> {
+        content: String,
+        isCurrent: Boolean
+    ): Pair<String, AiDisplayContent> {
+        val epoch = aiEpoch
         val processor = ContentProcessor.get(book.name, book.origin)
         val title = chapter.getDisplayTitle(
             processor.getTitleReplaceRules(),
             book.getUseReplaceRule(),
             replaceBook = book.toReplaceBook()
         )
-        return title to processor.getContent(book, chapter, content, includeTitle = false)
+        val original = processor.getContent(book, chapter, content, includeTitle = false)
+        val scope = if (isCurrent && AiReaderAccess.readerActive) {
+            runCatching { AiReaderAccess.buildScope(book, chapter.url, chapter.index, original) }.getOrNull()
+        } else null
+        val display = withContext(Main) {
+            ensureActive()
+            if (epoch != aiEpoch || book.bookUrl != this@ReadBook.book?.bookUrl) {
+                throw CancellationException("chapter_changed")
+            }
+            aiPrepared[chapter.index] = AiPrepared(book, chapter, original)
+            aiPrepared.keys.removeAll { it !in durChapterIndex - 1..durChapterIndex + 1 }
+            AiReaderAccess.coordinator.resolve(original, scope, chapter.index == durChapterIndex)
+        }
+        return title to display
     }
 
     /**
@@ -721,16 +849,29 @@ object ReadBook : CoroutineScope by MainScope() {
         }
         chapterLoadingJobs[chapter.index]?.cancel()
         val job = Coroutine.async(this, start = CoroutineStart.LAZY) {
-            val (displayTitle, contents) = prepareDisplayContent(book, chapter, content)
+            val epoch = aiEpoch
+            val offset = chapter.index - durChapterIndex
+            val (displayTitle, display) = prepareDisplayContent(book, chapter, content, offset == 0)
             ensureActive()
             val textChapter = ChapterProvider.getTextChapterAsync(
-                this, book, chapter, displayTitle, contents, simulatedChapterSize
+                this, book, chapter, displayTitle, display.content, simulatedChapterSize
             )
-            when (val offset = chapter.index - durChapterIndex) {
+            when (offset) {
                 0 -> curChapterLoadingLock.withLock {
                     withContext(Main) {
                         ensureActive()
+                        if (epoch != aiEpoch || book.bookUrl != this@ReadBook.book?.bookUrl || chapter.index != durChapterIndex) {
+                            throw CancellationException("chapter_changed")
+                        }
+                        if (display.isAi && (!AiReaderAccess.readerActive ||
+                            display.taskToken !== AiReaderAccess.coordinator.token ||
+                            AiReaderAccess.coordinator.displaySource.value != AiDisplaySource.Ai)) {
+                            textChapter.cancelLayout()
+                            resetAiDisplay()
+                            throw CancellationException("ai_display_invalidated")
+                        }
                         curTextChapter = textChapter
+                        aiTextChapter = if (display.isAi) textChapter else null
                     }
                     callBack?.upMenuView()
                     var available = false
@@ -757,6 +898,9 @@ object ReadBook : CoroutineScope by MainScope() {
                 -1 -> prevChapterLoadingLock.withLock {
                     withContext(Main) {
                         ensureActive()
+                        if (epoch != aiEpoch || book.bookUrl != this@ReadBook.book?.bookUrl || chapter.index != durChapterIndex - 1) {
+                            throw CancellationException("chapter_changed")
+                        }
                         prevTextChapter = textChapter
                     }
                     textChapter.layoutChannel.receiveAsFlow().collect()
@@ -766,6 +910,9 @@ object ReadBook : CoroutineScope by MainScope() {
                 1 -> nextChapterLoadingLock.withLock {
                     withContext(Main) {
                         ensureActive()
+                        if (epoch != aiEpoch || book.bookUrl != this@ReadBook.book?.bookUrl || chapter.index != durChapterIndex + 1) {
+                            throw CancellationException("chapter_changed")
+                        }
                         nextTextChapter = textChapter
                     }
                     for (page in textChapter.layoutChannel) {
@@ -803,15 +950,29 @@ object ReadBook : CoroutineScope by MainScope() {
             return
         }
         kotlin.runCatching {
-            val (displayTitle, contents) = prepareDisplayContent(book, chapter, content)
+            val epoch = aiEpoch
+            val offset = chapter.index - durChapterIndex
+            val (displayTitle, display) = prepareDisplayContent(book, chapter, content, offset == 0)
             val textChapter = ChapterProvider.getTextChapterAsync(
-                this@ReadBook, book, chapter, displayTitle, contents, simulatedChapterSize
+                this@ReadBook, book, chapter, displayTitle, display.content, simulatedChapterSize
             )
-            when (val offset = chapter.index - durChapterIndex) {
+            when (offset) {
                 0 -> {
-                    curTextChapter?.cancelLayout()
                     withContext(Main) {
+                        ensureActive()
+                        if (epoch != aiEpoch || book.bookUrl != this@ReadBook.book?.bookUrl || chapter.index != durChapterIndex) {
+                            throw CancellationException("chapter_changed")
+                        }
+                        if (display.isAi && (!AiReaderAccess.readerActive ||
+                            display.taskToken !== AiReaderAccess.coordinator.token ||
+                            AiReaderAccess.coordinator.displaySource.value != AiDisplaySource.Ai)) {
+                            textChapter.cancelLayout()
+                            resetAiDisplay()
+                            throw CancellationException("ai_display_invalidated")
+                        }
+                        curTextChapter?.cancelLayout()
                         curTextChapter = textChapter
+                        aiTextChapter = if (display.isAi) textChapter else null
                     }
                     callBack?.upMenuView()
                     var available = false
@@ -836,8 +997,12 @@ object ReadBook : CoroutineScope by MainScope() {
                 }
 
                 -1 -> {
-                    prevTextChapter?.cancelLayout()
                     withContext(Main) {
+                        ensureActive()
+                        if (epoch != aiEpoch || book.bookUrl != this@ReadBook.book?.bookUrl || chapter.index != durChapterIndex - 1) {
+                            throw CancellationException("chapter_changed")
+                        }
+                        prevTextChapter?.cancelLayout()
                         prevTextChapter = textChapter
                     }
                     textChapter.layoutChannel.receiveAsFlow().collect()
@@ -845,8 +1010,12 @@ object ReadBook : CoroutineScope by MainScope() {
                 }
 
                 1 -> {
-                    nextTextChapter?.cancelLayout()
                     withContext(Main) {
+                        ensureActive()
+                        if (epoch != aiEpoch || book.bookUrl != this@ReadBook.book?.bookUrl || chapter.index != durChapterIndex + 1) {
+                            throw CancellationException("chapter_changed")
+                        }
+                        nextTextChapter?.cancelLayout()
                         nextTextChapter = textChapter
                     }
                     for (page in textChapter.layoutChannel) {
@@ -1022,7 +1191,11 @@ object ReadBook : CoroutineScope by MainScope() {
     }
 
     private fun releaseAndCancel() {
+        aiEpoch++
+        aiActivation?.cancel()
+        aiPrepared.clear()
         msg = null
+        AiReaderAccess.coordinator.reset()
         preDownloadTask?.cancel()
         downloadScope.coroutineContext.cancelChildren()
         coroutineContext.cancelChildren()

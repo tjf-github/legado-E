@@ -93,6 +93,8 @@ object Restore {
     }
 
     suspend fun restoreLocked(path: String) {
+        // 恢复书架后逐书开关可能被带回，但本设备的外发授权必须作废：重新走设备 + 当前服务地址确认。
+        io.legado.app.help.ai.AiReaderAccess.revokeDeviceConsent()
         mutex.withLock {
             restore(path)
         }

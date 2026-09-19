@@ -1,0 +1,27 @@
+﻿{
+    "version":  1,
+    "checked_at_utc":  "2026-09-19T09:11:01Z",
+    "state":  "stable",
+    "before":  {
+                   "GitAvailable":  true,
+                   "Repository":  true,
+                   "GitRoot":  "D:/vsproject/legado-E",
+                   "Head":  "daab2ea440c056257075c17aee85ae5b86017cae",
+                   "GitDigest":  "3f43e1bbaa1d72ea88f6fba21a7162f62d9b8639573425c1ebe0fa80f2017534",
+                   "TaskDigest":  "f1b2d42b99879d2a5f1316a05de2286a46ffbdbd687f7933eefece169ae93272",
+                   "ExecutionDigest":  "29a8d1da28887f724311ec2b3cf2d70de697bbf19dd722b7019b4c574469c6c9",
+                   "Digest":  "8bdeee85c97b2627a1a924ea2a7b8e25ef0205107cfbce2e97d0a5cdda8b143e",
+                   "Detail":  ""
+               },
+    "after":  {
+                  "GitAvailable":  true,
+                  "Repository":  true,
+                  "GitRoot":  "D:/vsproject/legado-E",
+                  "Head":  "daab2ea440c056257075c17aee85ae5b86017cae",
+                  "GitDigest":  "3f43e1bbaa1d72ea88f6fba21a7162f62d9b8639573425c1ebe0fa80f2017534",
+                  "TaskDigest":  "f1b2d42b99879d2a5f1316a05de2286a46ffbdbd687f7933eefece169ae93272",
+                  "ExecutionDigest":  "29a8d1da28887f724311ec2b3cf2d70de697bbf19dd722b7019b4c574469c6c9",
+                  "Digest":  "8bdeee85c97b2627a1a924ea2a7b8e25ef0205107cfbce2e97d0a5cdda8b143e",
+                  "Detail":  ""
+              }
+}
