@@ -106,11 +106,10 @@ fun Fragment.readUri(uri: Uri?, success: (fileDoc: FileDoc, inputStream: InputSt
 @Throws(Exception::class)
 fun Uri.readBytes(context: Context): ByteArray {
     return if (this.isContentScheme()) {
-        context.contentResolver.openInputStream(this)?.use {
-            val len: Int = it.available()
-            val buffer = ByteArray(len)
-            it.read(buffer)
-            buffer
+        context.contentResolver.openInputStream(this)?.use { input ->
+            // 必须读到 EOF。此前用 available() 配单次 read()：content:// 流的 available()
+            // 常为 0 或小于真实长度，会读成空/截断，表现为「选择文件后导入书单/书源等提示格式不对」。
+            input.readBytes()
         } ?: throw NoStackTraceException("打开文件失败\n${this}")
     } else {
         val path = RealPathUtil.getPath(context, this)
@@ -124,9 +123,9 @@ fun Uri.readBytes(context: Context): ByteArray {
 
 @Throws(Exception::class)
 fun Uri.readText(context: Context): String {
-    readBytes(context).let {
-        return String(it)
-    }
+    // 去 BOM：外部工具（Windows 编辑器、部分导出功能）会写 UTF-8 BOM，
+    // 而 Kotlin 的 trim() 不把 \uFEFF 当空白，会让后续 JSON/XML 判断误判为格式不对。
+    return String(readBytes(context)).trimBom()
 }
 
 @Throws(Exception::class)

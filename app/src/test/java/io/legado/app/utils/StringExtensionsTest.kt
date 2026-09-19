@@ -1,5 +1,7 @@
 package io.legado.app.utils
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -42,5 +44,25 @@ class StringExtensionsTest {
         // 纯数字/数字前缀路径不依赖 Android Collator，可直接测扩展函数
         assertTrue("10.jpg".naturalCompare("2.jpg") > 0)
         assertTrue("001.jpg".naturalCompare("010.jpg") < 0)
+    }
+
+    @Test
+    fun trimBomMakesJsonArrayDetectionWorkWithBom() {
+        // 回归：外部工具（Windows 编辑器等）导出的 JSON 常带 UTF-8 BOM，
+        // 而 Kotlin 的 trim() 不把 \uFEFF 当空白 -> 旧实现会判成「不是 JSON 数组」，
+        // 表现为导入书单/书源时报「格式不对」。
+        val withBom = "\uFEFF[\n  {\"name\":\"a\"}\n]"
+        assertTrue(withBom.trimBom().isJsonArray())
+        assertTrue(withBom.trimBom().startsWith("["))
+    }
+
+    @Test
+    fun trimBomAlsoHandlesSurroundingWhitespaceAndEmptyInput() {
+        assertTrue("  \uFEFF \n[]\n ".trimBom().isJsonArray())
+        assertEquals("[]", "  \uFEFF [] ".trimBom())
+        assertEquals("", null.trimBom())
+        assertEquals("", "   ".trimBom())
+        assertFalse("".isJsonArray())
+        assertFalse("{}\uFEFF".isJsonArray())
     }
 }
