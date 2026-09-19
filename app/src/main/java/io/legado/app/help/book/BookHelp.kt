@@ -12,6 +12,8 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
+import io.legado.app.help.ai.AiAndroidAccess
+import io.legado.app.help.ai.AiChapterIdentity
 import io.legado.app.help.config.AppConfig
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.localBook.LocalBook
@@ -67,11 +69,15 @@ object BookHelp {
         FileUtils.delete(
             FileUtils.getPath(downloadDir, cacheFolderName)
         )
+        // 清理全部缓存 = 一并清除独立 AI 正文缓存。
+        AiAndroidAccess.clearAll()
     }
 
     fun clearCache(book: Book) {
         val filePath = FileUtils.getPath(downloadDir, cacheFolderName, book.getFolderName())
         FileUtils.delete(filePath)
+        // 清除该书缓存 = 联动删除该书独立 AI 正文缓存，但要保留原文缓存外的其它 AI 结果。
+        AiAndroidAccess.clearBook(book)
     }
 
     fun updateCacheFolder(oldBook: Book, newBook: Book) {
@@ -97,12 +103,16 @@ object BookHelp {
     suspend fun clearInvalidCache() {
         withContext(IO) {
             val bookFolderNames = hashSetOf<String>()
+            val aiBookHashes = hashSetOf<String>()
             val originNames = hashSetOf<String>()
             appDb.bookDao.all.forEach {
                 clearComicCache(it)
                 bookFolderNames.add(it.getFolderName())
+                aiBookHashes.add(AiChapterIdentity.bookUrlHash(it.bookUrl))
                 if (it.isEpub) originNames.add(it.originName)
             }
+            // 已删除书籍的独立 AI 正文缓存一并清理。
+            AiAndroidAccess.clearBooksNotIn(aiBookHashes)
             downloadDir.getFile(cacheFolderName)
                 .listFiles()?.forEach { bookFile ->
                     if (!bookFolderNames.contains(bookFile.name)) {

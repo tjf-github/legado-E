@@ -30,10 +30,16 @@ object AiPlainText {
         if (book.isLocal || book.isImage) {
             return false
         }
-        return content.textList.all { paragraph ->
-            !AppPattern.imgPattern.matcher(paragraph).find() &&
-                !AppPattern.useHtmlRegex.containsMatchIn(paragraph) &&
-                !htmlTagRegex.containsMatchIn(paragraph)
-        }
+        return content.textList.all(::isPlainTextString)
     }
+
+    /**
+     * 单字符串级结构校验：供「应用编辑并恢复哨兵后」的整章复验使用，由处理器调用。
+     * 与 [isAiPlainText] 共用同一套规则：真实 HTML 标签、`<img>`、`<usehtml>` 均判拒绝；
+     * 普通 `<`/`>`数学文本（`a < b > c`、`1 < 2`）判允许。
+     */
+    fun isPlainTextString(value: String): Boolean =
+        !AppPattern.imgPattern.matcher(value).find() &&
+            !AppPattern.useHtmlRegex.containsMatchIn(value) &&
+            !htmlTagRegex.containsMatchIn(value)
 }

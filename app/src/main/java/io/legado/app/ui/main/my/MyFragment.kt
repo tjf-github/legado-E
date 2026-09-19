@@ -138,7 +138,7 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
                     }
                 }
 
-                "recordLog" -> AppLog.onRecordLogChanged()
+                PreferKey.recordLog -> AppLog.onRecordLogChanged()
             }
         }
 

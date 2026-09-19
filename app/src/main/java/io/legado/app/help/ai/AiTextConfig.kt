@@ -84,7 +84,9 @@ class AiConfigRepository(
     private val store: AiTextConfigStore,
     private val onInvalidated: (AiConfigSnapshot) -> Unit = {}
 ) {
-    private var snapshot = AiConfigSnapshot(store.load(), 0)
+    @Volatile private var snapshot = AiConfigSnapshot(store.load(), 0)
+
+    fun isCurrent(expected: AiConfigSnapshot): Boolean = snapshot == expected
 
     @Synchronized
     fun current(): AiConfigSnapshot = snapshot
@@ -96,6 +98,7 @@ class AiConfigRepository(
         store.save(config)
         return AiConfigSnapshot(config, snapshot.generation + 1, fingerprint).also {
             snapshot = it
+            AiChapterProcessor.invalidateAll()
             onInvalidated(it)
         }
     }
