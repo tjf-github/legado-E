@@ -28,3 +28,8 @@ build.log
 .android_prefs/
 # 签名密钥 base64（临时，配置 GitHub Secret 后删除）
 keystore-base64.txt
+.agent-protocol-backups/
+# 本地发布用 worktree 副本（勿入库；它是整份仓库拷贝，误 add -A 的最大风险源）
+.codex-release-worktree/
+# 本机图片转文字小工具（读取本机凭据文件，不入库）
+look.ps1

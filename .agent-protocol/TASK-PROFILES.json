@@ -1,0 +1,26 @@
+{
+  "light": {
+    "max_review_rounds": 1,
+    "independent_reviewer_required": true,
+    "independent_acceptor_required": false,
+    "critical_gates_must_rerun": false,
+    "max_state_without_reviewer": "provisional",
+    "allowed_extensions": [".md", ".txt", ".rst", ".adoc"]
+  },
+  "standard": {
+    "max_review_rounds": 2,
+    "independent_reviewer_required": true,
+    "independent_acceptor_required": false,
+    "critical_gates_must_rerun": false,
+    "max_state_without_reviewer": "provisional",
+    "allowed_extensions": []
+  },
+  "high": {
+    "max_review_rounds": 3,
+    "independent_reviewer_required": true,
+    "independent_acceptor_required": true,
+    "critical_gates_must_rerun": true,
+    "max_state_without_reviewer": "provisional",
+    "allowed_extensions": []
+  }
+}
