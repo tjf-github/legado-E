@@ -43,6 +43,8 @@ internal enum class AiProtocolFailureDetail {
     end_not_int,
     original_not_string,
     replacement_not_string,
+    context_before_not_string,
+    context_after_not_string,
     bad_kind,
     warnings_not_array,
     warnings_not_string,
@@ -307,13 +309,17 @@ class OpenAiCompatibleProvider internal constructor(
             if (!element.isJsonObject) throw ProtocolDetail(AiProtocolFailureDetail.edit_not_object)
             val edit = element.asJsonObject
             val kindName = requiredString(edit, "kind", AiProtocolFailureDetail.kind_not_string)
+            val kind = AiEditKind.entries.firstOrNull { it.name == kindName }
+                ?: throw ProtocolDetail(AiProtocolFailureDetail.bad_kind)
             AiEdit(
                 requiredInt(edit, "start", AiProtocolFailureDetail.start_not_int),
                 requiredInt(edit, "end", AiProtocolFailureDetail.end_not_int),
                 requiredString(edit, "original", AiProtocolFailureDetail.original_not_string),
                 requiredString(edit, "replacement", AiProtocolFailureDetail.replacement_not_string),
-                AiEditKind.entries.firstOrNull { it.name == kindName }
-                    ?: throw ProtocolDetail(AiProtocolFailureDetail.bad_kind)
+                kind,
+                // 只读上下文锚点：仅在字段存在时严格解析为字符串；null 表示未提供，非法类型失败关闭。
+                optionalString(edit, "context_before", AiProtocolFailureDetail.context_before_not_string),
+                optionalString(edit, "context_after", AiProtocolFailureDetail.context_after_not_string)
             )
         }
         val warnings = payload.get("warnings")?.let { element ->
@@ -335,6 +341,20 @@ class OpenAiCompatibleProvider internal constructor(
     ): String {
         val element = value.get(name)
         if (element == null || !element.isJsonPrimitive || !element.asJsonPrimitive.isString) {
+            throw ProtocolDetail(detail)
+        }
+        return element.asString
+    }
+
+    /** 可选字符串字段：缺失或 null 记作“未提供”；存在但类型非法一律失败关闭。 */
+    private fun optionalString(
+        value: JsonObject,
+        name: String,
+        detail: AiProtocolFailureDetail
+    ): String? {
+        val element = value.get(name)
+        if (element == null || element.isJsonNull) return null
+        if (!element.isJsonPrimitive || !element.asJsonPrimitive.isString) {
             throw ProtocolDetail(detail)
         }
         return element.asString
@@ -407,7 +427,10 @@ Rules for edits:
 - return at most 128 edits. If any edit is uncertain, omit it instead of guessing.
 - NEVER emit a no-op edit where original equals replacement; if a span needs no change, do not include it in edits at all.
 - A correct chapter needs no changes: return an empty edits array when no repair is needed. Never invent errors to produce edits.
-- Each non-empty original must occur exactly once in text. If it repeats, omit the edit instead of guessing its position.
+- Each non-empty original must occur exactly once in text, or you must supply the context anchor fields below so that it can be located exactly.
+- context_before and context_after are optional read-only anchor fragments. Use them ONLY when original occurs more than once in text: context_before must be copied verbatim from the characters immediately left of the occurrence you mean, and context_after copied verbatim from the characters immediately right of it, inside this same text. Then they must be the exact adjacent substrings of that one occurrence, and context_before + original + context_after must occur exactly once in text.
+- Copy both fragments character for character from text. Never paraphrase, translate, normalize, or invent them; a fragment that is not in text, is not adjacent to original, or that still leaves the combination ambiguous makes the whole chapter fail. Omit the edit instead of guessing.
+- Supply BOTH context_before and context_after, each non-empty and at most 32 Unicode code points, copied from the same text. If original is already unique, omit both fields entirely; a lone or empty context on an ambiguous original is rejected. They are never edited and are never part of original or replacement.
 - context_only is read-only context and must never be edited or repeated.
 Do not rewrite, summarize, continue, translate, add or change letters, or alter sentinels, URLs, numbers, names, facts, plot, or style.
 json example: {"chunk_id":"chunk-0","edits":[{"start":0,"end":1,"original":"甲","replacement":"乙","kind":"typo"}],"warnings":[]}.

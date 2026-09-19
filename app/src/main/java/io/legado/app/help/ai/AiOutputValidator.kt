@@ -22,6 +22,8 @@ sealed class AiValidationResult {
  *
  * 模型偏移可能不准确，非空 original 只用块内唯一精确子串重建范围。
  * 不用模型偏移消解重复锚点，避免数错位置后碰巧匹配同字而改错句子。
+ * 重复锚点只在模型给出只读短前后文、且“前文 + original + 后文”在块内唯一且三者连续时才可定位；
+ * 未给上下文、上下文超长、组合不存在或仍不唯一一律退回 ANCHOR + ambiguous(changed) 失败关闭。
  * 无变化编辑也必须经过类别与保护项校验；重复锚点的 noop 可安全丢弃，真实编辑仍失败关闭。
  */
 object AiOutputValidator {
@@ -96,23 +98,31 @@ object AiOutputValidator {
                         AiAnchorFailureDetail(AiAnchorFailureKind.missing, effect))
                 }
                 if (occurrences.size > 1) {
-                    if (edit.original != edit.replacement) {
-                        return invalid(AiFailureCode.ANCHOR,
-                            AiAnchorFailureDetail(AiAnchorFailureKind.ambiguous, AiEditEffect.changed))
+                    if (edit.original == edit.replacement) {
+                        // 重复锚点仅在严格 noop 时可丢弃；每个可能位置都必须远离保护项，
+                        // 且编辑类别本身仍须合法。它不参与排序/重叠，因为不会应用任何范围。
+                        if (containsSentinelSyntax(edit.replacement, knownSentinels) ||
+                            occurrences.any { (start, end) ->
+                                val charStart = chunk.text.offsetByCodePoints(0, start)
+                                val charEnd = chunk.text.offsetByCodePoints(0, end)
+                                containsOrTouchesSentinel(chunk.text, charStart, charEnd, knownSentinels)
+                            }
+                        ) return invalid(AiFailureCode.SENTINEL)
+                        validateEditSemantics(edit)?.let { return it }
+                        continue
                     }
-                    // 重复锚点仅在严格 noop 时可丢弃；每个可能位置都必须远离保护项，
-                    // 且编辑类别本身仍须合法。它不参与排序/重叠，因为不会应用任何范围。
-                    if (containsSentinelSyntax(edit.replacement, knownSentinels) ||
-                        occurrences.any { (start, end) ->
-                            val charStart = chunk.text.offsetByCodePoints(0, start)
-                            val charEnd = chunk.text.offsetByCodePoints(0, end)
-                            containsOrTouchesSentinel(chunk.text, charStart, charEnd, knownSentinels)
-                        }
-                    ) return invalid(AiFailureCode.SENTINEL)
-                    validateEditSemantics(edit)?.let { return it }
-                    continue
+                    // 重复锚点的真实编辑：只允许用模型给出的只读上下文锚点消歧，且组合必须唯一。
+                    // 任何不满足（无上下文/超长/不连续/仍不唯一/不是 original）都退回原有的失败关闭，
+                    // 绝不允许落到上面的 noop 丢弃分支把已定位的真实编辑静默丢掉。
+                    val contextRange = resolveDisambiguatedRange(chunk.text, edit)
+                        ?: return invalid(
+                            AiFailureCode.ANCHOR,
+                            AiAnchorFailureDetail(AiAnchorFailureKind.ambiguous, AiEditEffect.changed)
+                        )
+                    contextRange
+                } else {
+                    occurrences.single()
                 }
-                occurrences.single()
             } else {
                 resolveInsertionRange(edit, totalCp) ?: return invalid(AiFailureCode.RANGE)
             }
@@ -142,6 +152,62 @@ object AiOutputValidator {
             result.replace(start, end, edit.replacement)
         }
         return AiValidationResult.Valid(result.toString())
+    }
+
+    /**
+     * 重复 original 的真实编辑的唯一放行路径：组合锚点必须唯一，且解析出的范围必须与 original 逐字相等。
+     * 任一不满足返回 null，调用方按 ANCHOR + ambiguous(changed) 失败关闭；模型 start/end 不参与。
+     */
+    private fun resolveDisambiguatedRange(text: String, edit: AiEdit): Pair<Int, Int>? {
+        val contextRange = resolveContextAnchor(text, edit) ?: return null
+        // 组合唯一不等于 original 一致：上下文伪造但组合恰好落点唯一时，落点必须是逐字相同的 original。
+        if (!rangeEqualsOriginal(text, contextRange, edit.original)) return null
+        return contextRange
+    }
+
+
+    /**
+     * 用只读上下文锚点消解重复 original：要求 before + original + after 在块内恰好出现一次，
+     * 且它确实是当前块从 [cpStart, cpEnd) 起的精确连续子串；由组合串起点 + 前文 code point 数推出 original 范围。
+     * 未提供有效上下文、上下文超长、组合不存在或不唯一一律返回 null（调用方失败关闭）。
+     * 模型 start/end 完全不参与本路径。返回 null 时不携带任何正文。
+     */
+    private fun resolveContextAnchor(text: String, edit: AiEdit): Pair<Int, Int>? {
+        val before = edit.contextBefore ?: return null
+        val after = edit.contextAfter ?: return null
+        val beforeCp = before.codePointCount(0, before.length)
+        val afterCp = after.codePointCount(0, after.length)
+        // 上下文长度按 code point 计，任一超出上限即拒绝。
+        if (beforeCp > AiEdit.MAX_ANCHOR_CONTEXT || afterCp > AiEdit.MAX_ANCHOR_CONTEXT) return null
+        // 必须两侧都给出（都非空）：只给一侧时，同一 original 的两个不同出现可能各自满足
+        // “组合唯一 + 一侧紧邻”，从而互相矛盾却都被接受；两侧齐备才是可核对的确定性锚点。
+        if (beforeCp == 0 || afterCp == 0) return null
+        val anchor = before + edit.original + after
+        // 组合必须在块内恰好出现一次，且与 original 在块内的重复次数无关。
+        val anchorOccurrences = codePointRanges(text, anchor)
+        if (anchorOccurrences.size != 1) return null
+        val cpStart = anchorOccurrences.single().first
+        // 组合串必须逐字落在同一位置，且 original 段必须与 original 精确相等。
+        val anchorCharStart = text.offsetByCodePoints(0, cpStart)
+        if (anchorCharStart < 0 || !text.startsWith(anchor, anchorCharStart)) return null
+        val originalCpStart = cpStart + beforeCp
+        val originalCpEnd = originalCpStart + edit.original.codePointCount(0, edit.original.length)
+        val originalCharStart = text.offsetByCodePoints(0, originalCpStart)
+        val originalCharEnd = text.offsetByCodePoints(0, originalCpEnd)
+        if (originalCharStart < 0 || originalCharEnd > text.length) return null
+        if (text.substring(originalCharStart, originalCharEnd) != edit.original) return null
+        // 组合必须真的“紧邻”：声明的前后文要落在这个出现位置的左右两侧；任一不成立即拒绝。
+        if (!text.startsWith(before, originalCharStart - before.length)) return null
+        if (!text.startsWith(after, originalCharEnd)) return null
+        return originalCpStart to originalCpEnd
+    }
+
+    /** 解析出的区间是否与 original 逐字相等（char 级等值，不依赖 code point 计数）。 */
+    private fun rangeEqualsOriginal(text: String, range: Pair<Int, Int>, original: String): Boolean {
+        val charStart = text.offsetByCodePoints(0, range.first)
+        val charEnd = text.offsetByCodePoints(0, range.second)
+        if (charStart < 0 || charEnd > text.length) return false
+        return text.substring(charStart, charEnd) == original
     }
 
     /**

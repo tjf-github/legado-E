@@ -346,4 +346,229 @@ class AiOutputValidatorTest {
             detail("甲乙", AiEdit(0, 1, "丙", "丙", AiEditKind.typo))
         )
     }
+    // ---- 阶段E B1：重复锚点的上下文消歧契约（仅合成正文）----
+
+    private fun validateEdit(text: String, edit: AiEdit): AiValidationResult =
+        AiOutputValidator.validateAndApply(
+            AiTextChunk("chunk-0", text, null),
+            AiChunkOutput("chunk-0", listOf(edit)),
+            emptySet()
+        )
+
+    private fun assertAnchorAmbiguousChanged(result: AiValidationResult) =
+        assertEquals(
+            AiValidationResult.Invalid(
+                AiFailureCode.ANCHOR,
+                AiAnchorFailureDetail(AiAnchorFailureKind.ambiguous, AiEditEffect.changed)
+            ),
+            result
+        )
+
+    @Test
+    fun resolvesRepeatedChangedAnchorFromUniqueContextCombination() {
+        // original（空格）在块内出现两次，唯一子串路径不成立，必须走上下文锚点；组合 "他 说" 只出现一次。
+        val text = "他 走得很快，他 说得更好"
+        assertEquals(
+            AiValidationResult.Valid("他 走得很快，他\n说得更好"),
+            validateEdit(
+                text,
+                AiEdit(99, 100, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = "他", contextAfter = "说")
+            )
+        )
+        // 同一输入去掉上下文即为旧行为：重复锚点的真实编辑必须失败关闭（B1 的新旧对照）。
+        assertAnchorAmbiguousChanged(
+            validateEdit(text, AiEdit(0, 1, " ", "\n", AiEditKind.whitespace))
+        )
+    }
+
+    @Test
+    fun contextAnchorNearChunkStartAndNearChunkEndResolvesUniquely() {
+        // 紧邻块首/块尾的空格：两侧上下文在块内齐备时可定位（真·块首元素没有左侧上下文，
+        // 协议要求两侧齐备，故块首元素本身不做上下文消歧——见仅单侧上下文必须失败关闭的用例）。
+        val nearStart = "他 开始，他 后来"
+        assertEquals(
+            AiValidationResult.Valid("他\n开始，他 后来"),
+            validateEdit(
+                nearStart,
+                AiEdit(99, 100, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = "他", contextAfter = "开")
+            )
+        )
+
+        val nearEnd = "他来，他 就是他 "
+        assertEquals(
+            AiValidationResult.Valid("他来，他\n就是他 "),
+            validateEdit(
+                nearEnd,
+                AiEdit(99, 100, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = "他", contextAfter = "就")
+            )
+        )
+    }
+
+    @Test
+    fun fabricatedContextMustFailClosed() {
+        // 组合锚点 "他 他" 在两个空格处都落点，落点唯一性成立时仍必须逐字比对 original。
+        val text = "他 走得很快，他 说"
+        assertAnchorAmbiguousChanged(
+            validateEdit(
+                text,
+                AiEdit(0, 1, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = "他", contextAfter = "他")
+            )
+        )
+    }
+
+    @Test
+    fun contextThatIsNotAdjacentToOriginalMustFailClosed() {
+        // 空格在块内出现两次（必须走上下文定位），声明的后文“走”虽是块内片段，却不是紧邻第一个空格右侧的字符。
+        val text = "他 说得很快，他 。走得很慢"
+        assertAnchorAmbiguousChanged(
+            validateEdit(
+                text,
+                AiEdit(0, 1, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = "他", contextAfter = "走")
+            )
+        )
+    }
+
+    @Test
+    fun nonUniqueContextCombinationMustFailClosed() {
+        // 两侧上下文都非空、长度都在上限内，但组合锚点 "他好。" 在块内出现两次：
+        // 这正是"组合仍不唯一必须失败关闭"的分支，必须失败关闭（去掉该分支会让本用例变红）。
+        val text = "他好。他好。他坏"
+        assertAnchorAmbiguousChanged(
+            validateEdit(
+                text,
+                AiEdit(0, 1, "好", "佳", AiEditKind.typo,
+                    contextBefore = "他", contextAfter = "。")
+            )
+        )
+    }
+
+    @Test
+    fun contextLongerThanLimitMustFailClosed() {
+        // 前文确实逐字存在于块中、组合本可唯一定位，但前文 33 > 32 超过上限，必须失败关闭。
+        val over = "长".repeat(AiEdit.MAX_ANCHOR_CONTEXT + 1)
+        assertAnchorAmbiguousChanged(
+            validateEdit(
+                "他 结尾，" + over + "他 ",
+                AiEdit(0, 1, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = over, contextAfter = "")
+            )
+        )
+    }
+
+    @Test
+    fun contextAtExactlyTheLimitResolves() {
+        // 前文恰好 32 个 code point：上限内且组合唯一，必须可定位。
+        val exact = "长".repeat(AiEdit.MAX_ANCHOR_CONTEXT)
+        assertEquals(
+            AiValidationResult.Valid("他 结尾，" + exact + "\n。"),
+            validateEdit(
+                "他 结尾，" + exact + " 。",
+                AiEdit(0, 1, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = exact, contextAfter = "。")
+            )
+        )
+    }
+
+    @Test
+    fun replacementSentinelSyntaxIsRejectedOnUniqueOccurrencePath() {
+        // 本用例覆盖的是既有 replacement 哨兵语法检查（original "编" 唯一，走唯一子串路径）。
+        // 复审 F6：含哨兵的 original 必然唯一，锚点路径不可能触达该检查，故不能把本用例当作
+        // "锚点路径下的哨兵保护"证据。
+        val protected = AiTextChunker.protect("编号 123456 结束", "anchor")
+        val sentinel = protected.sentinels.keys.single()
+        val result = AiOutputValidator.validateAndApply(
+            AiTextChunk("chunk-0", protected.protected, null),
+            AiChunkOutput(
+                "chunk-0",
+                listOf(
+                    AiEdit(0, 1, "编", sentinel, AiEditKind.whitespace)
+                )
+            ),
+            setOf(sentinel)
+        )
+        assertEquals(AiValidationResult.Invalid(AiFailureCode.SENTINEL), result)
+    }
+
+    @Test
+    fun contextAnchoredRangesOutOfOrderMustFailClosed() {
+        // 两条编辑都能被上下文唯一定位，但顺序颠倒（后一条落在前一条之前）：必须 OVERLAP 失败关闭。
+        val text = "他很早，很早就走了"
+        val first = AiEdit(0, 1, "很", "十", AiEditKind.typo,
+            contextBefore = "，", contextAfter = "早")
+        val second = AiEdit(0, 1, "很", "十", AiEditKind.typo,
+            contextBefore = "他", contextAfter = "早")
+        val result = AiOutputValidator.validateAndApply(
+            AiTextChunk("chunk-0", text, null),
+            AiChunkOutput("chunk-0", listOf(first, second)),
+            emptySet()
+        )
+        assertEquals(AiValidationResult.Invalid(AiFailureCode.OVERLAP), result)
+    }
+
+    @Test
+    fun contextAnchoredNestedRangeMustFailClosed() {
+        // 第一条解析到 [2,4)，第二条解析到 [3,4)：范围嵌套，必须 OVERLAP 失败关闭。
+        val text = "起初早早他都"
+        val first = AiEdit(0, 4, "早早", "甲乙", AiEditKind.typo,
+            contextBefore = "起初", contextAfter = "他")
+        val second = AiEdit(0, 1, "早", "丙", AiEditKind.typo,
+            contextBefore = "早", contextAfter = "他")
+        val result = AiOutputValidator.validateAndApply(
+            AiTextChunk("chunk-0", text, null),
+            AiChunkOutput("chunk-0", listOf(first, second)),
+            emptySet()
+        )
+        assertEquals(AiValidationResult.Invalid(AiFailureCode.OVERLAP), result)
+    }
+
+    @Test
+    fun singleSidedContextMustFailClosedBecauseItIsNotAContractAnchor() {
+        // 协议要求两侧都给出：只给一侧时一律失败关闭，绝不退回“只靠一侧消歧”。
+        val text = "他很早，很早就走了"
+        assertAnchorAmbiguousChanged(
+            validateEdit(
+                text,
+                AiEdit(0, 1, "很", "十", AiEditKind.typo,
+                    contextBefore = "早", contextAfter = "")
+            )
+        )
+        assertAnchorAmbiguousChanged(
+            validateEdit(
+                text,
+                AiEdit(0, 1, "很", "十", AiEditKind.typo,
+                    contextBefore = "", contextAfter = "早")
+            )
+        )
+    }
+
+    @Test
+    fun supplementaryPlaneContextMustBeCodePointAligned() {
+        // 补充平面字符（\uD840\uDC00 / \uD840\uDC01，即 U+20000 / U+20001）各占一个 code point、两个 UTF-16 char。
+        val base = "\uD840\uDC00"
+        val other = "\uD840\uDC01"
+        // 正例：紧邻空格的完整补充平面字符作为后文（两侧齐备），必须能按 code point 唯一定位。
+        val positive = "他 " + base + "，他 " + other
+        assertEquals(
+            AiValidationResult.Valid("他 " + base + "，他\n" + other),
+            validateEdit(
+                positive,
+                AiEdit(0, 1, " ", "\n", AiEditKind.whitespace,
+                    contextBefore = "他", contextAfter = other)
+            )
+        )
+        // 反例：original 在块内重复，声明的后文“说”在块内存在但与紧邻字符不符，必须失败关闭。
+        val negative = "他 " + base + "，他，" + base + " 说"
+        assertAnchorAmbiguousChanged(
+            validateEdit(
+                negative,
+                AiEdit(0, 1, "，", "。", AiEditKind.punctuation,
+                    contextBefore = "他", contextAfter = "说")
+            )
+        )
+    }
 }

@@ -5,6 +5,7 @@ import com.google.gson.JsonParser
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -243,6 +244,87 @@ class OpenAiCompatibleProviderTest {
                 assertFalse(details.toString().contains("trailing-private-text"))
             }
         }
+    }
+
+    @Test
+    fun contextAnchorFieldsAreParsedStrictlyAndDescribedInThePrompt() = runBlocking {
+        val okContent = """{"chunk_id":"c1","edits":[{"start":0,"end":1,"original":"乙","replacement":"丙","kind":"typo","context_before":"甲","context_after":"丁"}],"warnings":[]}"""
+        val output = OpenAiCompatibleProvider(
+            FakeTransport(AiHttpResponse(200, emptyMap(), chatResponse(okContent)))
+        ).processChunk(
+            AiChunkRequest("c1", "private chapter text", null),
+            config,
+            apiKey
+        )
+        val edit = output.edits.single()
+        assertEquals("甲", edit.contextBefore)
+        assertEquals("丁", edit.contextAfter)
+        assertFalse(edit.toString().contains("甲"))
+        assertFalse(edit.toString().contains("乙"))
+
+        // 字段缺失 → 视为"未提供"，解析必须成功：真实模型省略这两个可选字段时不得整章 PROTOCOL 失败。
+        val missingFields = OpenAiCompatibleProvider(
+            FakeTransport(
+                AiHttpResponse(
+                    200, emptyMap(),
+                    chatResponse("""{"chunk_id":"c1","edits":[{"start":0,"end":1,"original":"乙","replacement":"丙","kind":"typo"}],"warnings":[]}""")
+                )
+            )
+        ).processChunk(AiChunkRequest("c1", "private chapter text", null), config, apiKey)
+        assertNull(missingFields.edits.single().contextBefore)
+        assertNull(missingFields.edits.single().contextAfter)
+
+        // 显式 null → 同样视为"未提供"。
+        val nullFields = OpenAiCompatibleProvider(
+            FakeTransport(
+                AiHttpResponse(
+                    200, emptyMap(),
+                    chatResponse("""{"chunk_id":"c1","edits":[{"start":0,"end":1,"original":"乙","replacement":"丙","kind":"typo","context_before":null,"context_after":null}],"warnings":[]}""")
+                )
+            )
+        ).processChunk(AiChunkRequest("c1", "private chapter text", null), config, apiKey)
+        assertNull(nullFields.edits.single().contextBefore)
+        assertNull(nullFields.edits.single().contextAfter)
+
+        suspend fun detailFor(editsJson: String): AiProtocolFailureDetail {
+            val details = mutableListOf<AiProtocolFailureDetail>()
+            val content = """{"chunk_id":"c1","edits":[$editsJson],"warnings":[]}"""
+            val error = runCatching {
+                OpenAiCompatibleProvider(
+                    FakeTransport(AiHttpResponse(200, emptyMap(), chatResponse(content)))
+                ) { details += it }
+                    .processChunk(AiChunkRequest("c1", "private chapter text", null), config, apiKey)
+            }.exceptionOrNull() as AiProviderException
+            assertEquals(AiProviderError.protocol, error.error)
+            assertEquals(1, details.size)
+            assertFalse(details.toString().contains("private chapter text"))
+            return details.single()
+        }
+
+        assertEquals(
+            AiProtocolFailureDetail.context_before_not_string,
+            detailFor("""{"start":0,"end":1,"original":"乙","replacement":"丙","kind":"typo","context_before":7}""")
+        )
+        assertEquals(
+            AiProtocolFailureDetail.context_after_not_string,
+            detailFor("""{"start":0,"end":1,"original":"乙","replacement":"丙","kind":"typo","context_after":["丁"]}""")
+        )
+
+        // schema 描述必须同步：上下文锚点的使用条件、逐字复制要求与上限。
+        val promptTransport = FakeTransport(validResponse("c1"))
+        OpenAiCompatibleProvider(promptTransport).processChunk(
+            AiChunkRequest("c1", "正文", null), config, apiKey
+        )
+        val prompt = JsonParser.parseString(promptTransport.requests.single().body)
+            .asJsonObject.getAsJsonArray("messages")[0].asJsonObject.get("content").asString
+        listOf(
+            "context_before",
+            "context_after",
+            "exactly once",
+            "copied verbatim",
+            "32 Unicode code points",
+            "Supply BOTH context_before and context_after"
+        ).forEach { assertTrue("missing prompt rule: $it", prompt.contains(it)) }
     }
 
     private fun validResponse(chunkId: String, finishReason: String = "stop"): AiHttpResponse {

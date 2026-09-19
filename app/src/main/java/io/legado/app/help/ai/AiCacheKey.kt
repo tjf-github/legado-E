@@ -45,9 +45,9 @@ object AiCacheKey {
 
 /** 参与缓存身份的版本：Prompt / 分块 / 校验任一变化都会产生新的缓存键。 */
 object AiVersions {
-    const val PROMPT = "ai-prompt-v4"
+    const val PROMPT = "ai-prompt-v5"
     const val CHUNKING = "ai-chunk-v2"
-    const val VALIDATION = "ai-validate-v6"
+    const val VALIDATION = "ai-validate-v7"
 }
 
 /**

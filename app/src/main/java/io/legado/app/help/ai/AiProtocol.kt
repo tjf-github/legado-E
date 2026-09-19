@@ -38,15 +38,25 @@ enum class AiEditKind {
  * @param original 必须与 [start, end) 区间的原文逐值相等（本机锚定校验）。
  * @param replacement 替换文本。
  * @param kind 编辑类型。
+ * @param contextBefore 只读短前文锚点：仅用于本机定位重复 original，必须是当前块中紧邻 original 左侧的
+ *   逐字片段；为 null 视作空串。绝不参与替换、绝不写入日志或缓存身份。
+ * @param contextAfter 只读短后文锚点：语义同 [contextBefore]，紧邻 original 右侧。
  */
 data class AiEdit(
     val start: Int,
     val end: Int,
     val original: String,
     val replacement: String,
-    val kind: AiEditKind
+    val kind: AiEditKind,
+    val contextBefore: String? = null,
+    val contextAfter: String? = null
 ) {
     override fun toString(): String = "AiEdit(start=$start, end=$end, kind=$kind, text=[REDACTED])"
+
+    companion object {
+        /** 上下文锚点上限（Unicode code point，分别计前文与后文）。超出即失败关闭，不放宽定位。 */
+        const val MAX_ANCHOR_CONTEXT = 32
+    }
 }
 
 /** 最终原因。长度截断/异常结束会导致整块失败。 */
