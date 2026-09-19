@@ -1,7 +1,7 @@
 ﻿---
-task_id: synthetic-20260918-135513
-evidence_dir: .agent-protocol/tasks/synthetic-20260918-135513
-state: ready
+task_id: none
+evidence_dir: none
+state: provisional
 mode: dsh-claude
 assurance: standard
 route_revision: 1
@@ -9,7 +9,7 @@ controller: dsh
 executor: dsh
 reviewer: claude
 acceptor: dsh
-last_closed_task: none
+last_closed_task: ai-stage-e-device
 channel_test: passed@2026-09-18
 ---
 
