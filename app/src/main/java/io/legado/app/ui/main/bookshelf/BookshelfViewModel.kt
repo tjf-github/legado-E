@@ -31,11 +31,13 @@ import io.legado.app.utils.isAbsUrl
 import io.legado.app.utils.isJsonArray
 import io.legado.app.utils.printOnDebug
 import io.legado.app.utils.toastOnUi
+import io.legado.app.utils.trimBom
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
+import java.util.concurrent.atomic.AtomicInteger
 
 class BookshelfViewModel(application: Application) : BaseViewModel(application) {
     val addBookProgressLiveData = MutableLiveData(-1)
@@ -180,8 +182,13 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
 
     fun importBookshelf(str: String, groupId: Long) {
         execute {
-            val text = str.trim()
+            // trimBom：外部工具导出的 JSON 常带 UTF-8 BOM，不剥掉会被判成「格式不对」
+            val text = str.trimBom()
             when {
+                text.isEmpty() -> {
+                    throw NoStackTraceException("内容为空：文件可能没读到（请用「选择文件」重试），或粘贴框是空的")
+                }
+
                 text.isAbsUrl() -> {
                     okHttpClient.newCallResponseBody {
                         url(text)
@@ -195,7 +202,7 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
                 }
 
                 else -> {
-                    throw NoStackTraceException("格式不对")
+                    throw NoStackTraceException("不是书单格式：应为 JSON 数组（以 [ 开头、以 ] 结尾），或是指向该文件的 http(s) 地址")
                 }
             }
         }.onError {
@@ -205,9 +212,16 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
 
     private fun importBookshelfByJson(json: String, groupId: Long) {
         execute {
+            val entries = GSON.fromJsonArray<Map<String, String?>>(json).getOrThrow()
             val bookSourceParts = appDb.bookSourceDao.allEnabledPart
+            if (bookSourceParts.isEmpty()) {
+                // 书单只有书名/作者，必须靠书源检索才能变成可读的书
+                context.toastOnUi("没有启用的书源，无法按书名检索；请先在书源管理里启用书源")
+                return@execute
+            }
             val semaphore = Semaphore(AppConfig.threadCount)
-            GSON.fromJsonArray<Map<String, String?>>(json).getOrThrow().forEach { bookInfo ->
+            val imported = AtomicInteger(0)
+            entries.forEach { bookInfo ->
                 val name = bookInfo["name"] ?: ""
                 val author = bookInfo["author"] ?: ""
                 if (name.isEmpty() || appDb.bookDao.has(name, author)) {
@@ -223,15 +237,17 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
                             book.group = groupId
                         }
                         book.save()
+                        imported.incrementAndGet()
                     }.onError { e ->
                         context.toastOnUi(e.localizedMessage)
                     }
                 }
             }
+            // 如实回报：此前无论导入几本都固定提示「成功」，会掩盖「书源没启用/一本都没匹配上」
+            context.toastOnUi("书单处理完成：新增 ${imported.get()} 本（共 ${entries.size} 条）")
         }.onError {
             it.printOnDebug()
-        }.onFinally {
-            context.toastOnUi(R.string.success)
+            context.toastOnUi("导入书单出错：${it.localizedMessage}")
         }
     }
 

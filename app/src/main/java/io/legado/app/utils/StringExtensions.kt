@@ -55,15 +55,19 @@ fun String?.isJson(): Boolean =
         }
     } ?: false
 
+/** 去掉 UTF-8 BOM（\uFEFF）与首尾空白。外部工具导出的文件常带 BOM，
+ *  而 Kotlin 的 trim() 不把 \uFEFF 当空白，会让 startsWith("[") 之类的判断失败。 */
+fun String?.trimBom(): String = this?.trim()?.removePrefix("\uFEFF")?.trim() ?: ""
+
 fun String?.isJsonObject(): Boolean =
     this?.run {
-        val str = this.trim()
+        val str = this.trimBom()
         str.startsWith("{") && str.endsWith("}")
     } ?: false
 
 fun String?.isJsonArray(): Boolean =
     this?.run {
-        val str = this.trim()
+        val str = this.trimBom()
         str.startsWith("[") && str.endsWith("]")
     } ?: false
 
