@@ -274,11 +274,12 @@ class ReadMenu @JvmOverloads constructor(
     fun upBrightnessState() {
         if (brightnessAuto()) {
             binding.ivBrightnessAuto.setColorFilter(context.accentColor)
-            binding.seekBrightness.isEnabled = false
         } else {
             binding.ivBrightnessAuto.setColorFilter(context.buttonDisabledColor)
-            binding.seekBrightness.isEnabled = true
         }
+        // 亮度条始终可拖：拖动本身就代表要手动控制（见 onProgressChanged 里退出自动亮度），
+        // 否则自动亮度开启时它是一个"看得见却拖不动"的死控件——用户会当成亮度坏了。
+        binding.seekBrightness.isEnabled = true
         setScreenBrightness(AppConfig.readBrightness.toFloat())
     }
 
@@ -493,6 +494,13 @@ class ReadMenu @JvmOverloads constructor(
 
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
+                    // 手动拖 = 要手动控制：自动亮度开着时先退出自动，否则拖动会毫无反应。
+                    if (brightnessAuto()) {
+                        context.putPrefBoolean("brightnessAuto", false)
+                        upBrightnessState()
+                    }
+                    // 拖动过程中就落盘：菜单自动收起时不再丢掉这次的亮度设置。
+                    AppConfig.readBrightness = progress
                     setScreenBrightness(progress.toFloat())
                 }
             }
