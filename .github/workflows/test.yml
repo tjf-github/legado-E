@@ -310,8 +310,10 @@ jobs:
           fail_on_unmatched_files: true
 
   lanzou:
+    # 用户 2026-09-21 授权：发布只发 GitHub，本 job 硬禁用（不依赖 Secrets 是否存在）
+    if: ${{ false }}  # github-only
     needs: [ prepare, build ]
-    if: ${{ github.event_name != 'pull_request' && needs.prepare.outputs.lanzou == 'yes' }}
+    # 原自动触发条件（Secrets 存在即运行）：github.event_name != 'pull_request' && needs.prepare.outputs.lanzou == 'yes'
     runs-on: ubuntu-latest
     env:
       # 登录蓝奏云后在控制台运行document.cookie
@@ -336,8 +338,10 @@ jobs:
           echo "[$(date -u -d '+8 hour' '+%Y.%m.%d %H:%M:%S')] 分享链接: $LANZOU_URL"
 
   telegram:
+    # 用户 2026-09-21 授权：发布只发 GitHub，本 job 硬禁用（不依赖 Secrets 是否存在）
+    if: ${{ false }}  # github-only
     needs: [prepare, build]
-    if: github.event_name != 'pull_request' && needs.prepare.outputs.telegram == 'yes'
+    # 原自动触发条件（Secrets 存在即运行）：github.event_name != 'pull_request' && needs.prepare.outputs.telegram == 'yes'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
@@ -376,8 +380,10 @@ jobs:
           method: sendFile
 
   gitee:
+    # 用户 2026-09-21 授权：发布只发 GitHub，本 job 硬禁用（不依赖 Secrets 是否存在）
+    if: ${{ false }}  # github-only
     needs: [prepare, build]
-    if: github.event_name != 'pull_request' && needs.prepare.outputs.gitee == 'yes'
+    # 原自动触发条件（Secrets 存在即运行）：github.event_name != 'pull_request' && needs.prepare.outputs.gitee == 'yes'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
@@ -489,8 +495,10 @@ jobs:
           done
 
   update-storage:
+    # 用户 2026-09-21 授权：发布只发 GitHub，本 job 硬禁用（不依赖 Secrets 是否存在）
+    if: ${{ false }}  # github-only
     needs: [prepare, build]
-    if: github.event_name != 'pull_request'&& needs.prepare.outputs.sgithub == 'yes' && needs.prepare.outputs.updateLog_updated == 'yes'
+    # 原自动触发条件（Secrets 存在即运行）：github.event_name != 'pull_request'&& needs.prepare.outputs.sgithub == 'yes' && needs.prepare.outputs.updateLog_updated == 'yes'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
