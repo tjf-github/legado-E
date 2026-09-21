@@ -1,0 +1,178 @@
+{
+    "version":  1,
+    "generated_at_utc":  "2026-09-20T09:21:16Z",
+    "task_id":  "dual-release-privacy",
+    "task_class":  "standard",
+    "role":  "reviewer",
+    "round_id":  "reviewer-r004",
+    "mode":  "dsh-claude",
+    "assurance":  "standard",
+    "route_revision":  "6",
+    "role_map":  {
+                     "controller":  "dsh",
+                     "executor":  "dsh",
+                     "reviewer":  "claude",
+                     "acceptor":  "dsh"
+                 },
+    "task_digest":  "7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216",
+    "snapshot_digest":  "40f10aa52597fef3c6e53c6485da0a21ce784f3cbf61b42e9a963bccea4cdba0",
+    "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
+    "role_contract":  ".agent-protocol/prompts/reviewer.md",
+    "evidence_file":  ".agent-protocol/tasks/dual-release-privacy/20-review.md",
+    "rules":  [
+                  {
+                      "path":  ".agent-protocol/prompts/reviewer.md",
+                      "kind":  "role-contract",
+                      "sha256":  "d2131485fb5fe21fc902b42d15e10626bb18ad6d664972f129ef49ad25588c61",
+                      "bytes":  3480
+                  },
+                  {
+                      "path":  ".agent-protocol/README.md",
+                      "kind":  "protocol",
+                      "sha256":  "ea8f7c0cf78170e8b8704d849e9b27c51554e07e99afff493a6139bbce2a69a2",
+                      "bytes":  11611
+                  },
+                  {
+                      "path":  ".agent-protocol/MODES.md",
+                      "kind":  "protocol",
+                      "sha256":  "3f116cc85ed7dba1b6c4f5d23fd063d7cf323988fe4595a874f400997f860a1c",
+                      "bytes":  4689
+                  },
+                  {
+                      "path":  ".agent-protocol/CLOSEOUT.md",
+                      "kind":  "protocol",
+                      "sha256":  "677543ac8419e43a12fe3c568c836c414481f6b92a2da5bdae932b5a17de205c",
+                      "bytes":  4053
+                  },
+                  {
+                      "path":  ".agent-protocol/TASK-PROFILES.json",
+                      "kind":  "policy",
+                      "sha256":  "b0e21c2b46e5eea2a56722cbefd0cb145c0e0eb619b33c3986751f188dcba2b7",
+                      "bytes":  812
+                  },
+                  {
+                      "path":  ".agent-protocol/ROUTES.json",
+                      "kind":  "policy",
+                      "sha256":  "d53ba511e8a3457b7fa8ce7faa9860feea68813c6a9c3fabc2b5192ee47de386",
+                      "bytes":  1573
+                  }
+              ],
+    "read_list":  [
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\dual-release-privacy\\00-task.md",
+                          "sha256":  "7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216",
+                          "bytes":  15728,
+                          "why":  "任务书：范围、白名单、完成条件、停止条件以它为准"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\dual-release-privacy\\10-execution.md",
+                          "sha256":  "8bb2aa9b8df4d19b121c84582564cde20d8122d077ce8a9e43c742cf0da2053d",
+                          "bytes":  16799,
+                          "why":  "上一环产物：当作待验证的主张读，不要当作事实"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\PROJECT.md",
+                          "sha256":  "f08c643fb4b1829dad2bee7c7e5e114637f1b014f47f638319c25756bcbfee03",
+                          "bytes":  1814,
+                          "why":  "项目专属事实；仅在任务书把它列入你的可读白名单时读"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\CURRENT.md",
+                          "sha256":  "1383408aaf782b582ce59a91d82d7c7aee64649fb9901e4a289091c8793bc203",
+                          "bytes":  488,
+                          "why":  "当前模式与角色映射；换挡后 delta 会让你读它，所以它必须在这张清单里"
+                      }
+                  ],
+    "excluded":  [
+                     {
+                         "pattern":  ".agent-protocol/tasks/\u003c其它任务\u003e/**",
+                         "why":  "历史长报告默认不进上下文；需要历史时只读 read_list 里的 .agent-protocol/ARCHIVE.md 一行索引（对应的 40-archive.json 只在任务书另行授权时才读）"
+                     },
+                     {
+                         "pattern":  "rounds/**",
+                         "why":  "已归档轮次全文默认不读；机器事实已在 recent_rounds 与 findings.json 里"
+                     },
+                     {
+                         "pattern":  "15-*-raw.md",
+                         "why":  "runner 回执是审计材料，不是角色输入"
+                     }
+                 ],
+    "open_findings":  [
+
+                      ],
+    "recent_rounds":  [
+                          {
+                              "round_number":  2,
+                              "round_id":  "executor-r002",
+                              "role":  "executor",
+                              "summary":  "absent",
+                              "status":  "",
+                              "not_run":  0,
+                              "files_changed":  0,
+                              "worktree_dirty":  0,
+                              "findings":  ""
+                          },
+                          {
+                              "round_number":  2,
+                              "round_id":  "reviewer-r002",
+                              "role":  "reviewer",
+                              "summary":  "absent",
+                              "status":  "",
+                              "not_run":  0,
+                              "files_changed":  0,
+                              "worktree_dirty":  0,
+                              "findings":  ""
+                          },
+                          {
+                              "round_number":  3,
+                              "round_id":  "executor-r003",
+                              "role":  "executor",
+                              "summary":  "absent",
+                              "status":  "",
+                              "not_run":  0,
+                              "files_changed":  0,
+                              "worktree_dirty":  0,
+                              "findings":  ""
+                          },
+                          {
+                              "round_number":  3,
+                              "round_id":  "reviewer-r003",
+                              "role":  "reviewer",
+                              "summary":  "runner-fallback",
+                              "status":  "completed",
+                              "not_run":  1,
+                              "files_changed":  0,
+                              "worktree_dirty":  13,
+                              "findings":  ""
+                          },
+                          {
+                              "round_number":  4,
+                              "round_id":  "executor-r004",
+                              "role":  "executor",
+                              "summary":  "absent",
+                              "status":  "",
+                              "not_run":  0,
+                              "files_changed":  0,
+                              "worktree_dirty":  0,
+                              "findings":  ""
+                          },
+                          {
+                              "round_number":  5,
+                              "round_id":  "executor-r005",
+                              "role":  "executor",
+                              "summary":  "absent",
+                              "status":  "",
+                              "not_run":  0,
+                              "files_changed":  0,
+                              "worktree_dirty":  0,
+                              "findings":  ""
+                          }
+                      ],
+    "project_root":  "D:\\vsproject\\legado-E",
+    "usage_notes":  [
+                        "read_list 里是绝对路径；excluded 与 evidence_file 是项目相对路径（统一用正斜杠）。",
+                        "规则文件按 sha256 引用：只有 delta 里列出的变化文件才需要重读。",
+                        "发现一律用 ID 引用（如 F-0002），不要复制全文；claimed_resolved 表示被审方声称已修、尚未被复审方确认。",
+                        "excluded 里的路径默认不读；任务书的读取白名单仍是硬上限。"
+                    ]
+}

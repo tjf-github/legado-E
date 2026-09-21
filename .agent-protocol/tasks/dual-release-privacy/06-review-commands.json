@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "network_policy": "deny-declared-not-enforced",
+  "commands": [
+    {
+      "name": "phase-cd-diff-check",
+      "file": "git",
+      "args": ["diff", "--check", "--", ".github/workflows/test.yml", "app/build.gradle", "app/src/main/res/values/strings.xml", "app/src/main/res/values-zh/strings.xml", "app/src/main/java/io/legado/app/help/update/AppReleaseInfo.kt", "app/src/main/java/io/legado/app/help/update/AppUpdateGitHub.kt", "app/src/main/java/io/legado/app/help/update/AppUpdateGitee.kt", "app/src/main/java/io/legado/app/constant/AppConst.kt", "app/src/main/java/io/legado/app/help/update/ReleaseIdentity.kt", "app/src/test/java/io/legado/app/help/update/AppReleaseInfoTest.kt"],
+      "working_directory": ".",
+      "timeout_sec": 120
+    },
+    {
+      "name": "phase-cd-business-diff",
+      "file": "git",
+      "args": ["diff", "--", ".github/workflows/test.yml", "app/build.gradle", "app/src/main/res/values/strings.xml", "app/src/main/res/values-zh/strings.xml", "app/src/main/java/io/legado/app/help/update/AppReleaseInfo.kt", "app/src/main/java/io/legado/app/help/update/AppUpdateGitHub.kt", "app/src/main/java/io/legado/app/help/update/AppUpdateGitee.kt", "app/src/main/java/io/legado/app/constant/AppConst.kt", "app/src/main/java/io/legado/app/help/update/ReleaseIdentity.kt", "app/src/test/java/io/legado/app/help/update/AppReleaseInfoTest.kt"],
+      "working_directory": ".",
+      "timeout_sec": 120
+    },
+    {
+      "name": "phase-cd-targeted-test",
+      "file": "gradlew.bat",
+      "args": ["-g", "D:\\gradle_home", ":app:testAppDebugUnitTest", "--tests", "io.legado.app.help.update.AppReleaseInfoTest", "--console=plain"],
+      "working_directory": ".",
+      "timeout_sec": 600
+    },
+    {
+      "name": "phase-cd-status",
+      "file": "git",
+      "args": ["status", "-sb"],
+      "working_directory": ".",
+      "timeout_sec": 120
+    }
+  ]
+}

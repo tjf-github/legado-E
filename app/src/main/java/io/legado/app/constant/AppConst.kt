@@ -7,6 +7,7 @@ import androidx.annotation.Keep
 import cn.hutool.crypto.digest.DigestUtil
 import io.legado.app.BuildConfig
 import io.legado.app.help.update.AppVariant
+import io.legado.app.help.update.ReleaseIdentity
 import org.apache.commons.lang3.time.FastDateFormat
 import splitties.init.appCtx
 
@@ -65,13 +66,10 @@ object AppConst {
         appCtx.packageManager.getPackageInfo(appCtx.packageName, PackageManager.GET_ACTIVITIES)
             ?.let {
                 appInfo.versionName = it.versionName!!
-                appInfo.appVariant = when {
-                    it.packageName.contains("releaseA") -> AppVariant.BETA_RELEASEA
-                    it.packageName.contains("releaseS") -> AppVariant.BETA_RELEASES
-                    isBeta -> AppVariant.BETA_RELEASE
-                    isOfficial -> AppVariant.OFFICIAL
-                    else -> AppVariant.OFFICIAL
-                }
+                appInfo.appVariant = AppVariant.of(
+                    ReleaseIdentity.fromPackageName(it.packageName),
+                    isBetaChannel
+                )
 
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
                     appInfo.versionCode = it.longVersionCode
@@ -94,6 +92,9 @@ object AppConst {
 
     private val isBeta = sha256Signature == BETA_SIGNATURE || BuildConfig.DEBUG
 
+    /** 发布通道（与 normal/private 身份正交）：本 fork 的 beta 签名与 DEBUG 走 beta 通道。 */
+    private val isBetaChannel = isBeta && !isOfficial
+
     val charsets =
         arrayListOf("UTF-8", "GB2312", "GB18030", "GBK", "Unicode", "UTF-16", "UTF-16LE", "ASCII")
 
@@ -101,7 +102,7 @@ object AppConst {
     data class AppInfo(
         var versionCode: Long = 0L,
         var versionName: String = "",
-        var appVariant: AppVariant = AppVariant.UNKNOWN
+        var appVariant: AppVariant = AppVariant.UNKNOWN_OFFICIAL
     )
 
     /**

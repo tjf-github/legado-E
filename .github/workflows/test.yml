@@ -138,11 +138,8 @@ jobs:
           echo "body=$CONTENT_JSON" >> $GITHUB_OUTPUT
       - id: set-matrix
         run: |
-          if [ "${{ steps.updateLog.outputs.updated }}" == "yes" ]; then
-            echo 'build_matrix={"product":["app"],"type":["release","releaseS"]}' >> $GITHUB_OUTPUT
-          else
-            echo 'build_matrix={"product":["app"],"type":["release"]}' >> $GITHUB_OUTPUT
-          fi
+          # 通道（beta/正式）与身份（normal/private）分开：无论更新日志是否变化，两个身份都必须构建
+          echo 'build_matrix={"product":["app"],"type":["normal","private"]}' >> $GITHUB_OUTPUT
 
   build:
     needs: prepare
@@ -185,23 +182,14 @@ jobs:
 
       - name: Build With Gradle
         run: |
-          if [ "${{ env.type }}" == 'release' ]; then
-            typeName="原包名"
-          else
-            typeName="共存"
-            sed "s/'.release'/'.releaseS'/" $GITHUB_WORKSPACE/app/build.gradle  -i
-          fi
-          echo "开始${{ env.product }}$typeName构建（版本号由 -P 注入：${{ env.VERSION }}）"
+          echo "开始${{ env.product }} [${{ env.type }}] 构建（身份由 -PRELEASE_IDENTITY 注入，版本号由 -P 注入：${{ env.VERSION }}）"
           chmod +x gradlew
-          ./gradlew testAppDebugUnitTest lintAppDebug assembleAppRelease --build-cache --parallel --daemon --warning-mode all -PVERSION="${{ env.VERSION }}" -PVERSION_CODE="${{ env.VERSION_CODE }}"
+          ./gradlew testAppDebugUnitTest lintAppDebug assembleAppRelease --build-cache --parallel --daemon --warning-mode all -PVERSION="${{ env.VERSION }}" -PVERSION_CODE="${{ env.VERSION_CODE }}" -PRELEASE_IDENTITY="${{ env.type }}"
           echo "修改APK文件名"
           mkdir -p ${{ github.workspace }}/apk/
+          # 资产名固定为 legado_app_<versionL>_<identity>.apk，客户端靠名称里的 normal/private 精确匹配身份
           for file in `ls ${{ github.workspace }}/app/build/outputs/apk/*/*/*.apk`; do
-            if [ "${{ env.type }}" == 'release' ]; then
-              mv "$file" ${{ github.workspace }}/apk/legado_测试版_${{ env.VERSIONL }}_$typeName.apk
-            else
-              mv "$file" ${{ github.workspace }}/apk/legado_正式版_${{ env.VERSIONL }}_$typeName.apk
-            fi
+            mv "$file" ${{ github.workspace }}/apk/legado_app_${{ env.VERSIONL }}_${{ env.type }}.apk
           done
           echo "移动mapping文件"
           mkdir -p ${{ github.workspace }}/mapping/
@@ -269,13 +257,14 @@ jobs:
           mv */*.apk .
           rm -rf */
 
-          for file in `ls *.apk`; do
-            if [[ "$file" == *原包名* ]]; then
-              mv "$file" $(echo $file | sed -e s/原包名/release/ -e s/测试版/beta/)
-            else
-              mv "$file" $(echo $file | sed -e s/共存/releaseS/ -e s/正式版/plus/)
+          # 双版本必须同时到位：缺任一身份都视为发布不完整，直接失败
+          for identity in normal private; do
+            if ! ls legado_app_*_$identity.apk > /dev/null 2>&1; then
+              echo "缺少 $identity APK，双版本发布不完整"
+              exit 1
             fi
           done
+          ls -l *.apk
 
       - name: Publish Official Release
         if: needs.prepare.outputs.updateLog_updated == 'yes'
@@ -361,10 +350,7 @@ jobs:
           rm -rf */
           has_plus=false
           for file in `ls *.apk`; do
-            if [[ "$file" == *原包名* ]]; then
-              mv "$file" $(echo $file | sed s/原包名/beta/)
-            else
-              mv "$file" $(echo $file | sed s/共存/plus/)
+            if [[ "$file" == *_private.apk ]]; then
               has_plus=true
             fi
           done
@@ -401,14 +387,8 @@ jobs:
         run: |
           mv */*.apk .
           rm -rf */
-
-          for file in `ls *.apk`; do
-            if [[ "$file" == *原包名* ]]; then
-              mv "$file" $(echo $file | sed s/原包名/release/)
-            else
-              mv "$file" $(echo $file | sed s/共存/releaseS/)
-            fi
-          done
+          # 资产名已由构建 job 固定为 legado_app_<versionL>_<identity>.apk，不再按中文标签改名
+          ls -l *.apk
 
       - name: Upload to Gitee Release
         continue-on-error: true
@@ -515,17 +495,17 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: legado.app.releaseS
-          path: ./apk-releaseS
+          name: legado.app.private
+          path: ./apk-private
 
-      - name: Check releaseS APK exists
+      - name: Check private APK exists
         id: check-apk
         run: |
-          if ls ./apk-releaseS/*.apk 1> /dev/null 2>&1; then
-            echo "releaseS APK found"
+          if ls ./apk-private/*.apk 1> /dev/null 2>&1; then
+            echo "private APK found"
             echo "apk_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "releaseS APK not found"
+            echo "private APK not found"
             echo "apk_exists=false" >> $GITHUB_OUTPUT
           fi
 
@@ -540,8 +520,8 @@ jobs:
           git clone https://${{ secrets.S_GITHUB_TOKEN }}@github.com/Luoyacheng/link-E.git link-E-repo
           # 创建目录（如果不存在）
           mkdir -p link-E-repo/sigma
-          # 复制releaseS APK文件并重命名
-          cp ./apk-releaseS/*.apk link-E-repo/sigma/leagado_Sigma_正式版.apk
+          # 复制 private（旧 .release 升级链）APK 到 link-E 既有路径；目标文件名保持不变，避免影响外部消费方
+          cp ./apk-private/*.apk link-E-repo/sigma/leagado_Sigma_正式版.apk
           # 提交更改
           cd link-E-repo
           git add sigma/leagado_Sigma_正式版.apk
