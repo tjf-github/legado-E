@@ -16,14 +16,19 @@ import kotlinx.coroutines.CoroutineScope
 @Suppress("unused")
 object AppUpdateGitHub : AppUpdate.AppUpdateInterface {
 
+    /**
+     * 更新检查目标 = 本机安装身份（永远跟随包名）+ 发布通道（可由设置覆盖）。
+     *
+     * 身份绝不允许来自设置项：普通版拿到隐私版（或反向）会直接装错包，切断升级链。
+     * 历史键 `beta_releaseS_version` 在设置里显示为“正式版”，按其可见语义映射到正式通道；
+     * `beta_releaseA_version`（“共存版”）保持 beta 通道。两者都不再改变身份。
+     */
     private val checkVariant: AppVariant
-        get() = when (AppConfig.updateToVariant) {
-            "official_version" -> AppVariant.OFFICIAL
-            "beta_release_version" -> AppVariant.BETA_RELEASE
-            "beta_releaseA_version" -> AppVariant.BETA_RELEASEA
-            "beta_releaseS_version" -> AppVariant.BETA_RELEASES
-            else -> AppConst.appInfo.appVariant
-        }
+        get() = AppVariant.of(
+            AppConst.appInfo.appVariant.identity,
+            ReleaseIdentity.betaChannelOfSetting(AppConfig.updateToVariant)
+                ?: AppConst.appInfo.appVariant.isBeta()
+        )
 
     private suspend fun getLatestRelease(): List<AppReleaseInfo> {
         val lastReleaseUrl = if (checkVariant.isBeta()) {

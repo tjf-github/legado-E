@@ -34,6 +34,14 @@ if (keystorePropertiesFile.exists()) {
 }
 def hasSigning = keystoreProperties.getProperty('storeFile') != null || project.hasProperty("RELEASE_STORE_FILE")
 
+// 发布身份：normal（基础 applicationId io.legado.app.tjf，全新安装链）| private（.release 后缀，旧自用版延续）。
+// 未显式指定时默认 private，避免本地误打出会切断旧升级链的包；未知值立即失败，不静默回退。
+def releaseIdentity = project.findProperty("RELEASE_IDENTITY")?.toString() ?: "private"
+if (!(releaseIdentity in ["normal", "private"])) {
+    throw new GradleException("RELEASE_IDENTITY 只接受 normal 或 private，当前为 '" + releaseIdentity + "'")
+}
+def isPrivateIdentity = releaseIdentity == "private"
+
 android {
     compileSdk = compile_sdk_version
     namespace = 'io.legado.app'
@@ -88,11 +96,11 @@ android {
             if (hasSigning) {
                 signingConfig signingConfigs.myConfig
             }
-            applicationIdSuffix '.release'
-            if (getApplicationIdSuffix() == '.releaseA') {
-                manifestPlaceholders.put("app_name", "@string/app_name_a")
-            } else if (getApplicationIdSuffix() == '.releaseS') {
-                manifestPlaceholders.put("app_name", "@string/app_name_s")
+            // 包名是升级身份：private 继续用 .release 覆盖旧自用版，normal 不添加后缀。
+            // 显示名称只跟随身份变化，不参与包名推断。
+            if (isPrivateIdentity) {
+                applicationIdSuffix '.release'
+                manifestPlaceholders.put("app_name", "@string/app_name_private")
             } else {
                 manifestPlaceholders.put("app_name", "@string/app_name")
             }

@@ -1,0 +1,36 @@
+{
+    "version":  1,
+    "role":  "executor",
+    "round_id":  "executor-r006",
+    "task_id":  "dual-release-privacy",
+    "started_at_utc":  "2026-09-20T01:56:07Z",
+    "ended_at_utc":  "2026-09-20T02:06:08Z",
+    "timed_out":  true,
+    "report_written":  false,
+    "task_digest":  "21af3aa320115e60c5b876c862ac9bf7f9def3fd32a7c5063c1b4d4062a59d1a",
+    "start_head":  "fd045f69b2bdadcba86d30b525fe1fd244edb9ce",
+    "end_head":  "fd045f69b2bdadcba86d30b525fe1fd244edb9ce",
+    "start_snapshot_digest":  "508eca9e64f1161e5f352d4cb30303255e25043e7e8d46bab2f7c4be6b4d3409",
+    "end_snapshot_digest":  "508eca9e64f1161e5f352d4cb30303255e25043e7e8d46bab2f7c4be6b4d3409",
+    "start_status":  [
+                         " M .agent-protocol/CURRENT.md",
+                         " M .github/workflows/test.yml",
+                         " M app/src/main/java/io/legado/app/help/update/AppReleaseInfo.kt",
+                         " M \"\\347\\273\\264\\346\\212\\244\\350\\256\\241\\345\\210\\222\\344\\271\\246-\\345\\220\\216\\347\\273\\255\\344\\277\\256\\345\\244\\215\\344\\270\\216\\345\\242\\236\\345\\274\\272.md\"",
+                         "?? app/src/test/java/io/legado/app/help/update/AppReleaseInfoTest.kt",
+                         "?? bookshelf.json"
+                     ],
+    "end_status":  [
+                       " M .agent-protocol/CURRENT.md",
+                       " M .github/workflows/test.yml",
+                       " M app/src/main/java/io/legado/app/help/update/AppReleaseInfo.kt",
+                       " M \"\\347\\273\\264\\346\\212\\244\\350\\256\\241\\345\\210\\222\\344\\271\\246-\\345\\220\\216\\347\\273\\255\\344\\277\\256\\345\\244\\215\\344\\270\\216\\345\\242\\236\\345\\274\\272.md\"",
+                       "?? app/src/test/java/io/legado/app/help/update/AppReleaseInfoTest.kt",
+                       "?? bookshelf.json"
+                   ],
+    "stdout_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runner_temp_root":  "C:\\Users\\huixu\\AppData\\Local\\Temp\\agent-protocol-53fc8caf9d454d38983fa8c3e81bbf08",
+    "cleanup":  "removed-by-runner",
+    "note":  "机器采集的部分成果清单，不是角色结论，也不能替代角色报告。"
+}
