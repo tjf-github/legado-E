@@ -45,5 +45,3 @@ __pycache__/
 .agent-protocol/tasks/*/temp-manifests/
 # 本机专属：书单导出样本（含真实书名/作者，是「书单导入」待办的取证样本，只留本机）
 /bookshelf.json
-# 本地门禁原始日志（结论抄进计划书/维护计划书，日志本身不入库）
-/build-dsh-*.log
