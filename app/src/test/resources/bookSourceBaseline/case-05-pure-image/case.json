@@ -1,0 +1,25 @@
+{
+  "id": "case-05-pure-image",
+  "kind": "pure-image",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "纯图片书：连续 img，含同标签同时带 src 与 data-src 的情形",
+  "rules": {
+    "bookSourceType": 2,
+    "ruleContent": {
+      "content": "#content@html",
+      "imageStyle": "FULL"
+    }
+  },
+  "notes": [
+    "第 1 个 img 同时带 src 与 data-src，用于锁住 formatImagePattern 的交替分支顺序：",
+    "data-src 分支在双引号 src 分支之前，因此取到的是 data-src 的懒加载地址，而不是 src。",
+    "imageStyle=FULL 与 TextChapterLayout 中 imageStyle?.uppercase() 的比较同口径。"
+  ],
+  "invariants": [
+    "INV-IMG-DATA-1",
+    "INV-IMG-ORDER-2",
+    "INV-IMG-COUNT-1",
+    "INV-IMG-STYLE-1"
+  ]
+}

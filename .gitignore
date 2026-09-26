@@ -33,3 +33,17 @@ keystore-base64.txt
 .codex-release-worktree/
 # 本机图片转文字小工具（读取本机凭据文件，不入库）
 look.ps1
+# 书源原始快照与逐源清单（含真实 URL/请求头，只留本机；见《书源与解析优化计划书》§3.4）
+/阅读书源.zip
+/bookSource.json
+/.book-source-audit/
+# Python 字节码缓存（tools/book-source-audit 是纯标准库工具，不需要缓存入库）
+__pycache__/
+*.pyc
+# 协议 runner 的一次性临时产物：按既有惯例不入库（历史任务同样未跟踪），结论与哈希已在回执里
+.agent-protocol/tasks/*/temp-artifacts/
+.agent-protocol/tasks/*/temp-manifests/
+# 本机专属：书单导出样本（含真实书名/作者，是「书单导入」待办的取证样本，只留本机）
+/bookshelf.json
+# 本地门禁原始日志（结论抄进计划书/维护计划书，日志本身不入库）
+/build-dsh-*.log

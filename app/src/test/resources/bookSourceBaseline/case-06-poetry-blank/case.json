@@ -1,0 +1,25 @@
+{
+  "id": "case-06-poetry-blank",
+  "kind": "poetry-blank",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "诗歌空行：行内 <br> 与 <br><br> 的换行语义、段间空行是否被强制合并",
+  "rules": {
+    "ruleContent": {
+      "content": "#content@html"
+    }
+  },
+  "notes": [
+    "本用例记录的是**当前行为**，不是期望行为。",
+    "HtmlFormatter 的 indent1Regex 为 \\s*\\n+\\s* → 「\\n　　」，会把连续换行合并成一个换行加缩进；",
+    "因此 <br><br> 造成的诗节空行在现有实现下会被吃掉。P0 点名「诗歌空行」正是要冻结这一现象，",
+    "供 P3 判断是否属于「不得强制重分段」的破坏面。",
+    "空 <div class=\"sep\"> 经 wrapHtmlRegex 也会变成换行，同样落进这条规则。"
+  ],
+  "invariants": [
+    "INV-POEM-1",
+    "INV-POEM-2",
+    "INV-FMT-BLOCK-2",
+    "INV-FMT-INDENT-1"
+  ]
+}

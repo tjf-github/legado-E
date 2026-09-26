@@ -9,8 +9,11 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.exception.RegexTimeoutException
+import io.legado.app.help.book.diagnostics.ContentLineNormalizer
+import io.legado.app.help.book.diagnostics.DiagnosticStage
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
+import io.legado.app.model.Debug
 import io.legado.app.utils.ChineseUtils
 import io.legado.app.utils.escapeRegex
 import io.legado.app.utils.replace
@@ -102,6 +105,14 @@ class ContentProcessor private constructor(
         var sameTitleRemoved = false
         var effectiveReplaceRules: ArrayList<ReplaceRule>? = null
         val replaceBook by lazy { book.toReplaceBook() }
+        // 只有本次书源调试会话绑定的那本书、那一章才拿得到接收端；
+        // 本地 TXT/EPUB（origin 为 loc_book）、别的书、别的章节一律拿不到，诊断对它们是零额外处理。
+        val diagnostics = Debug.diagnosticsFor(book.origin, book.bookUrl, chapter.url)
+        // 计时同样只在会话开启时读时钟，关闭状态下不引入额外处理
+        val stageStart = if (diagnostics != null) System.currentTimeMillis() else 0L
+        // 本阶段被就地吞掉的异常（替换超时、规则报错）会被分类进诊断，而不是只留在 toast/日志里
+        var processError: Throwable? = null
+        var processTimeoutMs = 0L
         if (content != "null") {
             //去除重复标题
             val fileName = chapter.getFileName("nr")
@@ -129,6 +140,7 @@ class ContentProcessor private constructor(
                     }
                 }
             } catch (e: Exception) {
+                if (processError == null) processError = e
                 AppLog.put("去除重复标题出错\n${e.localizedMessage}", e)
             }
             if (reSegment && book.getReSegment()) {
@@ -180,11 +192,17 @@ class ContentProcessor private constructor(
                             mContent = tmp
                         }
                     } catch (e: RegexTimeoutException) {
+                        if (processError == null) {
+                            processError = e
+                            // 该规则自己的超时阈值，交给诊断分类判「替换超时」
+                            processTimeoutMs = item.getValidTimeoutMillisecond()
+                        }
                         item.isEnabled = false
                         appDb.replaceRuleDao.update(item)
                         mContent = item.name + e.stackTraceStr
                     } catch (_: CancellationException) {
                     } catch (e: Exception) {
+                        if (processError == null) processError = e
                         AppLog.put("替换净化: 规则 ${item.name}替换出错.\n${mContent}", e)
                         appCtx.toastOnUi("替换净化: 规则 ${item.name}替换出错")
                     }
@@ -205,20 +223,27 @@ class ContentProcessor private constructor(
         if (isAndroid8) {
             mContent = mContent.replace('\u00A0', ' ')
         }
-        val contents = arrayListOf<String>()
-        mContent.split("\n").forEach { str ->
-            val paragraph = str.trim {
-                it.code <= 0x20 || it == '　'
-            }
-            if (paragraph.isNotEmpty()) {
-                if (contents.isEmpty() && includeTitle) {
-                    contents.add(paragraph)
-                } else {
-                    contents.add("${ReadBookConfig.paragraphIndent}$paragraph")
-                }
-            }
+        val contents = ContentLineNormalizer.normalize(
+            content = mContent,
+            includeTitle = includeTitle,
+            paragraphIndent = ReadBookConfig.paragraphIndent
+        )
+        val bookContent = BookContent(sameTitleRemoved, contents, effectiveReplaceRules)
+        // 四阶段诊断「阅读处理后」：去重标题 / 重分段 / 简繁 / 净化替换 / usehtml 还原 / 段落切分之后。
+        // 诊断关闭时 diagnostics 为 null，本方法不做任何额外处理，也不产生持久化。
+        diagnostics?.record(
+            stage = DiagnosticStage.READ_PROCESS,
+            text = contents.joinToString("\n"),
+            elapsedMs = if (stageStart > 0) System.currentTimeMillis() - stageStart else 0L,
+            error = processError,
+            timeoutMs = processTimeoutMs
+        )
+        // 阶段四只可能发生在这里：会话仍存活时由 Debug 补一次含真实读数的摘要，
+        // 让「阅读处理后」不再永远显示成「未执行」；关闭诊断时 diagnostics 为 null，不做任何额外工作
+        if (diagnostics != null) {
+            Debug.onReadingStageRecorded()
         }
-        return BookContent(sameTitleRemoved, contents, effectiveReplaceRules)
+        return bookContent
     }
 
 }

@@ -1,0 +1,93 @@
+{
+  "id": "case-09-title-in-body",
+  "kind": "title-in-body",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "正文里出现章节标题：冻结「展示期去重」的匹配行为，覆盖命中与不命中两种结果",
+  "chapter": {
+    "title": "第一章 初入仙门",
+    "index": 1,
+    "bookName": "测试书名"
+  },
+  "rules": {
+    "ruleContent": {
+      "content": "#content@html"
+    }
+  },
+  "why": [
+    "用户于 2026-09-22 追问「还有一类是正文出现标题，不知道考虑到没有」——此前零覆盖。",
+    "唯一会删正文标题行的代码是 ContentProcessor.kt:105-133（展示期去重），",
+    "它只改显示用的内存副本，磁盘上的 *.nb 正文缓存不动。",
+    "匹配正则 = ^(\\s|\\p{P}|Pattern.quote(book.name))*${title.escapeRegex()}(\\s)*，",
+    "其中 title 经 escapeRegex 后仅把空格换成 \\s* —— 因此匹配很脆。"
+  ],
+  "scenarios": [
+    {
+      "file": "s1-exact.html",
+      "input_first_line": "第一章 初入仙门",
+      "current": "命中并删除",
+      "expect": "KEEP（删除标题行）",
+      "note": "正例：正文首行与目录标题逐字相同"
+    },
+    {
+      "file": "s2-indent-u3000.html",
+      "input_first_line": "　　第一章 初入仙门",
+      "current": "**不命中**（Java 默认模式 \\s 不匹配 U+3000）",
+      "expect": "KEEP（应删而未删）",
+      "note": "已知缺口。且 BookContent.kt:172-174 在书源 replaceRegex 生效时会亲手加上这个缩进"
+    },
+    {
+      "file": "s3-numeric.html",
+      "input_first_line": "第102章 夜雨",
+      "chapter_title_for_this_file": "第一百零二章 夜雨",
+      "current": "**不命中**（阿拉伯数字 vs 汉字数字）",
+      "expect": "KEEP（应删而未删）",
+      "note": "已知缺口"
+    },
+    {
+      "file": "s4-suffix.html",
+      "input_first_line": "第一章 初入仙门（免费）",
+      "current": "**不命中**（标题后多后缀）",
+      "expect": "KEEP（应删而未删）",
+      "note": "已知缺口。注意后缀若落在 (\\s)* 之后则正则不覆盖"
+    },
+    {
+      "file": "s5-wrapper.html",
+      "input_first_line": "【第一章】初入仙门",
+      "current": "**不命中**（【】 不在 \\p{P} 白名单内）",
+      "expect": "KEEP（应删而未删）",
+      "note": "已知缺口"
+    },
+    {
+      "file": "s6-nav-plus-title.html",
+      "input_first_line": "上一章 目录 下一章",
+      "input_second_line": "第三章 山雨",
+      "chapter_title_for_this_file": "第三章 山雨",
+      "current": "不命中（首行是导航，不是标题）",
+      "expect": "KEEP 导航 + KEEP 标题",
+      "note": "来自语料 D03 的预期（保留标题）。导航行与标题行是两个独立现象，删导航不得连标题一起删"
+    },
+    {
+      "file": "s7-duplicate.html",
+      "input_first_line": "第一章 初入仙门",
+      "input_second_line": "第一章 初入仙门",
+      "current": "只删掉第一行",
+      "expect": "STRIP（保留一行）",
+      "note": "来自语料 I01 的预期。去重只执行一次，不循环"
+    }
+  ],
+  "conflict": [
+    "⚠️ 语料 D03 与 I01 的预期方向与本卡的现存缺陷相反：",
+    "D03 预期「保留标题」，I01 预期「删掉重复的一行」。",
+    "诊断卡 06 采取的立场是「只在正文首行 == 目录标题时删，且删除只发生在展示副本」。",
+    "**这个立场尚未经用户裁决**，改动前必须先确认方向，否则会把 D03/I01 改坏。"
+  ],
+  "invariants": [
+    "INV-TITLE-DEDUP-1",
+    "INV-TITLE-DEDUP-2",
+    "INV-TITLE-DEDUP-3",
+    "INV-TITLE-KEEP-1",
+    "INV-TITLE-KEEP-2",
+    "INV-TITLE-DISPLAY-ONLY-1"
+  ]
+}

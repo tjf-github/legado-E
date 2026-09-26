@@ -1,0 +1,51 @@
+{
+  "id": "case-07-existing-replace",
+  "kind": "existing-replace",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "书源内 replaceRegex 与用户 ReplaceRule 的组合与先后顺序，以及两处按行 trim 的位置",
+  "rules": {
+    "ruleContent": {
+      "content": "#content@html",
+      "replaceRegex": "##^\\s*本章由网友自发整理，仅供试读\\s*$"
+    }
+  },
+  "userReplaceRules": [
+    {
+      "name": "示例：去掉站点域名提示行",
+      "isRegex": true,
+      "pattern": "本站|example\\.invalid",
+      "replacement": "",
+      "isEnabled": true,
+      "synthetic": true
+    },
+    {
+      "name": "示例：把旧书名统一成新书名",
+      "isRegex": false,
+      "pattern": "山中送别",
+      "replacement": "山中来信",
+      "isEnabled": true,
+      "synthetic": true
+    }
+  ],
+  "notes": [
+    "书源内 replaceRegex 取两段式 `##正则`，即 replacement 取默认空串、语义为删除命中，",
+    "这是书源里的常规写法（见 README「关于 replaceRegex 的三段式语义」）。",
+    "执行顺序（BookContent.kt:167-176 然后 ContentProcessor.kt:158-173）：",
+    "  1. BookContent：contentList 用 \\n 拼接；有 replaceRegex 时**先对每一行 trim**，再执行替换；",
+    "     若 book.isOnLineTxt 再给每行补「　　」缩进。",
+    "  2. ContentProcessor：简繁转换 → usehtml 特殊样式占位 → 用户 ReplaceRule 执行前**再次对每一行 trim**，",
+    "     然后按规则顺序逐条替换。",
+    "两处 trim 是独立的，改动任何一处都会影响本用例的可见结果。"
+  ],
+  "invariants": [
+    "INV-REPLACE-1",
+    "INV-REPLACE-2",
+    "INV-REPLACE-3",
+    "INV-REPLACE-4",
+    "INV-REPLACE-TRIM-1",
+    "INV-REPLACE-TRIM-2",
+    "INV-REPLACE-ORDER-1",
+    "INV-FMT-INDENT-1"
+  ]
+}

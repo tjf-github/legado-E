@@ -1,0 +1,25 @@
+{
+  "id": "case-03-next-page",
+  "kind": "next-page",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "正文分页：两页拼接，第二页首尾带有成片空白，用于锁住页边界不产生重复空行",
+  "rules": {
+    "ruleContent": {
+      "content": "#content@html",
+      "nextContentUrl": "#content@html@href"
+    }
+  },
+  "notes": [
+    "page-2.html 的开头与结尾刻意留有多行空白，page-1.html 结尾亦同，",
+    "模拟真实站点分页时的模板残留。拼接后不得出现连续空行或重复缩进。"
+  ],
+  "invariants": [
+    "INV-PAGE-EMPTY-1",
+    "INV-PAGE-EMPTY-2",
+    "INV-FMT-INDENT-1",
+    "INV-FMT-INDENT-2",
+    "INV-FMT-INDENT-3",
+    "INV-FMT-INDENT-4"
+  ]
+}

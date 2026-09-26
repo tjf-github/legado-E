@@ -1,6 +1,5 @@
 package io.legado.app.model.analyzeRule
 
-import android.text.TextUtils
 import androidx.annotation.Keep
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -135,7 +134,8 @@ class AnalyzeByXPath(doc: Any) {
         val rules = ruleAnalyzes.splitRule("&&", "||")
         if (rules.size == 1) {
             getResult(rule)?.let {
-                return TextUtils.join("\n", it)
+                // TextUtils.join 在纯 JVM 单测里是未实现的 android.jar 桩，语义等价的 joinToString 更可测
+                return it.joinToString("\n")
             }
             return null
         } else {

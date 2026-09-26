@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<!-- synthetic: 合成夹具 -->
+<!-- scenario: 对照组 —— 与 input.html 语义相同, 但空白是真实字符而非实体 -->
+<!-- 期望: 这批换行会被 indent1Regex 归一成「换行 + 两个全角空格」, 与 input.html 结果不同 -->
+<html><body>
+<div id="content"><p>他推开门。
+
+
+屋内空无一人。</p><p>他退后半步。　　门框上有一道裂痕。</p><p>窗外的雨声　　越来越密。</p><p>他低声说：&ldquo;走吧。&rdquo;&nbsp;随后转身离开。</p></div>
+</body></html>

@@ -1,0 +1,28 @@
+{
+  "id": "case-04-inline-img",
+  "kind": "inline-img",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "文本内插图：绝对/相对 URL、单双引号、data-src 懒加载、逗号花括号参数、相邻图片",
+  "rules": {
+    "ruleContent": {
+      "content": "#content@html"
+    }
+  },
+  "notes": [
+    "redirectUrl 固定为 https://novel.test/chapter/12 —— 相对路径 /photos/letter.png 应据此拼成绝对地址。",
+    "formatKeepImg 的交替分支顺序为 src(带花括号) → data-src/data-original/data-srcset → src(双引号) → 其它 data-*/src，",
+    "本用例逐条覆盖这四个分支，改动分支顺序会直接改变取到的地址。"
+  ],
+  "invariants": [
+    "INV-IMG-ORDER-1",
+    "INV-IMG-ORDER-2",
+    "INV-IMG-KEEP-1",
+    "INV-IMG-ABS-1",
+    "INV-IMG-ABS-2",
+    "INV-IMG-DATA-1",
+    "INV-IMG-PARAM-1",
+    "INV-IMG-ADJACENT-1",
+    "INV-FMT-STRIP-1"
+  ]
+}

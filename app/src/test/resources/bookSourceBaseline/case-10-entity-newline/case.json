@@ -1,0 +1,57 @@
+{
+  "id": "case-10-entity-newline",
+  "kind": "entity-newline",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "实体形式的换行与空白：HtmlFormatter 的换行归一跑在实体解码之前，导致解码后产出的换行不再经过任何归一化",
+  "rules": {
+    "ruleContent": {
+      "content": "#content@html"
+    }
+  },
+  "mechanism": {
+    "location": "app/src/main/java/io/legado/app/model/webBook/BookContent.kt:244-247",
+    "order": "先 HtmlFormatter.formatKeepImg（:244），后 StringEscapeUtils.unescapeHtml4（:246-247）",
+    "why_it_breaks": "格式化阶段 &#10; 不是换行，躲过 indent1Regex（\\\\s*\\\\n+\\\\s* → 换行+两个全角空格）；解码后才变成真换行，而这批换行从此不再经过任何归一化。",
+    "related_regex": [
+      "nbspRegex = (&nbsp;)+  —— 只认具名实体，漏 &#160; / &#12288;",
+      "indent1Regex = \\\\s*\\\\n+\\\\s*  —— 只认真实换行序列，漏 &#10; / &#13;"
+    ],
+    "android_version_condition": "ContentProcessor.kt:32 isAndroid8 = SDK_INT in 26..27；只有 Android 8.0/8.1 会把 U+00A0 换回普通空格（:205）"
+  },
+  "measured": [
+    {
+      "input": "他推开门。&#10;&#10;&#10;&#10;屋内空无一人。",
+      "after_format": "原样不变",
+      "after_unescape": "他推开门。\\n\\n\\n\\n屋内空无一人。",
+      "newlines": "0 → 0 → 4"
+    },
+    {
+      "input": "他退后半步。&#160;&#160;门框上…",
+      "after_format": "原样不变",
+      "after_unescape": "U+00A0 ×2",
+      "newlines": "—"
+    },
+    {
+      "input": "…&rdquo;&nbsp;随后转身离开。",
+      "after_format": "&nbsp; 已收成半角空格",
+      "after_unescape": "引号正确解码",
+      "newlines": "0 → 0 → 0"
+    }
+  ],
+  "notes": [
+    "input.html 里 &#10; 出现 4 次，是本用例的核心断言对象：它经管线后**不得**在正文里留下 4 个连续换行。",
+    "input-literal.html 是对照组 —— 同样的空白写成真实字符时，indent1Regex 会把它归一掉。",
+    "两者结果不同，正是「先格式化、后解码」这个顺序造成的。",
+    "⚠️ 与 G02 的边界：语料 G02 的测试点是「实体只解码一次」。",
+    "任何把解码提前的修法，都必须同时守住 case-01 与 G02，不能只测一条。"
+  ],
+  "invariants": [
+    "INV-ENTITY-ORDER-1",
+    "INV-ENTITY-ORDER-2",
+    "INV-ENTITY-ORDER-3",
+    "INV-ENTITY-DECODE-ONCE-1",
+    "INV-FMT-INDENT-1",
+    "INV-FMT-INDENT-4"
+  ]
+}

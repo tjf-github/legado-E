@@ -5,6 +5,8 @@ import android.util.Log
 import io.legado.app.BuildConfig
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.*
+import io.legado.app.help.book.diagnostics.BookSourceDiagnosticsCollector
+import io.legado.app.help.book.diagnostics.DiagnosticStage
 import io.legado.app.help.book.isWebFile
 import io.legado.app.help.coroutine.CompositeCoroutine
 import io.legado.app.help.source.sortUrls
@@ -14,6 +16,7 @@ import io.legado.app.utils.HtmlFormatter
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.isAbsUrl
 import io.legado.app.utils.stackTraceStr
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,6 +28,16 @@ object Debug {
     val debugMessageMap = HashMap<String, String>()
     private val debugTimeMap = HashMap<String, Long>()
     var isChecking: Boolean = false
+
+    /**
+     * 正文四阶段诊断的接收端。只在书源调试会话期间非空；为空表示诊断关闭，
+     * 正文管线不得因此产生额外内容处理或持久化。
+     *
+     * 主线程建立/清空、IO 线程读取，故用 @Volatile 保证可见性；外部只能经
+     * [diagnosticsFor] 取匹配目标的接收端，不直接读本字段。
+     */
+    @Volatile
+    private var diagnostics: BookSourceDiagnosticsCollector? = null
 
     @SuppressLint("ConstantLocale")
     private val debugTimeFormat = SimpleDateFormat("[mm:ss.SSS]", Locale.getDefault())
@@ -75,12 +88,55 @@ object Debug {
         log(debugSource, msg ?: "", true)
     }
 
+    /**
+     * 开启一次书源调试会话。
+     *
+     * 诊断接收端随会话建立，被正文管线的四个阶段共享；此时才允许产出阶段快照。
+     * 会话身份由接收端自己持有：没有绑定正文目标之前，任何阶段写入都被拒绝。
+     */
+    fun startBookSourceDebugSession() {
+        diagnostics = BookSourceDiagnosticsCollector()
+    }
+
+    /**
+     * 把本次会话要调试的正文目标（书源 + 书 + 章节）绑给接收端。
+     *
+     * 只有匹配这个目标的正文调用才拿得到接收端，本地书/别的书/别的章节不会串进本次摘要。
+     */
+    fun bindDiagnosticsTarget(bookSourceUrl: String?, bookUrl: String?, chapterUrl: String?) {
+        diagnostics?.bindTarget(bookSourceUrl, bookUrl, chapterUrl)
+    }
+
+    /**
+     * 取当前调试会话里匹配该正文目标的接收端；未开启诊断、未绑定目标或不匹配时返回 null。
+     */
+    fun diagnosticsFor(
+        bookSourceUrl: String?,
+        bookUrl: String?,
+        chapterUrl: String?
+    ): BookSourceDiagnosticsCollector? {
+        val collector = diagnostics ?: return null
+        if (!collector.isEnabled) return null
+        return collector.takeIf { it.accepts(bookSourceUrl, bookUrl, chapterUrl) }
+    }
+
+    /**
+     * 输出本次会话收集到的四阶段诊断摘要。
+     *
+     * 缺哪个阶段就明确写「未执行」，不以其它阶段的快照冒充。
+     */
+    fun printBookSourceDiagnostics() {
+        val collector = diagnostics ?: return
+        collector.summaryLines().forEach { log(debugSource, it, showTime = false) }
+    }
+
     fun cancelDebug(destroy: Boolean = false) {
         tasks.clear()
 
         if (destroy) {
             debugSource = null
             callback = null
+            diagnostics = null
         }
     }
 
@@ -231,6 +287,7 @@ object Debug {
         cancelDebug()
         debugSource = bookSource.bookSourceUrl
         startTime = System.currentTimeMillis()
+        startBookSourceDebugSession()
         when {
             key.isAbsUrl() -> {
                 val book = Book()
@@ -361,6 +418,8 @@ object Debug {
         nextChapterUrl: String?
     ) {
         log(debugSource, "︾开始解析正文页")
+        // 先绑定本次会话要调试的正文目标，正文管线才可能把阶段快照写进这个会话
+        bindDiagnosticsTarget(bookSource.bookSourceUrl, book.bookUrl, bookChapter.url)
         val content = WebBook.getContent(
             scope = scope,
             bookSource = bookSource,
@@ -369,11 +428,53 @@ object Debug {
             nextChapterUrl = nextChapterUrl,
             needSave = false
         ).onSuccess {
+            // 顺序不能反：Web 端 printLog 收到 state=1000 会异步 cancelDebug(true)，
+            // 先发终止信号会连带清掉 collector 与 callback，摘要一行都打不出来。
+            finishContentDiagnostics()
             log(debugSource, "︽正文页解析完成", state = 1000)
         }.onError {
+            // 链路级异常兜底：把网络/HTTP/编码等只有异常没有阶段读数的失败归到停住的那一层
+            if (it !is CancellationException) {
+                diagnostics?.recordFailure(it)
+            }
+            finishContentDiagnostics()
             log(debugSource, it.stackTraceStr, state = -1)
         }
         tasks.add(content)
+    }
+
+    /**
+     * 正文调试收尾：先补「未执行」的标注，再输出四个阶段的诊断摘要。
+     *
+     * 书源调试链路在 BookContent 之后即结束；阶段四只有在阅读路径**没有**真实执行过时才标未执行。
+     * 无条件标注会 upsert 覆盖掉已经发生的真实读数，把「执行过」写成「未执行」，属反向伪造。
+     * 其余阶段若因链路提前失败而没有快照，也一律显式标注，不让摘要看起来「四段齐全」。
+     */
+    private fun finishContentDiagnostics() {
+        val collector = diagnostics ?: return
+        collector.markNotExecutedIfMissing(
+            DiagnosticStage.READ_PROCESS,
+            "书源调试链路止于 BookContent，未进入阅读处理"
+        )
+        collector.markMissingStagesNotExecuted("本次调试链路未执行该阶段")
+        printBookSourceDiagnostics()
+    }
+
+    /**
+     * 阅读路径真正执行完阶段四时调用（由 ContentProcessor 记录快照后触发）。
+     *
+     * 阶段四只可能发生在阅读处理里，调试链路本身止于 BookContent，所以摘要不能在收尾处
+     * 一律写成「未执行」：会话仍存活且本次会话尚未补打过时，补一次含真实阶段四读数的摘要。
+     * 会话已结束（callback/diagnostics 被清空）时不输出、也不伪造；每个会话只补打一次，
+     * 避免同一章被阅读、导出统计等路径反复处理时刷屏——该判定由
+     * [BookSourceDiagnosticsCollector.shouldReportReadingStage] 承担，可在 JVM 里直接契约测试。
+     */
+    fun onReadingStageRecorded() {
+        val collector = diagnostics ?: return
+        if (callback == null) return
+        if (!collector.shouldReportReadingStage()) return
+        collector.markMissingStagesNotExecuted("本次调试链路未执行该阶段")
+        printBookSourceDiagnostics()
     }
 
     interface Callback {

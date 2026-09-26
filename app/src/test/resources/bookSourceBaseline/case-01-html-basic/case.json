@@ -1,0 +1,27 @@
+{
+  "id": "case-01-html-basic",
+  "kind": "html",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "普通 HTML 正文：块标签转行、HTML 实体、NBSP、注释、嵌套行内标签",
+  "rules": {
+    "ruleContent": {
+      "content": "#chapter-content@html"
+    }
+  },
+  "invariants": [
+    "INV-FMT-BLOCK-1",
+    "INV-FMT-BLOCK-2",
+    "INV-FMT-ENTITY-1",
+    "INV-FMT-ENTITY-2",
+    "INV-FMT-ENTITY-3",
+    "INV-FMT-ENTITY-4",
+    "INV-FMT-COMMENT-1",
+    "INV-FMT-COMMENT-2",
+    "INV-FMT-INDENT-1",
+    "INV-FMT-INDENT-2",
+    "INV-FMT-INDENT-3",
+    "INV-FMT-INDENT-4",
+    "INV-FMT-STRIP-1"
+  ]
+}

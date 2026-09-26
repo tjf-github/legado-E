@@ -23,6 +23,14 @@ class BookSourceDebugWebSocket(handshakeRequest: NanoHTTPD.IHTTPSession) :
 
     private val notPrintState = arrayOf(10, 20, 30, 40)
 
+    /**
+     * 日志投递队列：同一 socket 的日志按提交顺序串行发送。
+     *
+     * 不能每条日志各发一个并发 IO 任务——诊断摘要的四行与随后的终止信号会因此被重排，
+     * 终止任务可能先 cancelDebug(true)+close()，摘要行就再也发不出去（B-4 的残余竞态）。
+     */
+    private val logQueue = SerialTaskQueue(this)
+
     override fun onOpen() {
         launch(IO) {
             kotlin.runCatching {
@@ -86,7 +94,8 @@ class BookSourceDebugWebSocket(handshakeRequest: NanoHTTPD.IHTTPSession) :
         if (state in notPrintState) {
             return
         }
-        runOnIO {
+        // 入队顺序即发送顺序：摘要行先发完，终止信号才会执行取消与关闭
+        logQueue.submit {
             runCatching {
                 send(msg)
                 if (state == -1 || state == 1000) {

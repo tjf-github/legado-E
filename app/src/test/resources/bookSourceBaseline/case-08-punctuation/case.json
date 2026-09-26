@@ -1,0 +1,26 @@
+{
+  "id": "case-08-punctuation",
+  "kind": "punctuation",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "正常标点：中文标点、英文标点、全角符号、中英混排、数字与破折号省略号",
+  "rules": {
+    "ruleContent": {
+      "content": "#content@html"
+    }
+  },
+  "notes": [
+    "P0 在「冻结兼容样本」里显式点名「正常标点」——它是判定「多出符号」类问题的对照基准，",
+    "因此单独成例：本用例里没有任何需要被清理的字符，任何改动只要动了这里的输出，",
+    "就已经越过了「正常标点不该变」的边界。",
+    "最后一行以全角空格开头，用于对照 indent2Regex（^[\\n\\s]+ → 「　　」）：",
+    "行首空白会被替换成两格全角缩进，而不是原样保留。"
+  ],
+  "invariants": [
+    "INV-PUNCT-1",
+    "INV-PUNCT-2",
+    "INV-PUNCT-3",
+    "INV-PUNCT-4",
+    "INV-FMT-INDENT-2"
+  ]
+}

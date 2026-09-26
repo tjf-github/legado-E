@@ -1,6 +1,5 @@
 package io.legado.app.model.analyzeRule
 
-import android.text.TextUtils
 import androidx.annotation.Keep
 import com.google.gson.internal.LinkedTreeMap
 import com.script.CompiledScript
@@ -92,6 +91,12 @@ class AnalyzeRule(
         }
     }
 
+    /**
+     * 设置待解析内容，并做真实解析。
+     *
+     * 诊断不在这里挂钩：本方法拿到的只是**原始响应**，四阶段诊断的「提取后」必须记录
+     * [getString] 对 contentRule.content 的真实产出，因此采集点在 [io.legado.app.model.webBook.BookContent]。
+     */
     @JvmOverloads
     fun setContent(content: Any?, baseUrl: String? = null): AnalyzeRule {
         if (content == null) throw AssertionError("内容不可空（Content cannot be null）")
@@ -288,13 +293,13 @@ class AnalyzeRule(
      */
     @JvmOverloads
     fun getString(ruleStr: String?, mContent: Any? = null, isUrl: Boolean = false): String {
-        if (TextUtils.isEmpty(ruleStr)) return ""
+        if (ruleStr.isNullOrEmpty()) return ""
         val ruleList = splitSourceRuleCacheString(ruleStr)
         return getString(ruleList, mContent, isUrl)
     }
 
     fun getString(ruleStr: String?, unescape: Boolean): String {
-        if (TextUtils.isEmpty(ruleStr)) return ""
+        if (ruleStr.isNullOrEmpty()) return ""
         val ruleList = splitSourceRuleCacheString(ruleStr)
         return getString(ruleList, unescape = unescape)
     }
@@ -374,7 +379,7 @@ class AnalyzeRule(
      * 获取Element
      */
     fun getElement(ruleStr: String): Any? {
-        if (TextUtils.isEmpty(ruleStr)) return null
+        if (ruleStr.isNullOrEmpty()) return null
         var result: Any? = null
         val content = this.content
         val ruleList = splitSourceRule(ruleStr, true)

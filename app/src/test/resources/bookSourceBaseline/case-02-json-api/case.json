@@ -1,0 +1,20 @@
+{
+  "id": "case-02-json-api",
+  "kind": "json-api",
+  "synthetic": true,
+  "target_stage": "P3",
+  "purpose": "正文走 JSON 接口：ruleContent 用 JSONPath 取值，正文体本身仍是 HTML",
+  "rules": {
+    "ruleContent": {
+      "content": "$.data.content",
+      "nextContentUrl": "$.data.nextPageUrl"
+    }
+  },
+  "invariants": [
+    "INV-JSONPATH-1",
+    "INV-JSONPATH-2",
+    "INV-JSONPATH-3",
+    "INV-FMT-BLOCK-1",
+    "INV-PAGE-EMPTY-1"
+  ]
+}

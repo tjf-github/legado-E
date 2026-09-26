@@ -1,0 +1,406 @@
+{
+  "by_cookie_jar": {
+    "false": {
+      "enabled": 2080,
+      "total": 3626
+    },
+    "true": {
+      "enabled": 1920,
+      "total": 2513
+    }
+  },
+  "by_enabled_explore": {
+    "false": {
+      "enabled": 96,
+      "total": 103
+    },
+    "true": {
+      "enabled": 3904,
+      "total": 6036
+    }
+  },
+  "by_image_style": {
+    "0": {
+      "enabled": 264,
+      "total": 448
+    },
+    "0.0": {
+      "enabled": 3,
+      "total": 10
+    },
+    "DEFAULT": {
+      "enabled": 7,
+      "total": 10
+    },
+    "FULL": {
+      "enabled": 175,
+      "total": 360
+    },
+    "TEXT": {
+      "enabled": 21,
+      "total": 45
+    },
+    "none": {
+      "enabled": 3530,
+      "total": 5266
+    }
+  },
+  "by_type": {
+    "audio": {
+      "enabled": 67,
+      "total": 109
+    },
+    "file": {
+      "enabled": 9,
+      "total": 37
+    },
+    "image": {
+      "enabled": 83,
+      "total": 188
+    },
+    "text": {
+      "enabled": 3841,
+      "total": 5805
+    }
+  },
+  "checks_enabled": {
+    "explore_book_list_empty": 924,
+    "image_style_text": 21,
+    "js_bracket_mismatch": 14,
+    "last_update_stale": 1954,
+    "login_configured": 400,
+    "next_content_url_self_ref": 0,
+    "no_content_rule": 14,
+    "no_content_rule_download_type": 27,
+    "no_discovery": 13,
+    "replace_regex_catastrophic_backtracking": 5,
+    "replace_regex_empty_alternative": 3,
+    "replace_regex_hits_markup": 31,
+    "replace_regex_trailing_pipe": 30,
+    "replace_regex_unparsable": 0,
+    "respond_time_missing": 1,
+    "respond_time_slow": 1529,
+    "rule_prefix_empty": 0,
+    "search_book_list_empty": 2,
+    "sensitive_header_keys": 115,
+    "title_rule_no_dedup": 0,
+    "title_selector_named": 9,
+    "title_selector_named_js_only": 83,
+    "type_unknown": 0,
+    "url_duplicate": 0,
+    "url_empty": 0,
+    "url_not_http": 45
+  },
+  "checks_total": {
+    "explore_book_list_empty": 1506,
+    "image_style_text": 45,
+    "js_bracket_mismatch": 32,
+    "last_update_stale": 3830,
+    "login_configured": 793,
+    "next_content_url_self_ref": 0,
+    "no_content_rule": 89,
+    "no_content_rule_download_type": 46,
+    "no_discovery": 34,
+    "replace_regex_catastrophic_backtracking": 8,
+    "replace_regex_empty_alternative": 3,
+    "replace_regex_hits_markup": 52,
+    "replace_regex_trailing_pipe": 43,
+    "replace_regex_unparsable": 0,
+    "respond_time_missing": 43,
+    "respond_time_slow": 1672,
+    "rule_prefix_empty": 0,
+    "search_book_list_empty": 5,
+    "sensitive_header_keys": 164,
+    "title_rule_no_dedup": 0,
+    "title_selector_named": 11,
+    "title_selector_named_js_only": 134,
+    "type_unknown": 0,
+    "url_duplicate": 0,
+    "url_empty": 0,
+    "url_not_http": 67
+  },
+  "features": {
+    "content_section_uses_js": {
+      "enabled": 689,
+      "total": 1151
+    },
+    "content_uses_js": {
+      "enabled": 580,
+      "total": 1010
+    },
+    "has_book_url_pattern": {
+      "enabled": 1105,
+      "total": 1556
+    },
+    "has_callback_js": {
+      "enabled": 0,
+      "total": 0
+    },
+    "has_concurrent_rate": {
+      "enabled": 35,
+      "total": 37
+    },
+    "has_content_rule": {
+      "enabled": 3959,
+      "total": 6004
+    },
+    "has_cookie_jar": {
+      "enabled": 1920,
+      "total": 2513
+    },
+    "has_explore_url": {
+      "enabled": 2729,
+      "total": 4224
+    },
+    "has_image_decode": {
+      "enabled": 1,
+      "total": 2
+    },
+    "has_js_replace_regex": {
+      "enabled": 26,
+      "total": 54
+    },
+    "has_login": {
+      "enabled": 400,
+      "total": 793
+    },
+    "has_next_content_url": {
+      "enabled": 1460,
+      "total": 2030
+    },
+    "has_pay_action": {
+      "enabled": 6,
+      "total": 10
+    },
+    "has_replace_regex": {
+      "enabled": 1184,
+      "total": 1635
+    },
+    "has_search_url": {
+      "enabled": 3962,
+      "total": 5962
+    },
+    "has_sensitive_header_substring": {
+      "enabled": 173,
+      "total": 239
+    },
+    "has_source_regex": {
+      "enabled": 25,
+      "total": 41
+    },
+    "has_title_rule": {
+      "enabled": 0,
+      "total": 0
+    },
+    "has_variable_comment": {
+      "enabled": 27,
+      "total": 47
+    },
+    "has_webjs": {
+      "enabled": 3,
+      "total": 9
+    },
+    "uses_js": {
+      "enabled": 1963,
+      "total": 3156
+    },
+    "uses_webjs": {
+      "enabled": 3,
+      "total": 9
+    }
+  },
+  "reference_readings": {
+    "items": [
+      {
+        "actual_key": "totals.sources",
+        "expected": 6139,
+        "label": "bookSource.json 书源数",
+        "note": "按唯一 bookSourceUrl 计"
+      },
+      {
+        "actual_key": "run.unique_urls",
+        "expected": 6139,
+        "label": "唯一 bookSourceUrl",
+        "note": ""
+      },
+      {
+        "actual_key": "totals.enabled",
+        "expected": 4000,
+        "label": "启用书源",
+        "note": ""
+      },
+      {
+        "actual_key": "by_type",
+        "expected": "5805 / 109 / 188 / 37",
+        "label": "文本 / 音频 / 图片 / 文件",
+        "note": "本列展示的是类型分桶，需逐项核对"
+      },
+      {
+        "actual_key": "features.has_content_rule.total",
+        "expected": 6004,
+        "label": "有正文规则",
+        "note": "口径为 content 或 subContent 非空"
+      },
+      {
+        "actual_key": "features.has_replace_regex.total",
+        "expected": 1635,
+        "label": "有书源内 replaceRegex",
+        "note": ""
+      },
+      {
+        "actual_key": "features.has_next_content_url.total",
+        "expected": 2030,
+        "label": "有正文下一页规则",
+        "note": ""
+      },
+      {
+        "actual_key": "features.content_uses_js.total",
+        "expected": 1010,
+        "label": "正文规则使用 JS/WebJS",
+        "note": "口径为 ruleContent 的 content/subContent 体含 JS/WebJS；features.content_section_uses_js 是全 ruleContent 段的更宽口径，features.uses_js 是任意规则段的更宽口径"
+      },
+      {
+        "actual_key": "by_image_style.TEXT",
+        "expected": "45（启用 21）",
+        "label": "imageStyle=TEXT（启用）",
+        "note": "须大写归一后比较；大小写敏感的朴素计数会少算 4 条（§3.4 为 45，其中启用 21）"
+      },
+      {
+        "actual_key": "features.has_sensitive_header_substring.total",
+        "expected": "≥239",
+        "label": "请求头含敏感键名",
+        "note": "§3.4 口径为「原始请求头字符串出现敏感词」；checks_total.sensitive_header_keys 是更严的键名口径，两者都列出"
+      },
+      {
+        "actual_key": "checks_total.login_configured",
+        "expected": 790,
+        "label": "配置登录入口或登录检测",
+        "note": "口径为 loginUrl / loginUi / loginCheckJs 任一非空；本次读数比 §3.4 多 3 条，按 §3.4「数字变化不等于回归」如实列出，不调整阈值凑数"
+      }
+    ],
+    "source": "《书源与解析优化计划书》§3.4（2026-09-21 静态读数）"
+  },
+  "run": {
+    "collection_names": [
+      "阅读pro书源/bookSource.json"
+    ],
+    "collections_read": 1,
+    "duplicate_urls": 0,
+    "generated_at": "2026-09-22T00:00:00+08:00",
+    "merge_collections": false,
+    "raw_entries": 6139,
+    "slow_respond_ms": 15000,
+    "source": "阅读书源.zip",
+    "stale_days": 730,
+    "tool_version": "1.0.0",
+    "unique_urls": 6139
+  },
+  "top_fingerprints": [
+    {
+      "enabled": 20,
+      "fingerprint": "5df53badd693",
+      "total": 32
+    },
+    {
+      "enabled": 0,
+      "fingerprint": "27fbdb75c9d6",
+      "total": 27
+    },
+    {
+      "enabled": 0,
+      "fingerprint": "ef1dbe1da38c",
+      "total": 27
+    },
+    {
+      "enabled": 20,
+      "fingerprint": "a0dcf9dcdc59",
+      "total": 24
+    },
+    {
+      "enabled": 9,
+      "fingerprint": "e3b0c44298fc",
+      "total": 24
+    },
+    {
+      "enabled": 23,
+      "fingerprint": "656789c561b0",
+      "total": 23
+    },
+    {
+      "enabled": 0,
+      "fingerprint": "aef3366b20b6",
+      "total": 21
+    },
+    {
+      "enabled": 0,
+      "fingerprint": "67160fc8fcf7",
+      "total": 14
+    },
+    {
+      "enabled": 13,
+      "fingerprint": "61544b62ebaf",
+      "total": 13
+    },
+    {
+      "enabled": 5,
+      "fingerprint": "f0cffea19517",
+      "total": 13
+    },
+    {
+      "enabled": 12,
+      "fingerprint": "bfff79587283",
+      "total": 12
+    },
+    {
+      "enabled": 11,
+      "fingerprint": "2a1c38f311c0",
+      "total": 11
+    },
+    {
+      "enabled": 7,
+      "fingerprint": "5a124cd9e316",
+      "total": 11
+    },
+    {
+      "enabled": 11,
+      "fingerprint": "cbd4c2df62b6",
+      "total": 11
+    },
+    {
+      "enabled": 10,
+      "fingerprint": "3f5195a2c1cd",
+      "total": 10
+    },
+    {
+      "enabled": 0,
+      "fingerprint": "6b138c9e9bb6",
+      "total": 10
+    },
+    {
+      "enabled": 10,
+      "fingerprint": "f8846168737b",
+      "total": 10
+    },
+    {
+      "enabled": 8,
+      "fingerprint": "3ba5a586410f",
+      "total": 9
+    },
+    {
+      "enabled": 7,
+      "fingerprint": "75907edbc3ef",
+      "total": 9
+    },
+    {
+      "enabled": 7,
+      "fingerprint": "18c9db400aff",
+      "total": 8
+    }
+  ],
+  "totals": {
+    "disabled": 2139,
+    "distinct_fingerprints": 3812,
+    "enabled": 4000,
+    "sources": 6139
+  }
+}

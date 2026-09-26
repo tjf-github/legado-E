@@ -1,7 +1,6 @@
 package io.legado.app.data.entities
 
 import android.os.Parcelable
-import android.text.TextUtils
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
@@ -86,7 +85,7 @@ data class ReplaceRule(
     }
 
     fun isValid(): Boolean {
-        if (TextUtils.isEmpty(pattern)) {
+        if (pattern.isEmpty()) {
             return false
         }
         //判断正则表达式是否正确
