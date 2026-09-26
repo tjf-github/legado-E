@@ -1,119 +1,147 @@
-# dual-release-privacy — C+D 阶段执行证据（DSH executor，route_revision 6）
+<!-- agent-protocol-binding
+round_id: executor-r007
+task_digest: 1b5d59a0a4d5ec701f9fb35e56a807318dfe4bf9f2c314230c0b08a014dfdb52
+snapshot_digest: 7ea670dd3394ad8e5dcd7c1b15030b38b7eefa430a9e8d0f2656b95cad790961
+--># dual-release-privacy — GitHub-only 发布收口执行证据（executor=dsh，route_revision 7）
 
-状态：`cd-implemented / pending-review`
+状态：**完成（仅限本轮授权范围）**
 
-> A/B 阶段报告（由 controller=Codex 撰写）已**原样归档**到 `rounds/controller-ab-report-10-execution.md`
-> （6506 字节，SHA-256 `A82704CB66E53DCBA07CB106CDBA8DCB1A1C734DA02C87C60EBFBDE0F73E1D5D`），未改写一个字节。
-> 本文件是 C+D 当前轮的 executor 证据，只描述本次真实执行。
+- 本轮只执行 `00-task.md` 顶部「2026-09-21 GitHub-only 双版本发布收口」段授权的唯一业务改动：在 `.github/workflows/test.yml` 硬禁用 `lanzou`、`telegram`、`gitee`、`update-storage` 四个 job，并留下静态证明。
+- 未做：提交、推送、切分支、发布、GitHub Actions 实跑、创建/更新 Release、Gitee/link-E/Telegram/蓝奏云任何写入、真机操作、安装/卸载 APK、读取凭据或用户数据。
+- 未改：APK 身份、签名、版本、应用功能、AI 功能、Gradle、源码、资源、Manifest、`updateLog.md`、协议其它角色原文（`20-review.md`、`30-acceptance.md`）。
+- 修改基线：分支 `codex/manga-import`，HEAD=`3c6685cffb750e83b53aea9cfaafcaa0e61b7fb3`，`test.yml` 改动前与 HEAD 一致（`git diff` 为空）。
 
-## 1. 授权与角色披露
+## 1. 改了哪些文件、各自为什么改
 
-- 本轮只执行 `00-task.md` 顶部「2026-09-20 DSH + Claude 接管任务书」授权的 **C（最小实现）+ D（本地自动化门禁）**。
-- mode=`dsh-claude`、assurance=`standard`、route_revision=6：**DSH 同时是 controller、executor、acceptor，Claude 只是只读 reviewer**。
-  这不是 high 档要求的「独立 executor + 独立 acceptor」，本报告与后续验收都必须带这一限制阅读。
-- 未执行：E 真机安装/迁移、F 发布验证、提交、推送、发布、切分支、安装/卸载 APK、清数据。
-- 未读取、输出或改动任何密钥内容；`apksigner --print-certs` 只用于比对两个 APK 的**证书摘要是否一致**。
-- 写入范围：业务文件 10 个（相对 HEAD 新增 2 个：`ReleaseIdentity.kt`、`AppReleaseInfoTest.kt`），其余为任务目录内的协议证据文件。
-  （§2 表格 9 行覆盖这 10 个文件，其中 `values/strings.xml` 与 `values-zh/strings.xml` 同一行。）
-
-## 2. 实际业务 diff（与当前工作树一致）
-
-| 文件 | 变更 | 为什么必须改 |
+| 文件 | 变更 | 为什么改 |
 | --- | --- | --- |
-| `app/src/main/java/io/legado/app/help/update/ReleaseIdentity.kt`（新增） | 新增身份轴枚举 + `fromPackageName` + `fromAssetName` + `betaChannelOfSetting` | 身份轴原先不存在，只能由「单枚举猜」；这是纯模型文件，白名单允许新增 |
-| `AppReleaseInfo.kt` | `AppVariant` 改成 `(identity, betaChannel)` 两轴 8 变体；GitHub/Gitee 资产解析改为 `AppVariant.of(ReleaseIdentity.fromAssetName(name), preRelease)` | 原实现把正式发布的所有 APK 压成 `OFFICIAL`、把 beta 资产按名字猜身份，身份与通道混在一个轴上（A/B 红测 5 项失败） |
-| `AppUpdateGitHub.kt` | `checkVariant` = 安装身份 + 设置通道 | 端点选择与资产过滤必须同源，否则会取到别人身份的 APK |
-| `AppUpdateGitee.kt` | 同上；删除「`appVariant == BETA_RELEASE` 就不切版本」的身份锁；过滤统一为 `it.appVariant == checkVariant` | 身份已固定跟随安装包，旧锁只会额外把用户在设置里选的正式通道覆盖掉 |
-| `AppConst.kt` | 安装身份改由包名派生（`ReleaseIdentity.fromPackageName`）；通道仍按签名/DEBUG（`isBetaChannel = isBeta && !isOfficial`）；`AppInfo.appVariant` 默认值改为 `UNKNOWN_OFFICIAL` | 原实现用 `packageName.contains("releaseA"/"releaseS")` 猜身份、用签名猜通道，normal/private 无法区分 |
-| `app/build.gradle` | 新增 `-PRELEASE_IDENTITY=normal或private`（未指定默认 private，未知值立即失败）；release 的 `applicationIdSuffix` 与 `app_name` 占位符随身份 | 冻结契约要求身份由显式、fail-closed 的参数决定，不再由 CI 用 `sed` 改 build.gradle |
-| `app/src/main/res/values/strings.xml`、`values-zh/strings.xml` | 新增 `app_name_private`（`Legado·Privacy` / `阅读·隐私`） | 双版本显示名必须可区分，但不得影响包名 |
-| `app/src/test/java/io/legado/app/help/update/AppReleaseInfoTest.kt` | **A/B 的 6 个断言逐字未改**，新增 3 个契约测试 | 让红测转绿只能靠生产代码；新增测试覆盖包名→身份、历史资产兼容、设置项只改通道 |
-| `.github/workflows/test.yml` | 矩阵 `normal/private`（不再按 updateLog 收敛）、删除 `sed`、资产名 `legado_app_<versionL>_<identity>.apk`、artifact `legado.app.*`、双版本完整性断言、下游四段（prerelease/telegram/gitee/update-storage）全部迁移 | 冻结契约要求两个身份每次发布都产出，且下游不得再依赖 `原包名/共存/releaseS` |
+| `.github/workflows/test.yml` | 4 处：`lanzou`(L312)、`telegram`(L340)、`gitee`(L382)、`update-storage`(L497) 各新增 `if: ${{ false }}  # github-only` 与一行说明注释；同时把这 4 个 job 原来「Secrets 非空即运行」的 `if:` 行改为注释行（原条件文本完整保留在同一行注释里） | 用户 2026-09-21 要求发布只写 GitHub；这四个 job 是仅有的外部写入路径（蓝奏云 / Telegram / Gitee / link-E），必须硬禁用且不依赖 Secrets 是否存在 |
+| 本文件 `.agent-protocol/tasks/dual-release-privacy/10-execution.md` | 重写为本轮证据 | 任务书指定的 executor 唯一可写证据文件 |
 
-未触碰（白名单外或明确禁止）：`AndroidManifest.xml`、`res/values/arrays.xml`、`res/xml/pref_config_other.xml`、数据库、签名与 Secrets、AI 源码与设置、发布目标、`bookshelf.json`、`.claude/`、《维护计划书》与 AI 任务文件。
+改动后工作树哈希：`test.yml` SHA-256 = `BA23A58B8DD9DCC35CAB9700238F6BD3E0B1815EAE1A88EFA7DF3BF56FC802B6`，`git diff --numstat` = `12 4`（新增 12 行、删除 4 行）。
 
-## 3. 冻结契约如何落地
+逐行 diff（`git diff -- .github/workflows/test.yml` 实际输出要点，四个 job 结构相同，以 lanzou 为例）：
 
-1. **Gradle 身份 fail-closed**：`def releaseIdentity = project.findProperty("RELEASE_IDENTITY") ?: "private"`；非 `normal|private` 直接抛 `GradleException`（配置期失败）。本地不传参 = private，保持旧 `.release` 升级链。
-2. **显示名与包名分离**：private=`io.legado.app.tjf.release` + `@string/app_name_private`；normal=`io.legado.app.tjf`（无后缀）+ `@string/app_name`；两者共用版本号、源码与签名配置。
-3. **两轴分离**：`AppVariant = 身份 × 通道`。资产身份来自文件名（新资产 `normal`/`private`；历史资产只把 `release` 兼容成 private；`releaseS`/`releaseA` 归 `LEGACY_RELEASES`，与 normal/private 不同变体），通道来自 `prerelease`。
-4. **身份永不来自设置**：`checkVariant = AppVariant.of(AppConst.appInfo.appVariant.identity, ReleaseIdentity.betaChannelOfSetting(pref) ?: 安装包默认通道)`；GitHub 与 Gitee 同一规则。
-5. **CI 双身份**：matrix 恒为 `["normal","private"]`；构建命令新增 `-PRELEASE_IDENTITY`（取自 matrix 的 type）；artifact=`legado.app.normal` / `legado.app.private`；Release 资产名 `legado_app_<versionL>_<identity>.apk`；prerelease job 在发布前断言两个身份都存在，缺一即失败。
-6. **下游迁移**：telegram 用 `*_private.apk` 判定 plus 标签；gitee 直接上传已定名的资产；update-storage 改取 `legado.app.private`。
-7. **不变量**：未改数据库结构、业务功能、AI 开关、签名配置、用户数据格式与版本号口径。
+```diff
+   lanzou:
++    # 用户 2026-09-21 授权：发布只发 GitHub，本 job 硬禁用（不依赖 Secrets 是否存在）
++    if: ${{ false }}  # github-only
+     needs: [ prepare, build ]
+-    if: ${{ github.event_name != 'pull_request' && needs.prepare.outputs.lanzou == 'yes' }}
++    # 原自动触发条件（Secrets 存在即运行）：github.event_name != 'pull_request' && needs.prepare.outputs.lanzou == 'yes'
+     runs-on: ubuntu-latest
+```
 
-## 4. D 阶段门禁与真实结果
+- 为什么删掉旧的 `if:` 而不是并存两条：同一 YAML 映射里出现两个 `if` 是重复键，多数解析器按「后者覆盖前者」，那会让「硬禁用」变成依赖解析顺序的假禁用。改为**每个 job 恰好一条 `if`，值为布尔字面量 false**，旧条件文本降级为注释保留可审计性。
+- 四个 job 的 `steps`、`needs`、`runs-on` 与所有 Secrets 引用**一个字节未改**（保留禁用痕迹，便于将来单独授权恢复）。
+- 未改动：`prepare`、`build`、`prerelease` 三个 job 的任何一行；APK 身份矩阵、`-PRELEASE_IDENTITY` 注入、`legado_app_<versionL>_<identity>.apk` 命名、双身份完整性守卫全部保持原样。
 
-运行环境：Windows + `GRADLE_USER_HOME=D:/gradle_home`，JDK 17（Temurin 17.0.20），Android SDK `D:/Android/Sdk`（build-tools 35.0.0）。
+## 2. 实际跑过的命令与真实输出
 
-> **证据来源标注（2026-09-20 第 2 轮复审后更正，属收窄性修正）**：本节 D0–D7 **全部产生于 F-01（Gitee 通道）修复之前**的代码状态，
-> 因此 D1/D2 的计数是 9 / 258 项，而当前冻结树上应为 10 / 259 项。修复后的门禁原始输出由 acceptor 在 `30-acceptance.md` §2 给出；
-> 本节数字只作历史记录，**不得作为当前完成判据**，两者不得混用。
+### 2.1 `git diff --check`（任务书明确要求）
 
-| 步骤 | 命令 | 结果 |
-| --- | --- | --- |
-| D0 | `git diff --check` | `EXIT=0`，只有 Git 的 LF→CRLF 提示 |
-| D1 | `$env:GRADLE_USER_HOME='D:/gradle_home'; gradlew.bat :app:testAppDebugUnitTest --tests io.legado.app.help.update.AppReleaseInfoTest --console=plain`（等价于冻结命令的 `-g D:/gradle_home`，reviewer F-05 指出报告应写明这一等价关系） | `BUILD SUCCESSFUL in 44s`；XML：tests=9 / failures=0 / errors=0 |
-| D2 | `gradlew.bat :app:testAppDebugUnitTest --console=plain` | `BUILD SUCCESSFUL in 11s`；38 个 XML 汇总 tests=258 / failures=0 / errors=0 / skipped=0（全部时间戳 2026/9/20 16:17:29） |
-| D3 | `gradlew.bat :app:lintAppDebug --console=plain` | `BUILD SUCCESSFUL in 11m 41s`，报告 `app/build/reports/lint-results-appDebug.html` |
-| D4 | `gradlew.bat :app:assembleAppRelease -PRELEASE_IDENTITY=normal --console=plain` | `BUILD SUCCESSFUL in 16m 22s`，APK 19,964,341 字节 |
-| D5 | `gradlew.bat :app:assembleAppRelease -PRELEASE_IDENTITY=private --console=plain` | 成功，APK 19,964,366 字节（16:53:09）；随后复跑 `BUILD SUCCESSFUL in 22s`（UP-TO-DATE）、`EXIT=0` |
-| D6 | `gradlew.bat :app:assembleAppRelease -PRELEASE_IDENTITY=garbage`（**预期失败**） | `BUILD FAILED in 3s`，`build.gradle` 第 41 行：`RELEASE_IDENTITY 只接受 normal 或 private，当前为 garbage`，`EXIT=1` |
-| D7 | `aapt2 dump badging` + `apksigner verify --print-certs` | 见下 |
+```text
+$ cd D:\vsproject\legado-E
+$ git diff --check -- .github/workflows/test.yml
+EXIT=0
+$ git diff --check
+EXIT=0
+(stderr 仅有 Git 的 "LF will be replaced by CRLF" 提示，涉及协议 md 文件，与本轮业务改动无关)
+```
 
-D7 逐项事实：
+### 2.2 静态证明：四个外部 job 无论 Secrets 是否存在都不会运行
 
-- normal：`package: name=io.legado.app.tjf versionCode=26092016 versionName=3.26.092016`；`application-label: Legado`、`application-label-zh: 阅读`。
-- private：`package: name=io.legado.app.tjf.release versionCode=26092016 versionName=3.26.092016`；`application-label: Legado·Privacy`、`application-label-zh: 阅读·隐私`。
-- 两者版本号一致；包名一个是基础 applicationId、一个是旧自用版身份；显示名可区分。
-- 证书 SHA-256 摘要：两包均为 `bea423a492567c23903896aa41fac03f31fbd89c98eb6a32f7a7b7b2fe55db01`，**一致**（未输出任何密钥内容）。
-- 补充：CI 里「缺任一身份即失败」的守卫逻辑用 git-bash 本地模拟过：两包都在 → 通过；删掉 private → 报「缺少 private APK，双版本发布不完整」并判失败；telegram 的 `*_private.apk` 标签判定随之翻转。这只证明 shell 判定逻辑，**不代表 CI 已跑**。
+命令（一次性脚本经 stdin 执行，不在仓库或临时目录留新文件；`-X utf8` 避免中文转录依赖控制台代码页）：
 
-## 5. 过程中出现的真实缺陷与一次环境误导
+```powershell
+cd D:\vsproject\legado-E
+Get-Content "$env:TEMP\dual-release-privacy\verify_github_only.py" -Raw |
+  python -X utf8 - .github/workflows/test.yml
+```
 
-1. **真实缺陷（已修）**：`AppConst.kt` 的 `AppInfo.appVariant` 默认值仍写着 `AppVariant.UNKNOWN`，而该常量随旧枚举一起被删除 → `compileAppDebugKotlin` 直接失败（`Unresolved reference UNKNOWN`）。改为 `AppVariant.UNKNOWN_OFFICIAL` 后消失。这是本轮唯一一次由改动本身引起的编译失败。
-2. **环境误导（非代码缺陷，已排除并留证）**：修好上一条后，`AppUpdateGitHub.kt` / `AppUpdateGitee.kt` 仍报 26 条「`okHttpClient` / `GSON` / `newCallResponse` 未解析」，且连续复跑不变。逐条排除后确认是 Kotlin 增量编译与构建缓存的脏状态（声明这些符号的文件并未改动，错误却指向它们的 import）。处置：删除 `app/build/kotlin`、`app/build/tmp/kotlin-classes` 并以 `--no-build-cache` 全量重编，`BUILD SUCCESSFUL in 3m 26s`；此后 D1–D7 全部在干净状态下通过。
-   **后续窗口请注意**：本项目改完 Kotlin 若出现成片「import 未解析」而声明文件并未改动，优先怀疑增量状态，不要当成产品缺陷去改代码。
+校验脚本 SHA-256 = `29A7112BBF0E735431F496C0DE3A9B4BA4F9A6B91F64D8EADC2E3EDC65D35D32`（136 行，位于系统临时目录，收尾状态见 §5）。
 
-## 6. 未运行项（NOT RUN）
+真实输出（16 项全过，退出码 0）：
 
-- GitHub Actions `Test Build` 实跑、真实 Release/asset 上传、beta 标签更新：NOT RUN（属 F）。
-- 真机安装、`.release` 覆盖升级与数据保留、双包共存、应用内检查更新：NOT RUN（属 E）。
-- 设备侧证据（adb）、Gitee 真实上传：NOT RUN。
-- 提交、推送、发布、切分支：NOT RUN（未授权）。
-- 独立 executor 回执：NOT RUN —— 本轮 executor 就是人类启动的 DSH 实例本身（mode `dsh-claude` 的既定映射），顶层 `14-executor-prompt.md` / `15-executor-raw.md` 仍是 r006 子进程超时留下的历史回执；`role-verify` 对 executor 角色预计仍 FAIL，acceptor 必须在 `30-acceptance.md` 里如实披露，不得当作通过。
+```text
+PASS  YAML parses without duplicate keys  |  yaml.safe_load OK, jobs=7
+PASS  job 'lanzou' hard-disabled with if: ${{ false }}  |  present=True if='${{ false }}'
+PASS  job 'telegram' hard-disabled with if: ${{ false }}  |  present=True if='${{ false }}'
+PASS  job 'gitee' hard-disabled with if: ${{ false }}  |  present=True if='${{ false }}'
+PASS  job 'update-storage' hard-disabled with if: ${{ false }}  |  present=True if='${{ false }}'
+PASS  no enabled job depends on a disabled job  |  dependents=none
+PASS  prerelease job kept  |  if="github.event_name != 'pull_request' && github.repository == 'tjf-github/legado-E'"
+PASS  prerelease still gated on non-PR + tjf-github/legado-E  |  if="github.event_name != 'pull_request' && github.repository == 'tjf-github/legado-E'"
+PASS  prerelease guard requires both identities  |  guard step run = mv */*.apk . rm -rf */ # 双版本必须同时到位：缺任一身份都视为发布不完整，直接失败 for identity in normal private; do if ! ls legado_app_*_$identity.apk > /dev/null 2>&1; then echo "缺少 $identity APK，双版本发布不完整" exit 1 fi done ls -l *.apk
+PASS  prerelease publishes both channels (beta + official)  |  beta pre-release steps=1 official steps=1, complementary if: "needs.prepare.outputs.updateLog_updated != 'yes'" / "needs.prepare.outputs.updateLog_updated == 'yes'"
+PASS  prerelease releases every downloaded apk  |  both publish steps use files=<workspace>/apk/*.apk + fail_on_unmatched_files: true
+PASS  prepare matrix is exactly normal+private  |  build_matrix={'product': ['app'], 'type': ['normal', 'private']}
+PASS  build injects -PRELEASE_IDENTITY per matrix type  |  identity property wired to matrix.type
+PASS  disabled jobs keep their external secret references (not deleted)  |  references=['lanzou->secrets.LANZOU', 'telegram->secrets.BOT_TOKEN', 'gitee->secrets.GITEE_TOKEN', 'update-storage->secrets.S_GITHUB_TOKEN'] (job skipped, env never resolved)
+PASS  exactly 4 jobs carry the github-only marker  |  marker=4 if-false=4
+PASS  old Secrets-driven job conditions are commented out, not active  |  active leftover lines=none
 
-## 7. 判断、偏离与残留（请 reviewer 重点核对）
+SUMMARY: 16 checks, 0 failed
+EXIT=0
+```
 
-1. **设置项键名不在白名单**：`res/values/arrays.xml` 与 `res/xml/pref_config_other.xml` 属 C+D 白名单外文件，用户可见的三个选项键名仍是历史值 `default_version` / `beta_release_version` / `beta_releaseS_version`。本轮只把「键名 → 通道」的映射收敛进 `ReleaseIdentity.betaChannelOfSetting`：`beta_releaseS_version`（界面文案为「正式版」）→ 正式通道，`beta_release_version`（测试版）→ beta 通道，`beta_releaseA_version`（共存版，界面未列出）→ beta 通道，其它值 → 回退安装包默认通道。键名/文案清理留给白名单放开后的独立改动。
-2. **update-storage 只换数据源**：改为取 `legado.app.private`，但 link-E 仓库里的目标路径与文件名保持 `sigma/leagado_Sigma_正式版.apk` 不变，以免改到白名单外的外部消费契约；若用户要顺带改这个文件名，需要另行授权。
-3. **Manifest 只读核对**：`readerProvider` / `fileProvider` 均用 applicationId 占位符，双包 authorities 唯一；固定权限 `io.legado.READ_WRITE` 由同一证书签名的两个包声明，静态未见冲突，但**真机共存仍是 E 的门槛**。
-4. **默认通道取决于真实签名**：本机 release 证书摘要 `bea423a4…` 既不等于 `AppConst.OFFICIAL_SIGNATURE` 也不等于 `BETA_SIGNATURE`，因此本机打出的 release 默认走**正式通道**（判定逻辑与改动前一致）。E 阶段必须在真机上先记录已安装 `.release` 的证书摘要，再判断默认通道与 beta 标签的关系。
-5. **`app_name_a` / `app_name_s` 资源保留但不再被引用**：Manifest 占位符改由身份决定后这两个字符串失去引用；为控制 diff 未删除资源。
-6. **版本名口径（本项已按 reviewer F-05 更正）**：本地兜底 `yy.MMddHH` 与 CI 注入 `3.%y.%m%d%H` 的字段、宽度、补零一致，渲染结果相同（实测本机 APK `versionName=3.26.092016`），原文称“本地与 CI 不同”是**事实错误**；真正需要钉住的口径是 CI 资产名 `legado_app_<VERSIONL>_<identity>.apk` 与 `AppReleaseInfo.versionName = name.split("_")[2].dropLast(2)` 自洽（`VERSIONL` = `VERSION` + 分钟两位），由冻结测试的 `VERSION_L` / `PARSED_VERSION` 覆盖。
-7. **UNKNOWN 身份是 fail-closed 兜底**：非本 fork 包名 → `UNKNOWN_*`，与 normal/private/legacy 变体都不相等，不会拿到双版本资产；代价是这类自定义包名安装包不再从本项目取任何更新（旧实现会把它们当 `OFFICIAL`）。
-8. **未做（且不应在本轮做）**：数据库/用户数据迁移、跨包数据继承、真机验证、发布通道实跑。
+证明链（每步都对应上面一条 PASS）：
 
-## 8. 证据位置
+1. **语义**：`if: ${{ false }}` 是布尔字面量 false，不引用 `github.event_name`、`needs.*.outputs.*` 或 `secrets.*`。GitHub 在**展开 matrix 之前**先求值 job 级 `if`，条件为假即 skip，因此四个 job 与「Secrets 是否存在」「事件类型」「matrices」全部无关，恒不运行。
+2. **无旁路**：四个 job 都是终端节点（没有任何**启用中**的 job `needs` 它们，`dependents=none`），不存在「被别的 job 拉起来」的路径。
+3. **无残留自动条件**：`secrets` 派生的旧条件若还处于生效状态，脚本第 8 项会报 FAIL；实测 `active leftover lines=none`。
+4. **YAML 合法**：PyYAML 的 `safe_load` 对**重复映射键直接抛错**——它能解析出 7 个 job，同时反证「每个 job 只有一条 `if`」，不存在重复键被覆盖的假禁用。
+5. **外部写入面收敛**：全文 48 处 `lanzou|telegram|gitee|link-E|S_GITHUB|curl|git push|workflow_dispatch|schedule` 命中里，除 `workflow_dispatch`（L21）外**全部**落在四个已禁用 job 内或其 `prepare` 输出/Secrets 读取行；`prepare` 只做 `git fetch`/`git log`/`echo >> $GITHUB_OUTPUT`，`build` 只跑 Gradle 与 artifact 上传，`prerelease` 只调 GitHub 自己的 `softprops/action-gh-release` 与 `richardsimko/update-tag`，无第二个外部目的地。
 
-- 定向测试 XML：`app/build/test-results/testAppDebugUnitTest/TEST-io.legado.app.help.update.AppReleaseInfoTest.xml`
-- 全量测试 XML 目录：`app/build/test-results/testAppDebugUnitTest/`（38 个文件）
-- lint 报告：`app/build/reports/lint-results-appDebug.html`
-- 两个 APK 副本：系统临时目录 `%TEMP%/dual-release-privacy/{normal,private}.apk`（收尾时删除）
-- A/B 归档：`rounds/controller-ab-report-10-execution.md`
-- 复审冻结命令：`06-review-commands.json`（diff-check / business-diff / 定向测试 / status）
-## 9. 复审后处置（reviewer-r003 findings）
+### 2.3 静态证明：GitHub Release 路径仍会接收两个 APK
 
-复审原文：`20-review.md`（runner 冻结 sha256 `08339df6cd7beff1be3edd6a74a40d883e092288cefe088144a0c53a3a951be7`，结论「通过（有条件）、无阻塞项」，但 reviewer 侧 Bash 被禁用、4 条冻结命令全部 NOT RUN）。
+- `prepare` 的 matrix 字面量仍是 `{"product":["app"],"type":["normal","private"]}`（解析后结构相等，非文本匹配）；`build` 仍把 `matrix.type` 注入 `-PRELEASE_IDENTITY`，并按 `legado_app_<VERSIONL>_<type>.apk` 命名后上传 artifact `legado.app.normal` / `legado.app.private`。
+- `prerelease` job 保留，`if` 仍为 `github.event_name != 'pull_request' && github.repository == 'tjf-github/legado-E'`；`actions/download-artifact@v8` **不带 `name` 过滤**，因此两个身份 artifact 都会落到 `apk/`。
+- **缺一即失败守卫**未改：`for identity in normal private; do if ! ls legado_app_*_$identity.apk ...; then echo "缺少 $identity APK，双版本发布不完整"; exit 1; fi; done`。
+- 两个发布步骤（beta 预发布 / 正式）都是 `files: <workspace>/apk/*.apk` + `fail_on_unmatched_files: true`，即把守卫放行的全部 APK 一起上传；两者 `if` 互补（`updateLog_updated == 'yes'` / `!= 'yes'`），不会重复发布。
+- 本轮**没有**改 `updateLog.md`（任务书禁止），所以 `push main` 时 `updateLog_updated != 'yes'` 分支成立 → 走「删旧 beta → 更新 beta 标签 → 发布 prerelease=true 的 beta Release」，两个 APK 同时进入该 Release。
 
-| finding | 处置 |
+### 2.4 其它 workflow 不含外部写入路径
+
+```text
+$ Select-String -Path .github/workflows/cronet.yml,.github/workflows/release.yml,.github/workflows/stale.yml,.github/workflows/web.yml -Pattern 'gitee|lanzou|telegram|link-E'
+(无输出 = 无匹配)
+```
+
+## 3. 对照任务书的三条硬要求
+
+| 要求 | 事实 |
 | --- | --- |
-| F-01 Gitee beta 通道依赖 `/releases/latest` | **已修**：`AppUpdateGitee.getLatestRelease` 两条通道统一取列表（`per_page=5&direction=desc`），新增纯函数 `List<GiteeRelease>.firstReleaseOfChannel(isBetaChannel)`（`AppReleaseInfo.kt`）按 `prerelease` 元数据选支，选不到直接抛「已是最新版本」，不再可能拿另一支静默判最新；新增 JVM 测试 `giteeChannelSelectionFollowsReleaseMetadataNotListOrder`（两种列表顺序 + 只有正式 release 时必须为 null） |
-| F-02 update-storage 载荷身份变化 | **用户已裁决（2026-09-20，「按任务书吧」）**：`00-task.md` 约束 5 与迁移计划 §3.2 只要求下游「显式选择 normal 或 private、不得再依赖 releaseS」，未要求改目标路径；旧 `.releaseS` 正是「隐私系统共存版」，其语义延续者即 private，故保留 `legado.app.private`，link-E 目标路径与文件名不变。**残留**：`.releaseS` 旧下载用户无法被任一新身份覆盖升级（废止 releaseS 的必然结果），F 阶段须把「link-E 目标文件的包名已由 `.releaseS` 变为 `.release`」作为显性契约核对 |
-| F-03 `:app:compileAppDebugKotlin` 未单列 | **已补**：acceptor 在冻结树上显式重跑该门禁并记录原始输出（见 `30-acceptance.md`），同时覆盖「白名单外是否残留旧 `AppVariant` 常量引用」 |
-| F-04 diff 通道看不到 untracked 新文件 | **已披露接受**：`git diff` 对 untracked 恒空，本轮不引入 `git add -N`（避免改索引影响其它窗口）；改为在 `30-acceptance.md` 记录两个新文件的路径、行数与 SHA-256 作为替代证据 |
-| F-05 报告三处事实不符 | **已更正**：本节上方已改（文件计数、版本名口径、D1 命令与冻结命令的等价关系） |
-| F-06 A/B 第 6 个测试是空转测试 | **接受不再改**：`packageIdentityToAssetIdentityContractIsFrozen` 只断言测试类内部常量，红测保真用；真实契约由 C 阶段新增的 `installIdentityIsDerivedFromPackageNameOnly` 覆盖，`30-acceptance.md` 会标注它的性质 |
-| F-07 死分支与死资源 | **接受，暂不清理**：`ReleaseIdentity.PRIVATE_PACKAGE + ".debug"` 当前不可达（保留为防御性映射，不改变任何可达行为）；`app_name_a`/`app_name_s` 失去引用但未删除。两者都属白名单放开后的独立清理，不构成本轮阻塞 |
+| 只改 `.github/workflows/test.yml`（唯一业务改动） | 本轮业务侧只改这一个文件，`git status` 可见新增的 ` M .github/workflows/test.yml`；其余改动均为任务开始前既有（协议 md 指针/报告、`bookshelf.json`、`.claude/`），未触碰 |
+| 硬禁用四个 job、保留 `prerelease` + 双身份 matrix + 缺一即失败守卫 | 见 §1、§2.2、§2.3，全部为结构断言，非文本猜测 |
+| 不改 APK 身份、签名、版本、应用功能、AI 功能或其它文件 | `app/**`、`AndroidManifest.xml`、`updateLog.md`、`.claude/`、AI 相关文件在本轮 `git status` 中无任何新变化 |
 
-F-01 的改动落在 C 阶段授权的「更新识别/更新过滤」范围内，属于**功能改动**，按 `MODES.md`「任何改变功能的修正都要重新复审」，本轮已重新拉起 reviewer（第 2 轮）。
+## 4. 未运行项（NOT RUN）
+
+以下一律 **NOT RUN**，不得从本报告推论其通过：
+
+- GitHub Actions `Test Build` 实跑、`push main` 触发、真实 beta Release 创建/更新、线上两个 APK 核对：NOT RUN（属 controller 的后续授权动作，本次未授权）。
+- 本轮未重复 Android 门禁：`:app:compileAppDebugKotlin`、`:app:testAppDebugUnitTest`、`:app:lintAppDebug`、两次 release 打包，以及 `git diff --check`（后者本轮已跑，见 §2.1）。任务书明确「不要求重复已经在 `3c6685cff` 和 CI run `35555332167` 上通过的全量门禁」，本轮改动只碰 workflow 的 `if` 行、未触及 Gradle/源码，故按授权不重跑。
+- 真机/设备侧动作、`adb` 任何命令：NOT RUN。
+- `actionlint` 或 GitHub 官方 workflow schema 校验器：NOT RUN（本机未安装 actionlint，任务书禁止安装软件）。替代证据是 PyYAML 解析 + §2.2/§2.3 的结构断言。
+- Gitee / link-E / Telegram / 蓝奏云任何真实或手工写入：NOT RUN（且已由本轮改动静态禁用）。
+
+## 5. 不确定项、偏离与残留
+
+1. **`if: ${{ false }}` 的语义未在本机实跑验证**（无 GitHub 运行环境、不授权实跑）。依据是 GitHub 文档：表达式中的布尔字面量 `false` 为假值，job 级 `if` 求值为假即 skip（[Evaluate expressions in workflows and actions](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions)、[Workflow syntax: jobs.<job_id>.if](https://docs.github.com/en/enterprise-server@3.16/actions/reference/workflows-and-actions/workflow-syntax)）。**最终确认只能来自 controller 的 `push main` 实跑**：四个 job 应显示 `skipped`，`prerelease` 应执行并产出双 APK。
+2. **`prerelease` 的 `Delete Pre-Release` 步骤会 `gh release delete beta -y`**：这是既有行为（beta 通道每次重建），不是外部目的地写入，本轮未改。它意味着 beta Release 在重发窗口内会短暂消失，属既有发布语义，仅作披露。
+3. **收尾清理未完全达成**：任务书要求「收尾前必须清理本任务额外产生且不属于 Gradle 标准构建输出的临时文件」。系统临时目录 `C:\Users\huixu\AppData\Local\Temp\dual-release-privacy\` 下有三个我自建的文件：`verify_github_only.py`（6,031 字节，§2.2 校验脚本，建议保留供 reviewer 复算）、`debug_dump.py`（660 字节）、`debug2.py`（482 字节）——后两个是调试用草稿。我尝试删除它们，被沙箱拒绝：
+   ```text
+   Remove-Item: Access to the path 'C:\Users\huixu\AppData\Local\Temp\dual-release-privacy\debug_dump.py' is denied.
+   [sandbox: file access denied under workspace-write mode]
+   ```
+   按提示发起一次性提权 `danger-full-access` 重试，结果 `Error: sandbox escalation to "danger-full-access" requires approval, but no approval channel is available`。因此**这两个草稿文件仍在系统临时目录，未清理**，且未再尝试其它绕过方式。它们在工作区之外、不进 git、不含项目内容或凭据，仅含 YAML 解析调试语句；请 controller 或具备权限的实例清理。本轮没有在仓库内产生任何临时文件或日志。
+4. **`workflow_dispatch` 保留**：手动触发入口未禁用。它只是入口，四个外部 job 在手动触发下同样被 `if: false` 挡住；`prerelease` 仍受 `github.repository == 'tjf-github/legado-E'` 约束。此项未改属最小改动原则，若 controller 要求连手动入口一并收窄，需要新的授权。
+5. **`prepare` 仍会读取四个外部 Secrets 的名称并据此设置 outputs**（`lanzou/telegram/gitee/sgithub`）。这些 outputs 现在没有任何消费者（四个消费 job 已被禁用），保留是为了让 diff 最小、且将来恢复时有据可查；它不产生任何外部写入，只影响 `skip` 判断所需的输出集合。
+6. **判断不了的地方**：GitHub 服务端的 workflow 校验是否接受 `if: ${{ false }}`（YAML 层合法、也是 GitHub 表达式语法内的布尔字面量），我只能给出静态与文档依据；若服务端拒绝，症状会是 workflow 无法启动或 job 直接失败，**这一点必须在 `push main` 后核对实跑结果**，不能以本报告代替。
+
+## 6. 证据位置
+
+- 业务 diff：`git diff -- .github/workflows/test.yml`（12 增 4 删，工作树哈希 `BA23A58B…`）
+- 校验脚本：`C:\Users\huixu\AppData\Local\Temp\dual-release-privacy\verify_github_only.py`（SHA-256 `29A7112B…`，见 §2.2 复算命令）
+- 冻结复审命令：`06-review-commands.json`（其中的 `phase-cd-status` 可核对工作树文件清单；`phase-cd-diff-check` / `phase-cd-business-diff` 的路径数组包含 `.github/workflows/test.yml`）

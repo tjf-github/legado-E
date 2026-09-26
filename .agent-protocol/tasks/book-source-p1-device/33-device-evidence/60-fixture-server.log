@@ -1,0 +1,44 @@
+[23:00:39] server start port=8765 pid=7488
+[23:00:39] GET /search.html mode=normal -> 200 78B
+[23:03:29] GET /chapter.html mode=normal -> 200 128B
+[23:03:56] GET /toc.html mode=normal -> 200 137B
+[23:03:56] GET /chapter.html mode=normal -> 200 128B
+[23:04:20] GET /search.html mode=normal -> 200 78B
+[23:04:20] GET /book.html mode=normal -> 200 104B
+[23:04:20] GET /toc.html mode=normal -> 200 137B
+[23:04:21] GET /chapter.html mode=normal -> 200 128B
+[23:05:09] GET /chapter.html mode=normal -> 200 128B
+[23:06:17] server start port=8765 pid=11328
+[23:06:19] GET /chapter.html mode=normal -> 200 128B
+[23:07:06] GET /toc.html mode=normal -> 200 137B
+[23:07:19] GET /chapter.html mode=hang holding-without-response
+[23:09:03] server start port=8765 pid=13912
+[23:09:05] GET /chapter.html mode=normal -> 200 128B
+[23:09:25] GET /toc.html mode=hang-once:/chapter.html -> 200 137B
+[23:09:25] GET /chapter.html mode=hang-once:/chapter.html consumed -> mode.txt reset to normal, holding-without-response
+[23:09:44] GET /toc.html mode=hang-once:/chapter.html -> 200 137B
+[23:09:44] GET /chapter.html mode=hang-once:/chapter.html consumed -> mode.txt reset to normal, holding-without-response
+[23:11:11] GET /toc.html mode=hang-once:/chapter.html -> 200 137B
+[23:11:11] GET /chapter.html mode=hang-once:/chapter.html consumed -> mode.txt reset to normal, holding-without-response
+[23:12:45] server start port=8765 pid=12700
+[23:12:53] GET /toc.html mode=hang-once:/chapter.html -> 200 137B
+[23:12:53] GET /chapter.html mode=hang-once:/chapter.html consumed -> mode.txt reset to normal, holding-without-response
+[23:13:58] GET /toc.html mode=hang holding-without-response
+[23:15:33] GET /toc.html mode=hang holding-without-response
+[23:15:38] GET /chapter2.html mode=hang holding-without-response
+[23:16:09] GET /toc.html mode=hang holding-without-response
+[23:16:15] GET /chapter.html mode=hang holding-without-response
+[23:17:15] GET /toc.html mode=hang-once:/chapter.html -> 200 137B
+[23:17:47] GET /chapter.html mode=normal -> 200 128B
+[23:17:47] GET /chapter2.html mode=normal -> 200 87B
+[23:18:09] GET /toc.html mode=normal -> 200 137B
+[23:18:09] GET /chapter.html mode=normal -> 200 128B
+[23:18:12] GET /chapter.html mode=normal -> 200 128B
+[23:27:49] server start port=8765 pid=10840
+[23:29:15] GET /toc.html mode=normal -> 200 137B
+[23:29:40] GET /toc.html mode=hang-once:/chapter.html -> 200 137B
+[23:29:40] GET /chapter.html mode=hang-once:/chapter.html consumed -> mode.txt reset to normal, holding-without-response
+[23:30:23] GET /toc.html mode=hang-once:/chapter.html -> 200 137B
+[23:30:23] GET /chapter.html mode=hang-once:/chapter.html consumed -> mode.txt reset to normal, holding-without-response
+[23:30:27] GET /chapter2.html mode=normal -> 200 87B
+[23:31:03] GET /chapter.html mode=normal -> 200 128B

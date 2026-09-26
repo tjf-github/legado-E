@@ -1,0 +1,257 @@
+{
+    "version":  1,
+    "generated_at_utc":  "2026-09-24T01:50:29Z",
+    "task_id":  "book-source-p1-diagnostics",
+    "task_class":  "standard",
+    "role":  "reviewer",
+    "round_id":  "reviewer-r002",
+    "mode":  "triad",
+    "assurance":  "high",
+    "route_revision":  "7",
+    "role_map":  {
+                     "controller":  "codex",
+                     "executor":  "dsh",
+                     "reviewer":  "claude",
+                     "acceptor":  "codex"
+                 },
+    "task_digest":  "cf12fc2384da644c9cddd96eda6d4dadfac2d631fb0a75c233317c4a8bf51ede",
+    "snapshot_digest":  "5166b7ff346e260a4e381368ec6f4f75069fd7eb33e7d4f22e1c41fa821e3665",
+    "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
+    "role_contract":  ".agent-protocol/prompts/reviewer.md",
+    "evidence_file":  ".agent-protocol/tasks/book-source-p1-diagnostics/20-review.md",
+    "rules":  [
+                  {
+                      "path":  ".agent-protocol/prompts/reviewer.md",
+                      "kind":  "role-contract",
+                      "sha256":  "d2131485fb5fe21fc902b42d15e10626bb18ad6d664972f129ef49ad25588c61",
+                      "bytes":  3480
+                  },
+                  {
+                      "path":  ".agent-protocol/README.md",
+                      "kind":  "protocol",
+                      "sha256":  "ea8f7c0cf78170e8b8704d849e9b27c51554e07e99afff493a6139bbce2a69a2",
+                      "bytes":  11611
+                  },
+                  {
+                      "path":  ".agent-protocol/MODES.md",
+                      "kind":  "protocol",
+                      "sha256":  "3f116cc85ed7dba1b6c4f5d23fd063d7cf323988fe4595a874f400997f860a1c",
+                      "bytes":  4689
+                  },
+                  {
+                      "path":  ".agent-protocol/CLOSEOUT.md",
+                      "kind":  "protocol",
+                      "sha256":  "677543ac8419e43a12fe3c568c836c414481f6b92a2da5bdae932b5a17de205c",
+                      "bytes":  4053
+                  },
+                  {
+                      "path":  ".agent-protocol/TASK-PROFILES.json",
+                      "kind":  "policy",
+                      "sha256":  "b0e21c2b46e5eea2a56722cbefd0cb145c0e0eb619b33c3986751f188dcba2b7",
+                      "bytes":  812
+                  },
+                  {
+                      "path":  ".agent-protocol/ROUTES.json",
+                      "kind":  "policy",
+                      "sha256":  "d53ba511e8a3457b7fa8ce7faa9860feea68813c6a9c3fabc2b5192ee47de386",
+                      "bytes":  1573
+                  }
+              ],
+    "read_list":  [
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\book-source-p1-diagnostics\\00-task.md",
+                          "sha256":  "cf12fc2384da644c9cddd96eda6d4dadfac2d631fb0a75c233317c4a8bf51ede",
+                          "bytes":  13419,
+                          "why":  "任务书：范围、白名单、完成条件、停止条件以它为准"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\book-source-p1-diagnostics\\10-execution.md",
+                          "sha256":  "9642212cfb0b01458aac0f65194f2a8e33e19dd746e23b5b2e8bda147491df11",
+                          "bytes":  22011,
+                          "why":  "上一环产物：当作待验证的主张读，不要当作事实"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\PROJECT.md",
+                          "sha256":  "a40f5d47fa72f672ccf583d2c5218d61fc0d075a78df956e005edcba302e1959",
+                          "bytes":  1826,
+                          "why":  "项目专属事实；仅在任务书把它列入你的可读白名单时读"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\CURRENT.md",
+                          "sha256":  "3c5159b0f161727745de7cff1dedae133da050736d6f0aed438f9cd9573487d6",
+                          "bytes":  492,
+                          "why":  "当前模式与角色映射；换挡后 delta 会让你读它，所以它必须在这张清单里"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\book-source-p1-diagnostics\\06-review-commands.json",
+                          "sha256":  "e15beedbb7eb03907a0c91163fb21e62e0a380eb6542b22962fc03240b6c08b7",
+                          "bytes":  92,
+                          "why":  "冻结的复审命令数组；任务书授权读取后才能判断门禁覆盖"
+                      }
+                  ],
+    "excluded":  [
+                     {
+                         "pattern":  ".agent-protocol/tasks/\u003c其它任务\u003e/**",
+                         "why":  "历史长报告默认不进上下文；需要历史时只读 read_list 里的 .agent-protocol/ARCHIVE.md 一行索引（对应的 40-archive.json 只在任务书另行授权时才读）"
+                     },
+                     {
+                         "pattern":  "rounds/**",
+                         "why":  "已归档轮次全文默认不读；机器事实已在 recent_rounds 与 findings.json 里"
+                     },
+                     {
+                         "pattern":  "15-*-raw.md",
+                         "why":  "runner 回执是审计材料，不是角色输入"
+                     }
+                 ],
+    "open_findings":  [
+
+                      ],
+    "recent_rounds":  [
+                          {
+                              "round_number":  1,
+                              "round_id":  "executor-r001",
+                              "role":  "executor",
+                              "summary":  "runner-fallback",
+                              "status":  "completed",
+                              "not_run":  1,
+                              "files_changed":  0,
+                              "worktree_dirty":  82,
+                              "findings":  ""
+                          },
+                          {
+                              "round_number":  1,
+                              "round_id":  "reviewer-r001",
+                              "role":  "reviewer",
+                              "summary":  "runner-fallback",
+                              "status":  "completed",
+                              "not_run":  1,
+                              "files_changed":  0,
+                              "worktree_dirty":  82,
+                              "findings":  ""
+                          }
+                      ],
+    "gate_ledger":  {
+                        "state":  "missing",
+                        "sha256":  "-",
+                        "entries":  [
+
+                                    ]
+                    },
+    "temp_manifests":  [
+                           {
+                               "manifest_id":  "20260922T054924125Z-493771c1",
+                               "round_id":  "executor-r001",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "executor provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260922T054936790Z-009c9e4a",
+                               "round_id":  "executor-pending",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "executor provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260922T054952039Z-01bcbdbd",
+                               "round_id":  "executor-r001",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "executor provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+                                                 {
+                                                     "label":  "provider-stdout",
+                                                     "path":  "temp-artifacts/20260922T054952039Z-01bcbdbd-provider-stdout.log",
+                                                     "sha256":  "d5a98b0418e49ff8311198154e1a461b74afe887efeb43bab833e3cad0e330f9",
+                                                     "bytes":  2971,
+                                                     "summary":  "I executed the executor prompt strictly within its authority. Result written to `10-execution.md` (plus the permitted `10-execution.summary.json` and `11-implementation-notes.md`).\n\n## What I delivered\n\n**P1 diagnostics component** (new, whitelisted `help/book/diagnostics/**`): four-stage enum, 9-class error classifier, default redactor (URL credentials/query/fragment, token/cookie/Bearer values, truncation), and a collector whose snapshots carry only `len/lines/imgs/elapsed/stage/class` — never content.\n\n**Four stages wired into the real call chain:**\n| Stage | Location |\n|---|---|\n| 提取后 | `AnalyzeRule.setContent(content, baseUrl, diagnostics)` |\n| HTML格式化后 | `BookContent` private `analyzeContent`, after `formatKeepImg` + entity decode + `usehtml` restore |\n| 书源替换后 | `BookContent` public `analyzeContent`, after `contentRule.replaceRegex` |\n| 阅读处理后 | `ContentProcessor.getContent` (real reading path) |\n\nMissing stages are marked **未执行** explicitly (no `replaceRegex` → stage 3; source-debug chain → stage 4). The sink hangs off `Debug`, so `HtmlFormatter`/`WebBook` needed no changes and diagnostics-off is a null branch.\n\n**Tests: 99 new across 5 classes, full suite 358 tests / 0 failures / 0 errors.**\n\n## Three things you need to decide on\n\n1. **I changed `app/build.gradle` — outside the task\u0027s file whitelist.** The repo has no Robolectric or mock framework, so `TextUtils.isEmpty/join` threw `not mocked` and blocked all three main analyzer paths. I first replaced 3 `TextUtils` calls with pure-Kotlin equivalents (semantics identical), then added `testOptions { unitTests { returnDefaultValues = true } }`. Flagged in `10-execution.md` §3 for accept-or-revert.\n\n2. **The exact gate command from the task book is blocked by the sandbox, not by code.** `GRADLE_USER_HOME=D:\\gradle_home` fails — the wrapper can\u0027t create `.zip.lck` there. I ran both gates from the workspace-local `build/drp-gradle-home` with the unpacked Gradle 8.14.4; both tasks **succeeded** (compile: 0 `e:` errors; test: 358/0/0), but each round still ends in `BUILD FAILED` because Gradle\u0027s closing write to `build/reports/problems/problems-report.html` is session-read-only (append/exclusive-open/overwrite all denied; sibling files in the same directory write fine; ACLs normal). Evidence and a reproducible recipe are in `10-execution.md` §4 and `11-implementation-notes.md` §3. Please re-run the original command in a fresh session to confirm whether that deny persists.\n\n3. **Four existing behavior gaps found and only frozen, not fixed** (out of P1 scope): `getString`/`getStringList` have no `Mode.Regex` branch; `@textNodes` returns nothing; `HtmlFormatter.format` double-indents (4 full-width spaces on line 1, 2 on later lines); `ReplaceRule.isValid()`\u0027s failure path depends on Android Context.\n\nReal-device/UI checks are `NOT RUN`, so this is not a P1 completion claim — implementation is handed to review only.\n"
+                                                 },
+                                                 {
+                                                     "label":  "provider-stderr",
+                                                     "path":  "temp-artifacts/20260922T054952039Z-01bcbdbd-provider-stderr.log",
+                                                     "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                     "bytes":  0,
+                                                     "summary":  ""
+                                                 }
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260922T082852845Z-c3813f09",
+                               "round_id":  "reviewer-pending",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "reviewer provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260922T082907695Z-5e2d0228",
+                               "round_id":  "reviewer-r001",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "reviewer provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+                                                 {
+                                                     "label":  "provider-stdout",
+                                                     "path":  "temp-artifacts/20260922T082907695Z-5e2d0228-provider-stdout.log",
+                                                     "sha256":  "886bc131c891a78f38b7717c2fa54a87dcb70d3c49054391f1896e6e8726294c",
+                                                     "bytes":  28554,
+                                                     "summary":  "{\"duration_api_ms\":255724,\"stop_reason\":\"end_turn\",\"session_id\":\"cba3fff0-21d8-4165-93ac-d359bcb0875a\",\"total_cost_usd\":3.3616150000000005,\"usage\":{\"input_tokens\":122128,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":3184256,\"output_tokens\":46285,\"output_tokens_details\":{\"thinking_tokens\":0},\"server_tool_use\":{\"web_search_requests\":0,\"web_fetch_requests\":0},\"service_tier\":\"standard\",\"cache_creation\":{\"ephemeral_1h_input_tokens\":0,\"ephemeral_5m_input_tokens\":0},\"inference_geo\":\"\",\"iterations\":[],\"speed\":\"standard\"},\"modelUsage\":{\"claude-haiku-4-5\":{\"inputTokens\":1657,\"outputTokens\":13,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":0,\"webSearchRequests\":0,\"costUSD\":0.001722,\"contextWindow\":200000,\"maxOutputTokens\":32000,\"thinkingTokens\":0,\"canonicalModel\":\"claude-haiku-4-5\",\"provider\":\"firstParty\",\"costBasis\":\"list\"},\"claude-opus-5[1m]\":{\"inputTokens\":122128,\"outputTokens\":46285,\"cacheReadInputTokens\":3184256,\"cacheCreationInputTokens\":0,\"webSearchRequests\":0,\"costUSD\":3.3598930000000005,\"contextWindow\":1000000,\"maxOutputTokens\":64000,\"thinkingTokens\":0,\"canonicalModel\":\"claude-opus-5\",\"provider\":\"firstParty\",\"costBasis\":\"list\"}},\"permission_denials\":[],\"terminal_reason\":\"completed\",\"fast_mode_state\":\"off\",\"fast_mode_disabled_reason\":\"sdk_opt_in_required\",\"subagent_stats\":{\"spawned\":0,\"requested\":{\"background\":0,\"foreground\":0,\"unset\":0},\"started_in_background\":0,\"max_depth\":0,\"spawned_by_subagents\":0,\"completed\":0,\"failed\":0,\"killed\":{\"parent\":0,\"user\":0,\"system\":0},\"refused\":{\"depth_limit\":0,\"concurrency_limit\":0,\"budget\":0},\"by_type\":{}},\"is_error\":false,\"num_turns\":56,\"subtype\":\"success\",\"api_error_status\":null,\"result\":\"\u003cagent-protocol-report\u003e\\n\\n# book-source-p1-diagnostics — 独立复审报告（reviewer: claude，只读静态复审）\\n\\n- 任务：`.agent-protocol/tasks/book-source-p1-diagnostics`（round `executor-r001`，triad，route_revision 7）\\n- 复审方式：**只读静态复审**。`06-review-commands.json` 为 `{\\\"version\\\":1,\\\"network_policy\\\":\\\"deny-declared-not-enforced\\\",\\\"commands\\\":[]}`，按任务书「本轮\n... [bounded by agent protocol runner] ...\n-review-commands.json` 为空，按任务书本轮不得执行；`:app:compileAppDebugKotlin` / `:app:testAppDebugUnitTest` 的**独立复跑 = NOT RUN**，因此执行报告 §4 的构建结论我只能核对「产物侧」而不能核对「过程侧」。\\n2. **仓库根 `build-dsh-p1-*.log` 不在我的读取白名单内，未读取** → 报告里引用的编译/测试原始输出（`AccessDeniedException`、无 `e:` 错误、`358 tests` 行等）**我无法核实**，记为 NOT RUN；我用 `app/build/test-results/**` 的 XML 头独立重算了用例计数（第 2 步），这是本次唯一可独立验证的门禁侧证据。执行报告 §4.1 的沙箱阻断结论、§4.5 的失败-处置表，均**未被独立验证**。\\n3. **未执行 `git diff`/`git status`/`git log`**（只读无 shell 约束）。后果：我无法逐字节确认改动范围等于报告所列，无法确认「未提交、未推送、未切分支」，无法确认 `app/build.gradle` 原先是否为空 `testOptions`，也无法知道报告是否漏报了其它被修改文件。我只能以「白名单内文件的当前内容」为核对基准。**这是本次复审最大的盲区**，若 acceptor 需要 diff 级证据，应由 controller 提供。\\n4. **未运行/未覆盖的项**（与执行报告一致，我同意其 `NOT RUN` 定性）：真机与 UI 抽查、调试页四阶段可见效果、`@webjs:`、`ContentProcessor.getContent` 直调、`ReplaceRule.isValid()` 的 `PatternSyntaxException` 与 `isRegex=false` 分支、`Lint`。\\n5. **未通读全部 `app/src/main` 调用链**，只读了四阶段相关的 6 个生产文件 + `Debug.kt`/`BookContent.kt`/`ContentProcessor.kt`/`AnalyzeRule.kt`/`AnalyzeByXPath.kt`/`HtmlFormatter.kt`/`ReplaceRule.kt`，以及 `WebBook.kt`、`ReadBookViewModel.kt`、`BookSourceDebug*`、`BookSourceDebugWebSocket.kt` 的相关片段以确认调用链与生命周期。未读别的书源解析分支（搜索/详情/目录）是否也应接入诊断，也未评估 P2—P5 相关面。\\n6. **未评估**：多页并发分页时阶段 1/2 只取首页是否会让「多页拼接错误」类问题不可见（我判断这是设计取舍而非缺陷，但未做深入验证）。\\n\\n---\\n\\n## 六、给 controller / acceptor 的处置建议（优先级顺序）\\n\\n1. **B-1**：把错误分类接到真实异常路径（至少 `onError` + `timeoutMs`），否则 P1 的「统一错误分类」只是组件而非能力。\\n2. **B-2**：阶段一改为规则提取之后采集（或另立「原始响应」阶段），否则 §3.1 四快照里最关键的「选多/选少」判据缺失。\\n3. **B-3**：把「首个抓取页」与诊断会话绑定并补 `markNotExecuted` 兜底——这是真机 §8.2 主路径上的必现问题。\\n4. **B-4 / B-5**：分别在 Web 调试路径与契约测试里补齐；B-5 若无法补测试，需在验收里显式降级该完成条件。\\n5. **M-1**：修 `stripUrlSecrets` 并换成非凭据键名的守卫用例（在接入异常消息之前完成）。\\n6. **M-2 / M-3 / L-4**：由 controller 明确追认或回退，并补记 `tmp-gradle-home` 残留。\\n7. **L-2**：更正 `@textNodes` 的缺口描述，避免错误结论流入 P3。\\n\\n\u003c/agent-protocol-report\u003e\",\"ttft_ms\":1469,\"type\":\"result\",\"duration_ms\":271328,\"uuid\":\"09544481-8734-45ca-ba0b-6a2abe83d5d7\",\"ttft_stream_ms\":702,\"time_to_request_ms\":368,\"first_content_frame_ms\":703,\"queued_turn_count\":0,\"result_index\":0}\n"
+                                                 },
+                                                 {
+                                                     "label":  "provider-stderr",
+                                                     "path":  "temp-artifacts/20260922T082907695Z-5e2d0228-provider-stderr.log",
+                                                     "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                     "bytes":  0,
+                                                     "summary":  ""
+                                                 }
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260924T014402744Z-b4e77ae4",
+                               "round_id":  "reviewer-r001",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "reviewer provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260924T014919741Z-a0074a8c",
+                               "round_id":  "reviewer-pending",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "reviewer provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260924T015023502Z-89202cdb",
+                               "round_id":  "reviewer-r002",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "reviewer provider invocation",
+                               "cleanup_state":  "scheduled",
+                               "artifacts":  [
+
+                                             ]
+                           }
+                       ],
+    "project_root":  "D:\\vsproject\\legado-E",
+    "usage_notes":  [
+                        "read_list 里是绝对路径；excluded 与 evidence_file 是项目相对路径（统一用正斜杠）。",
+                        "规则文件按 sha256 引用：只有 delta 里列出的变化文件才需要重读。",
+                        "发现一律用 ID 引用（如 F-0002），不要复制全文；claimed_resolved 表示被审方声称已修、尚未被复审方确认。",
+                        "gate_ledger 只记录共享 runner 事实；缓存命中不等于 reviewer 或 acceptor 已独立判断，角色不得把 requested_by_roles 当成结论签名。",
+                        "temp_manifests 只提供清理状态、artifact 哈希和有界摘要；不得按其中路径重读完整长日志。",
+                        "excluded 里的路径默认不读；任务书的读取白名单仍是硬上限。"
+                    ]
+}

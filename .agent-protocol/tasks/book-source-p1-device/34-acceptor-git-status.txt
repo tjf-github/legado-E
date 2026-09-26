@@ -1,0 +1,88 @@
+﻿ M .agent-protocol/CURRENT.md
+ M .gitignore
+ M app/src/main/java/io/legado/app/data/entities/ReplaceRule.kt
+ M app/src/main/java/io/legado/app/help/book/ContentProcessor.kt
+ M app/src/main/java/io/legado/app/model/Debug.kt
+ M app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeByXPath.kt
+ M app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt
+ M app/src/main/java/io/legado/app/model/webBook/BookContent.kt
+ M app/src/main/java/io/legado/app/web/socket/BookSourceDebugWebSocket.kt
+ M "\344\271\246\346\272\220\344\270\216\350\247\243\346\236\220\344\274\230\345\214\226\350\256\241\345\210\222\344\271\246.md"
+ M "\345\217\214\345\271\263\345\217\260\345\274\200\345\217\221\347\216\257\345\242\203\346\265\201\347\250\213\344\271\246.md"
+ M "\347\273\264\346\212\244\350\256\241\345\210\222\344\271\246-\345\220\216\347\273\255\344\277\256\345\244\215\344\270\216\345\242\236\345\274\272.md"
+?? .agent-protocol/ARCHIVE.md
+?? app/src/main/java/io/legado/app/help/book/diagnostics/BookSourceDiagnostics.kt
+?? app/src/main/java/io/legado/app/help/book/diagnostics/ContentLineNormalizer.kt
+?? app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticClassifier.kt
+?? app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticErrorClass.kt
+?? app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticRedactor.kt
+?? app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticStage.kt
+?? app/src/main/java/io/legado/app/utils/SerialTaskQueue.kt
+?? app/src/test/java/io/legado/app/data/entities/ReplaceRuleContractTest.kt
+?? app/src/test/java/io/legado/app/help/book/ContentProcessorContractTest.kt
+?? app/src/test/java/io/legado/app/help/book/diagnostics/BookSourceDiagnosticsContractTest.kt
+?? app/src/test/java/io/legado/app/help/book/diagnostics/DiagnosticsToggleParityTest.kt
+?? app/src/test/java/io/legado/app/model/analyzeRule/AnalyzeRuleContractTest.kt
+?? app/src/test/java/io/legado/app/utils/HtmlFormatterContractTest.kt
+?? app/src/test/java/io/legado/app/utils/SerialTaskQueueTest.kt
+?? app/src/test/resources/bookSourceBaseline/INVARIANTS.md
+?? app/src/test/resources/bookSourceBaseline/README.md
+?? app/src/test/resources/bookSourceBaseline/case-01-html-basic/case.json
+?? app/src/test/resources/bookSourceBaseline/case-01-html-basic/input.html
+?? app/src/test/resources/bookSourceBaseline/case-02-json-api/case.json
+?? app/src/test/resources/bookSourceBaseline/case-02-json-api/input.json
+?? app/src/test/resources/bookSourceBaseline/case-03-next-page/case.json
+?? app/src/test/resources/bookSourceBaseline/case-03-next-page/page-1.html
+?? app/src/test/resources/bookSourceBaseline/case-03-next-page/page-2.html
+?? app/src/test/resources/bookSourceBaseline/case-04-inline-img/case.json
+?? app/src/test/resources/bookSourceBaseline/case-04-inline-img/input.html
+?? app/src/test/resources/bookSourceBaseline/case-05-pure-image/case.json
+?? app/src/test/resources/bookSourceBaseline/case-05-pure-image/input.html
+?? app/src/test/resources/bookSourceBaseline/case-06-poetry-blank/case.json
+?? app/src/test/resources/bookSourceBaseline/case-06-poetry-blank/input.html
+?? app/src/test/resources/bookSourceBaseline/case-07-existing-replace/case.json
+?? app/src/test/resources/bookSourceBaseline/case-07-existing-replace/input.html
+?? app/src/test/resources/bookSourceBaseline/case-08-punctuation/case.json
+?? app/src/test/resources/bookSourceBaseline/case-08-punctuation/input.html
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/case.json
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/s1-exact.html
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/s2-indent-u3000.html
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/s3-numeric.html
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/s4-suffix.html
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/s5-wrapper.html
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/s6-nav-plus-title.html
+?? app/src/test/resources/bookSourceBaseline/case-09-title-in-body/s7-duplicate.html
+?? app/src/test/resources/bookSourceBaseline/case-10-entity-newline/case.json
+?? app/src/test/resources/bookSourceBaseline/case-10-entity-newline/input-literal.html
+?? app/src/test/resources/bookSourceBaseline/case-10-entity-newline/input.html
+?? bookshelf.json
+?? build-dsh-p1-compile-final.log
+?? build-dsh-p1-final-verify.log
+?? build-dsh-p1-run4.log
+?? build-dsh-p1-test15.log
+?? "docs/book-source-audit/2026-09-22-\345\215\225\344\273\275\346\270\205\345\215\225-summary.json"
+?? "docs/book-source-audit/2026-09-22-\345\215\225\344\273\275\346\270\205\345\215\225-\351\235\231\346\200\201\345\210\206\347\276\244\346\212\245\345\221\212.md"
+?? "docs/book-source-audit/2026-09-22-\345\275\222\345\271\266\345\220\210\351\233\206-summary.json"
+?? "docs/book-source-audit/2026-09-22-\345\275\222\345\271\266\345\220\210\351\233\206-\351\235\231\346\200\201\345\210\206\347\276\244\346\212\245\345\221\212.md"
+?? "docs/book-source-audit/2026-09-22-\351\231\220\345\256\232\350\201\224\347\275\221\346\216\242\346\265\213.md"
+?? docs/book-source-audit/README.md
+?? docs/book-source-audit/summary.json
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/01-\346\255\243\346\226\207\351\223\276\350\267\257\347\274\272\345\244\261.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/02-\346\233\277\346\215\242\350\247\204\345\210\231\345\221\275\344\270\255\346\240\207\350\256\260.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/03-\345\233\276\347\211\207\345\255\227-imageStyle-TEXT.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/04-\346\255\243\346\226\207\344\270\213\344\270\200\351\241\265.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/05-\346\233\277\346\215\242\350\247\204\345\210\231\346\255\243\345\210\231\351\242\204\346\243\200\346\237\245.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/06-\346\255\243\346\226\207\345\207\272\347\216\260\346\240\207\351\242\230.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/07-\345\256\236\344\275\223\350\247\243\347\240\201\344\270\216\346\240\274\345\274\217\345\214\226\346\254\241\345\272\217.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/PENDING.md"
+?? "docs/book-source-audit/\350\257\212\346\226\255\345\215\241/TEMPLATE.md"
+?? "docs/book-source-audit/\350\257\255\346\226\231/2026-09-22-AI\346\255\243\346\226\207\345\274\202\345\270\270\346\240\267\346\234\254\345\272\223V1.md"
+?? "docs/book-source-audit/\350\257\255\346\226\231/README.md"
+?? "docs/book-source-audit/\350\257\255\346\226\231\345\275\222\345\233\240.md"
+?? tools/book-source-audit/README.md
+?? tools/book-source-audit/audit.py
+?? tools/book-source-audit/checks.py
+?? tools/book-source-audit/report.py
+?? tools/book-source-audit/rule_syntax.py
+?? tools/book-source-audit/tests/test_p0_tools.py
+?? tools/book-source-audit/verify_p0.py

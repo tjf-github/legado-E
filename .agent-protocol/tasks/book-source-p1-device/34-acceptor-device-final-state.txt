@@ -1,0 +1,5 @@
+﻿reverse(device): 
+forward(device): 
+fixture 8765: no listener
+web service: not running
+pkg version: versionCode=26092422 minSdk=21 targetSdk=36 | firstInstallTime=2026-09-24 10:01:36

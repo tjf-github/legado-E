@@ -1,0 +1,95 @@
+{
+  "task": "book-source-p1-device",
+  "role": "executor",
+  "report_revision": 3,
+  "report_revision_note": "第 3 版按 reviewer-r002 F-1…F-9 再更正：S5 收窄为部分通过（仅同书其它章节）、D-3 收窄、D-4 根因更正、F-6 标注代码可达性、补 F-8 加固项、证据文件实际转存 UTF-8 并同步带墙钟的 WS 客户端",
+  "agent": "dsh",
+  "runner_envelope": false,
+  "runner_envelope_note": "dsh-claude 下 controller=executor=acceptor=dsh，执行由 controller 直接完成，没有 runner 封套",
+  "device": {
+    "serial": "10CE5P1M1Z001P9",
+    "model": "V2338A",
+    "package": "io.legado.app.tjf.debug",
+    "versionName": "3.26.092422debug",
+    "versionCode": 26092422,
+    "firstInstallTime": "2026-09-24 10:01:36",
+    "lastUpdateTime": "2026-09-24 23:31:30",
+    "raw_evidence": [
+      "33-device-evidence/62-install-raw.txt",
+      "33-device-evidence/63-dumpsys-package-raw.txt"
+    ]
+  },
+  "apk": {
+    "path": "app/build/p1-device-apk-B-renamed.apk",
+    "size": 37693471,
+    "sha256": "31381c4141b8546196ac9f0207468663134c41fbcc6ced99f00e5b72de0a8cff",
+    "frozen_tree_counterpart_sha256": "87aa25c9ebcbe4058157adba09b469542c04830637c7d4ec2bbb3093d5164941",
+    "differing_entries": [
+      "AndroidManifest.xml",
+      "META-INF/CERT.RSA",
+      "META-INF/CERT.SF",
+      "META-INF/MANIFEST.MF"
+    ],
+    "dex_identical": true,
+    "temporary_manifest_change": "io.legado.READ_WRITE -> io.legado.app.tjf.debug.READ_WRITE (4 lines, reverted, git diff empty)"
+  },
+  "steps": {
+    "S1": "pass: Android debug page shows all four stages; stage 4 explicitly 未执行; no body/query/cookie leaked",
+    "S2": "pass: toc entry and full chain both show stages 1/2",
+    "S3": "partial: only the connection-refused sub-case satisfies 网络错误 + explicit 未执行; the mid-response EOF sub-case is still 未知错误 (D-4)",
+    "S4": "partial: 补打 with a real stage-4 reading reproduced only via the ++<tocUrl> entry (binding equals the stored relative chapter URL); --<absolute url> binding never matches (D-2); Android debug page channel NOT RUN",
+    "S5": "partial: same-session control holds, but it only covers another chapter of the same book; the task book scene (other books / local books) stays NOT RUN",
+    "S6": "pass: zero sourceDebug output after the session closed; reading served from local cache",
+    "S7": "pass: failure stamped on stage 1; stage 4 kept the real reading",
+    "S8": "pass: four summary lines delivered before the terminal frame and the close",
+    "S9": "pass: reading text byte-identical across diagnostics off / on / after close"
+  },
+  "findings": {
+    "D1": "install blocked by INSTALL_FAILED_DUPLICATE_PERMISSION on this device (environment fact, affects every device round)",
+    "D2": "stage-4 补打 matches chapterUrl by exact string; relative stored chapter URL vs --<absolute url> key never matches (medium)",
+    "D3": "补打 needs a real content (re)processing: in the same session a refresh of the bound chapter produced the 补打 while a chapter switch at 23:30:45 produced no diagnostic frame (narrowed: the switch half has only frame silence, no wall-clock artifact)",
+    "D4": "EOF/reset failures still classified 未知错误; root cause per reviewer-r002 F-4: the classifier has no cause-chain matching, EOFException maps to the encoding class and InterruptedIOException to the network class",
+    "F6": "unverified risk: ContentProcessor always records stage 4 with 正常 for non-empty text (sentinel/failure text could look like a real reading) - not triggered this round",
+    "D8": "fixture helper script has a path-traversal hazard (test tooling only, not fixed here)"
+  },
+  "boundaries": {
+    "summary_requires_contentDebug": "a chain failing before contentDebug (toc/detail stage) prints no diagnostics at all (F-3)"
+  },
+  "reviewer_r001": {
+    "verdict": "blocking on the evidence layer (F-1), product conclusion not overturned",
+    "evidence_sha256": "d9993e9c2bed9f6ec28131f9ff2f4ed7ef7e49900128790d9c3d4c43d567c15c",
+    "disposition": {
+      "F1": "accepted: S5 redone with same-session positive/negative control; D-3 re-attributed",
+      "F2": "accepted: hang-once wording corrected (reading served from local cache); screenshot timing claim removed",
+      "F3": "accepted: boundary recorded",
+      "F4": "accepted: S3/S4 verdicts narrowed",
+      "F5": "partially accepted: raw install/dumpsys files added, parity file re-encoded UTF-8, per-frame wall clock added; session boundaries in the frame log kept as-is",
+      "F6": "recorded as an unverified risk, not fixed"
+    }
+  },
+  "not_run": [
+    "Android debug page channel for the 补打 (F-0003 window not reproducible)",
+    "local TXT/EPUB and other-book isolation control",
+    "real book sources and real sites",
+    "audio/video/file sources, multi-page chapters, @webjs:",
+    ":app:lintAppDebug",
+    "browser-side web debug page",
+    "F-6 combination (bound session + reading path's own fetch failing)"
+  ],
+  "no_commit_push_release": true,
+  "reviewer_r002": {
+    "verdict": "pass, no blocking findings",
+    "evidence_sha256": "a0d566b218dbea0dcea9a1310fee05849054569c637ab719529cef42c934b701",
+    "disposition": {
+      "F1": "accepted: S5 narrowed to partial",
+      "F2": "accepted: parity/raw evidence files re-encoded to UTF-8",
+      "F3": "accepted: wall-clock client synced into the evidence dir",
+      "F4": "accepted: D-4 root cause corrected",
+      "F5": "accepted: screenshot label and S2 elapsed annotations corrected",
+      "F6": "accepted: S9 row relabelled (time not provable)",
+      "F7": "accepted: D-3 narrowed",
+      "F8": "recorded as hardening item (test tooling)",
+      "F9": "accepted: F-6 annotated as code-reachable"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+    "version":  1,
+    "task_id":  "dual-release-privacy",
+    "role":  "executor",
+    "round_id":  "executor-r007",
+    "source":  "runner-fallback",
+    "status":  "completed",
+    "not_run":  [
+                    "unknown：角色没有给出机器摘要，未运行项无法判定"
+                ],
+    "files_changed":  [
+
+                      ],
+    "commands":  [
+
+                 ],
+    "findings":  [
+
+                 ],
+    "unmatched_resolves":  [
+
+                           ],
+    "resolve_conflicts":  [
+
+                          ],
+    "invalid_summary":  "no-summary",
+    "worktree_dirty_after":  [
+                                 ".github/workflows/test.yml",
+                                 "/347/273/264/346/212/244/350/256/241/345/210/222/344/271/246-/345/220/216/347/273/255/344/277/256/345/244/215/344/270/216/345/242/236/345/274/272.md",
+                                 "bookshelf.json"
+                             ],
+    "worktree_attribution":  "unknown：只表示本轮结束时工作树里有哪些脏文件，不代表是本角色改的",
+    "findings_sha256":  "-",
+    "task_digest":  "1b5d59a0a4d5ec701f9fb35e56a807318dfe4bf9f2c314230c0b08a014dfdb52",
+    "snapshot_digest":  "7ea670dd3394ad8e5dcd7c1b15030b38b7eefa430a9e8d0f2656b95cad790961",
+    "evidence_file":  "10-execution.md",
+    "evidence_sha256":  "5ce0705a4fdec7722747675baa8c5537f1b0d84c4bf60858717bcdb3ba506ac0",
+    "context_pack":  "13-executor-context.json",
+    "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
+    "generated_at_utc":  "2026-09-21T06:21:46Z",
+    "note":  "source=role 时这段摘要由角色提供并原样提取；runner-fallback 只记录机器可观测事实，不是角色结论。"
+}

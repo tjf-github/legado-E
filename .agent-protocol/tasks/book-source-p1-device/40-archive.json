@@ -1,0 +1,108 @@
+{
+    "version":  1,
+    "task_id":  "book-source-p1-device",
+    "task_class":  "standard",
+    "mode":  "dsh-claude",
+    "route_revision":  "8",
+    "decision":  "accepted",
+    "product_state":  "ready",
+    "assurance_state":  "complete",
+    "review_rounds":  2,
+    "archived_rounds":  [
+                            "reviewer-r001"
+                        ],
+    "roles":  {
+                  "executor":  {
+                                   "top_round_id":  null,
+                                   "verification":  "NOT_PRESENT",
+                                   "assurance":  "none",
+                                   "machine_integrity":  "not-present",
+                                   "summary_sha256":  "-",
+                                   "legacy_rounds":  [
+
+                                                     ],
+                                   "historical_results":  [
+
+                                                          ]
+                               },
+                  "reviewer":  {
+                                   "top_round_id":  "reviewer-r002",
+                                   "verification":  "PASS",
+                                   "assurance":  "strict-envelope",
+                                   "machine_integrity":  "bound",
+                                   "summary_sha256":  "2bbc34f2cb8a726e808ea609a7f9a528b0e0b754f6ddeef9f609d3f5498f5608",
+                                   "legacy_rounds":  [
+
+                                                     ],
+                                   "historical_results":  [
+                                                              {
+                                                                  "round_id":  "reviewer-r001",
+                                                                  "result":  "PASS",
+                                                                  "assurance":  "strict-envelope"
+                                                              }
+                                                          ]
+                               },
+                  "acceptor":  {
+                                   "top_round_id":  null,
+                                   "verification":  "NOT_PRESENT",
+                                   "assurance":  "none",
+                                   "machine_integrity":  "not-present",
+                                   "summary_sha256":  "-",
+                                   "legacy_rounds":  [
+
+                                                     ],
+                                   "historical_results":  [
+
+                                                          ]
+                               }
+              },
+    "total_findings":  12,
+    "findings_source":  "read",
+    "findings_sha256":  "41568305e641f3febcbcc60f7a13db720085729d5d4636124436e0852d19fb8d",
+    "open_findings":  [
+                          {
+                              "id":  "F-0008",
+                              "severity":  "medium",
+                              "status":  "open",
+                              "title":  "本机安装本仓库产物被 INSTALL_FAILED_DUPLICATE_PERMISSION 拒绝（异签名 io.legado.app.tjf.release 占用 io.legado.READ_WRITE）"
+                          },
+                          {
+                              "id":  "F-0009",
+                              "severity":  "medium",
+                              "status":  "open",
+                              "title":  "补打按 chapterUrl 逐字匹配：--\u003c绝对URL\u003e 入口对存储为相对 URL 的存量书永不补打"
+                          },
+                          {
+                              "id":  "F-0010",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "DiagnosticClassifier 无 cause 链匹配：EOF/reset 类失败归「未知错误」（EOFException 本身属编码类）"
+                          },
+                          {
+                              "id":  "F-0011",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "ContentProcessor 无条件记录阶段四：哨兵/失败文案会打出一条「正常」读数（本轮未触发）"
+                          },
+                          {
+                              "id":  "F-0012",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "serve_p1_fixture.py 的路径拼接未做 .. 归一化（测试脚本，未发现被利用）"
+                          }
+                      ],
+    "gate_ledger":  {
+                        "state":  "missing",
+                        "sha256":  "-"
+                    },
+    "evidence":  {
+                     "task_book":  "2e900d08080ae6fceacc4881680236819190b37ab470326652e2063f09035286",
+                     "execution":  "a5926af3c34dbd77e0fc220c35105e4457e6b2cf2989a9c46b00ba47c6d8bb2a",
+                     "review":  "a0d566b218dbea0dcea9a1310fee05849054569c637ab719529cef42c934b701",
+                     "acceptance":  "b8b9343f1ae4a61df74268bc153c8092e8523e71080928b1e04147bc18ca610d"
+                 },
+    "git_head":  "b8ba92e194468f0d7e6103c1175ba9f2a8233d95",
+    "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
+    "closed_at_utc":  "2026-09-24T15:43:34Z",
+    "note":  "短归档：只记索引与摘要；长报告原文仍留在任务目录，默认不进新任务上下文。"
+}

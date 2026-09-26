@@ -1,0 +1,52 @@
+{
+    "version":  1,
+    "task_id":  "dual-release-privacy",
+    "role":  "reviewer",
+    "round_id":  "reviewer-r004",
+    "source":  "runner-fallback",
+    "status":  "completed",
+    "not_run":  [
+                    "unknown：角色没有给出机器摘要，未运行项无法判定"
+                ],
+    "files_changed":  [
+
+                      ],
+    "commands":  [
+
+                 ],
+    "findings":  [
+
+                 ],
+    "unmatched_resolves":  [
+
+                           ],
+    "resolve_conflicts":  [
+
+                          ],
+    "invalid_summary":  "no-summary",
+    "worktree_dirty_after":  [
+                                 ".agent-protocol/current.md",
+                                 ".github/workflows/test.yml",
+                                 "app/build.gradle",
+                                 "app/src/main/java/io/legado/app/constant/appconst.kt",
+                                 "app/src/main/java/io/legado/app/help/update/appreleaseinfo.kt",
+                                 "app/src/main/java/io/legado/app/help/update/appupdategithub.kt",
+                                 "app/src/main/java/io/legado/app/help/update/appupdategitee.kt",
+                                 "app/src/main/res/values-zh/strings.xml",
+                                 "app/src/main/res/values/strings.xml",
+                                 "/347/273/264/346/212/244/350/256/241/345/210/222/344/271/246-/345/220/216/347/273/255/344/277/256/345/244/215/344/270/216/345/242/236/345/274/272.md",
+                                 "app/src/main/java/io/legado/app/help/update/releaseidentity.kt",
+                                 "app/src/test/java/io/legado/app/help/update/appreleaseinfotest.kt",
+                                 "bookshelf.json"
+                             ],
+    "worktree_attribution":  "unknown：只表示本轮结束时工作树里有哪些脏文件，不代表是本角色改的",
+    "findings_sha256":  "-",
+    "task_digest":  "7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216",
+    "snapshot_digest":  "40f10aa52597fef3c6e53c6485da0a21ce784f3cbf61b42e9a963bccea4cdba0",
+    "evidence_file":  "20-review.md",
+    "evidence_sha256":  "5499867f3a50ff23411ca0867ce866f2f88bd9bb8c6dd858de622ca3feca9dc3",
+    "context_pack":  "13-reviewer-context.json",
+    "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
+    "generated_at_utc":  "2026-09-20T09:26:40Z",
+    "note":  "source=role 时这段摘要由角色提供并原样提取；runner-fallback 只记录机器可观测事实，不是角色结论。"
+}

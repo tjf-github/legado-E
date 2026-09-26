@@ -1,0 +1,109 @@
+{
+    "version": 1,
+    "task_id": "book-source-p1-rework-r3",
+    "role": "executor",
+    "round_id": "executor-r001",
+    "source": "direct-controller-dispatch",
+    "source_note": "本任务的 controller=executor=acceptor=dsh（mode=dsh-claude）。执行由 controller（人类窗口启动的 DSH 实例）直接指派并亲自完成，**没有 runner 封套**，因此不存在与 role 回执绑定的执行证据；role-verify 只校验到 reviewer 侧（PASS）。不接受把本文件读作「执行来源已被协议绑定」。",
+    "status": "completed",
+    "rework_basis": [
+        "book-source-p1-diagnostics/30-acceptance.md §阻塞发现 1-4 与 §下一步",
+        "book-source-p1-diagnostics/20-review.md (reviewer-r002) F-01/F-02/F-03/F-06",
+        "book-source-p1-rework-r3/20-review.md (reviewer-r001) F-01..F-06",
+        "MODES.md rework 收敛规则 + TASK-PROFILES.json standard.max_review_rounds=2"
+    ],
+    "addressed": [
+        "阻塞1 默认异常说明只输出异常类名，绝不引用 error.message（阶段内 + 链路级兜底）",
+        "阻塞2 新增 markNotExecutedIfMissing，收尾不再覆盖已执行的真实阶段四快照",
+        "阻塞2 新增 shouldReportReadingStage 三态判定 + Debug.onReadingStageRecorded，会话存活期间同章阅读后可见真实第四阶段读数",
+        "阻塞3 新增 SerialTaskQueue，BookSourceDebugWebSocket.printLog 改为串行投递，摘要与终止信号保序",
+        "阻塞4 M-3 由 controller 显式纳入范围并保留 AnalyzeByXPath 等价替换",
+        "F-03（P1 复审）stripUrlSecrets 只在 authority 内定位 userinfo，路径里的 @ 不再切掉主机名",
+        "reviewer-r001 F-01 recordFailure 排除 READ_PROCESS，抓取失败不再贴到阅读读数上",
+        "reviewer-r001 F-02 展示时机判定下沉为 collector 方法并可 JVM 直测（三态 + 关闭态守卫）",
+        "reviewer-r001 F-03 空 authority 保守回退；userinfo 含 / 记录为残余边界",
+        "reviewer-r001 F-04 summary source 改为 direct-controller-dispatch，报告同步澄清",
+        "reviewer-r001 F-06 删除无生产调用点的 SerialTaskQueue.close()；探针日志改 UTF-8"
+    ],
+    "accepted_limitations": [
+        "reviewer-r001 F-05：补打权可能被同书同章的导出/换源统计先消费，真机步骤 2 需以「此前未做过导出/统计」为前提",
+        "同一会话最多打印两份摘要（收尾 + 阅读路径补打），未做去重，登记为观感项"
+    ],
+    "gates": {
+        "command": "GRADLE_USER_HOME=D:\\gradle_home; .\\gradlew.bat :app:compileAppDebugKotlin :app:testAppDebugUnitTest --console=plain",
+        "runs": [
+            {
+                "stage": "first-version-before-review",
+                "exit_code": 0,
+                "build": "BUILD SUCCESSFUL in 3m 38s",
+                "suites": 45,
+                "tests": 393,
+                "failures": 0,
+                "xml_timestamp": "2026-09-24T22:22:54"
+            },
+            {
+                "stage": "final-after-review-fixes",
+                "exit_code": 0,
+                "build": "BUILD SUCCESSFUL in 55s",
+                "suites": 45,
+                "tests": 394,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "xml_timestamp": "2026-09-24T22:32:07"
+            }
+        ],
+        "attempts": [
+            "未提权：wrapper 写 D:\\gradle_home 锁文件被沙箱拒绝（exit 1），按任务书申请一次 danger-full-access 重试",
+            "提权首跑：编译失败 12 条 Unresolved reference，定位为陈旧 Kotlin 增量缓存，清理 app/build/kotlin、tmp/kotlin-classes、kspCaches 后重跑"
+        ],
+        "log": "app/build/p1-r3-gate.log（首版）、app/build/p1-r3-gate-r2.log（最终版）"
+    },
+    "probe": {
+        "file": "32-probe-source.java",
+        "log": "32-probe.log",
+        "encoding": "UTF-8",
+        "checks": 11,
+        "failures": 0,
+        "exit_code": 0,
+        "note": "在编译产物上直调生产类，只用 SYNTHETIC_* 合成常量"
+    },
+    "role_verify": {
+        "command": "agent-protocol role-verify book-source-p1-rework-r3",
+        "result": "PASS（15-reviewer-raw.md -> 20-review.md 一致）",
+        "executor_side": "NOT PRESENT（执行侧无 runner 封套，本任务 controller=executor=dsh）"
+    },
+    "not_run": [
+        "真机 / UI 四阶段可见性（含阶段四补打的真实读数）",
+        "Web 端投递顺序的真机前后对照（只证明提交顺序；NanoWSD send 语义未核实）",
+        "端到端（真机）诊断开关前后正文一致性",
+        ":app:lintAppDebug（非发布轮）",
+        "@webjs: 与真实书源 / 真实站点",
+        "ui/book、ui/rss 的 Debug.Callback 实现（不在 P1 范围）"
+    ],
+    "files_changed_this_round": [
+        "app/src/main/java/io/legado/app/help/book/diagnostics/BookSourceDiagnostics.kt",
+        "app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticRedactor.kt",
+        "app/src/main/java/io/legado/app/model/Debug.kt",
+        "app/src/main/java/io/legado/app/help/book/ContentProcessor.kt",
+        "app/src/main/java/io/legado/app/utils/SerialTaskQueue.kt",
+        "app/src/main/java/io/legado/app/web/socket/BookSourceDebugWebSocket.kt",
+        "app/src/test/java/io/legado/app/help/book/diagnostics/BookSourceDiagnosticsContractTest.kt",
+        "app/src/test/java/io/legado/app/utils/SerialTaskQueueTest.kt",
+        ".agent-protocol/tasks/book-source-p1-rework-r3/10-execution.md",
+        ".agent-protocol/tasks/book-source-p1-rework-r3/11-implementation-notes.md",
+        ".agent-protocol/tasks/book-source-p1-rework-r3/32-probe-source.java",
+        ".agent-protocol/tasks/book-source-p1-rework-r3/32-probe.log"
+    ],
+    "untouched_baseline": [
+        "book-source-p1-diagnostics/**（只读引用）",
+        "app/build.gradle、依赖与数据库结构",
+        "docs/book-source-audit/**、tools/book-source-audit/**、bookshelf.json、仓库根 build-dsh-p1-*.log"
+    ],
+    "git": {
+        "branch": "codex/manga-import",
+        "head": "b8ba92e194468f0d7e6103c1175ba9f2a8233d95",
+        "committed": false,
+        "pushed": false
+    }
+}

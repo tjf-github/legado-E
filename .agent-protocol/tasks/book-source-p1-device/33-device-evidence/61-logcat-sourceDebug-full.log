@@ -1,0 +1,218 @@
+﻿--------- beginning of main
+09-24 23:11:10.856 D/sourceDebug(20823): ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+09-24 23:11:10.856 D/sourceDebug(20823): ︾开始解析目录页
+09-24 23:11:10.881 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/toc.html
+09-24 23:11:10.881 D/sourceDebug(20823): <html><body><a class="chapter" href="/chapter.html">Chapter one</a><a class="chapter" href="/chapter2.html">Chapter two</a></body></html>
+09-24 23:11:10.882 D/sourceDebug(20823): ┌获取目录列表
+09-24 23:11:10.885 D/sourceDebug(20823): └列表大小:2
+09-24 23:11:10.886 D/sourceDebug(20823): ┌解析目录列表
+09-24 23:11:10.888 D/sourceDebug(20823): └目录列表解析完成
+09-24 23:11:10.888 D/sourceDebug(20823): ≡首章信息
+09-24 23:11:10.889 D/sourceDebug(20823): ◇章节名称:Chapter one
+09-24 23:11:10.889 D/sourceDebug(20823): ◇章节链接:/chapter.html
+09-24 23:11:10.890 D/sourceDebug(20823): ◇章节信息:
+09-24 23:11:10.890 D/sourceDebug(20823): ◇是否VIP:false
+09-24 23:11:10.890 D/sourceDebug(20823): ◇是否购买:false
+09-24 23:11:10.891 D/sourceDebug(20823): ◇目录总数:2
+09-24 23:11:10.894 D/sourceDebug(20823): ︽目录页解析完成
+09-24 23:11:10.894 D/sourceDebug(20823): 
+09-24 23:11:10.894 D/sourceDebug(20823): ︾开始解析正文页
+09-24 23:11:17.399 D/sourceDebug(20823): 【诊断】1.提取后 未执行 (本次调试链路未执行该阶段)
+09-24 23:11:17.399 D/sourceDebug(20823): 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+09-24 23:11:17.400 D/sourceDebug(20823): 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+09-24 23:11:17.400 D/sourceDebug(20823): 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms
+09-24 23:11:33.237 D/sourceDebug(20823): 【诊断】1.提取后 未知错误 len=0,lines=0,imgs=0 (异常类型 IOException，消息默认不输出)
+09-24 23:11:33.238 D/sourceDebug(20823): 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+09-24 23:11:33.238 D/sourceDebug(20823): 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+09-24 23:11:33.239 D/sourceDebug(20823): 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms
+09-24 23:11:33.242 D/sourceDebug(20823): java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+09-24 23:11:33.242 D/sourceDebug(20823): 	at _COROUTINE._BOUNDARY._(CoroutineDebugging.kt:42)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.http.OkHttpUtilsKt.newCallResponse(OkHttpUtils.kt:37)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.http.OkHttpUtilsKt.newCallStrResponse(OkHttpUtils.kt:56)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.model.analyzeRule.AnalyzeUrl.executeStrRequest(AnalyzeUrl.kt:478)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.model.analyzeRule.AnalyzeUrl.getStrResponseAwait(AnalyzeUrl.kt:431)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.model.webBook.WebBook.getContentAwait(WebBook.kt:417)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.model.webBook.WebBook$getContent$1.invokeSuspend(WebBook.kt:375)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.coroutine.Coroutine$executeBlock$2.invokeSuspend(Coroutine.kt:236)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.coroutine.Coroutine$executeInternal$1.invokeSuspend(Coroutine.kt:263)
+09-24 23:11:33.242 D/sourceDebug(20823): Caused by: java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:230)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.connection.Exchange.readResponseHeaders(Exchange.kt:117)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.CallServerInterceptor.intercept(CallServerInterceptor.kt:97)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addNetworkInterceptor$1.intercept(OkHttpClient.kt:1398)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:34)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:101)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:85)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:74)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.http.DecompressInterceptor.intercept(DecompressInterceptor.kt:25)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addInterceptor$1.intercept(OkHttpClient.kt:1399)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at io.legado.app.help.http.OkHttpExceptionInterceptor.intercept(OkHttpExceptionInterceptor.kt:12)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:226)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:574)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at java.lang.Thread.run(Thread.java:1149)
+09-24 23:11:33.242 D/sourceDebug(20823): 	Suppressed: java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+09-24 23:11:33.242 D/sourceDebug(20823): 		... 25 more
+09-24 23:11:33.242 D/sourceDebug(20823): 	Caused by: java.io.EOFException: \n not found: limit=0 content=…
+09-24 23:11:33.242 D/sourceDebug(20823): 		at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:362)
+09-24 23:11:33.242 D/sourceDebug(20823): 		at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+09-24 23:11:33.242 D/sourceDebug(20823): 		at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+09-24 23:11:33.242 D/sourceDebug(20823): 		... 24 more
+09-24 23:11:33.242 D/sourceDebug(20823): 	Suppressed: java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+09-24 23:11:33.242 D/sourceDebug(20823): 		... 25 more
+09-24 23:11:33.242 D/sourceDebug(20823): 	Caused by: java.io.EOFException: \n not found: limit=0 content=…
+09-24 23:11:33.242 D/sourceDebug(20823): 		at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:362)
+09-24 23:11:33.242 D/sourceDebug(20823): 		at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+09-24 23:11:33.242 D/sourceDebug(20823): 		at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+09-24 23:11:33.242 D/sourceDebug(20823): 		... 24 more
+09-24 23:11:33.242 D/sourceDebug(20823): Caused by: java.io.EOFException: \n not found: limit=0 content=…
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:362)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+09-24 23:11:33.242 D/sourceDebug(20823): 	at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+09-24 23:11:33.242 D/sourceDebug(20823): 	... 24 more
+09-24 23:12:52.691 D/sourceDebug(20823): ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+09-24 23:12:52.692 D/sourceDebug(20823): ︾开始解析目录页
+09-24 23:12:52.717 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/toc.html
+09-24 23:12:52.718 D/sourceDebug(20823): <html><body><a class="chapter" href="/chapter.html">Chapter one</a><a class="chapter" href="/chapter2.html">Chapter two</a></body></html>
+09-24 23:12:52.719 D/sourceDebug(20823): ┌获取目录列表
+09-24 23:12:52.722 D/sourceDebug(20823): └列表大小:2
+09-24 23:12:52.723 D/sourceDebug(20823): ┌解析目录列表
+09-24 23:12:52.725 D/sourceDebug(20823): └目录列表解析完成
+09-24 23:12:52.726 D/sourceDebug(20823): ≡首章信息
+09-24 23:12:52.726 D/sourceDebug(20823): ◇章节名称:Chapter one
+09-24 23:12:52.727 D/sourceDebug(20823): ◇章节链接:/chapter.html
+09-24 23:12:52.728 D/sourceDebug(20823): ◇章节信息:
+09-24 23:12:52.728 D/sourceDebug(20823): ◇是否VIP:false
+09-24 23:12:52.729 D/sourceDebug(20823): ◇是否购买:false
+09-24 23:12:52.730 D/sourceDebug(20823): ◇目录总数:2
+09-24 23:12:52.732 D/sourceDebug(20823): ︽目录页解析完成
+09-24 23:12:52.732 D/sourceDebug(20823): 
+09-24 23:12:52.732 D/sourceDebug(20823): ︾开始解析正文页
+09-24 23:12:59.395 D/sourceDebug(20823): 【诊断】1.提取后 未执行 (本次调试链路未执行该阶段)
+09-24 23:12:59.397 D/sourceDebug(20823): 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+09-24 23:12:59.397 D/sourceDebug(20823): 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+09-24 23:12:59.397 D/sourceDebug(20823): 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms
+09-24 23:13:57.655 D/sourceDebug(20823): ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+09-24 23:13:57.656 D/sourceDebug(20823): ︾开始解析目录页
+09-24 23:14:57.667 D/sourceDebug(20823): java.io.InterruptedIOException: timeout
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:461)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:423)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:381)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:234)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:574)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at java.lang.Thread.run(Thread.java:1149)
+09-24 23:14:57.667 D/sourceDebug(20823): Caused by: java.net.SocketException: Socket closed
+09-24 23:14:57.667 D/sourceDebug(20823): 	at java.net.SocketInputStream.read(SocketInputStream.java:188)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at java.net.SocketInputStream.read(SocketInputStream.java:143)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okio.internal.DefaultSocket$SocketSource.read(DefaultSocket.kt:124)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okio.RealBufferedSource.indexOf(RealBufferedSource.kt:457)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:350)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.Exchange.readResponseHeaders(Exchange.kt:117)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.CallServerInterceptor.intercept(CallServerInterceptor.kt:97)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addNetworkInterceptor$1.intercept(OkHttpClient.kt:1398)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:34)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:101)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:85)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:74)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at io.legado.app.help.http.DecompressInterceptor.intercept(DecompressInterceptor.kt:25)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addInterceptor$1.intercept(OkHttpClient.kt:1399)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at io.legado.app.help.http.OkHttpExceptionInterceptor.intercept(OkHttpExceptionInterceptor.kt:12)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+09-24 23:14:57.667 D/sourceDebug(20823): 	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:226)
+09-24 23:14:57.667 D/sourceDebug(20823): 	... 4 more
+09-24 23:15:32.168 D/sourceDebug(20823): ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+09-24 23:15:32.169 D/sourceDebug(20823): ︾开始解析目录页
+09-24 23:16:08.872 D/sourceDebug(20823): ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+09-24 23:16:08.873 D/sourceDebug(20823): ︾开始解析目录页
+09-24 23:17:14.195 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/toc.html
+09-24 23:17:14.195 D/sourceDebug(20823): <html><body><a class="chapter" href="/chapter.html">Chapter one</a><a class="chapter" href="/chapter2.html">Chapter two</a></body></html>
+09-24 23:17:14.195 D/sourceDebug(20823): ┌获取目录列表
+09-24 23:17:14.197 D/sourceDebug(20823): └列表大小:2
+09-24 23:17:14.197 D/sourceDebug(20823): ┌解析目录列表
+09-24 23:17:14.198 D/sourceDebug(20823): └目录列表解析完成
+09-24 23:17:14.198 D/sourceDebug(20823): ≡首章信息
+09-24 23:17:14.198 D/sourceDebug(20823): ◇章节名称:Chapter one
+09-24 23:17:14.198 D/sourceDebug(20823): ◇章节链接:/chapter.html
+09-24 23:17:14.198 D/sourceDebug(20823): ◇章节信息:
+09-24 23:17:14.198 D/sourceDebug(20823): ◇是否VIP:false
+09-24 23:17:14.198 D/sourceDebug(20823): ◇是否购买:false
+09-24 23:17:14.198 D/sourceDebug(20823): ◇目录总数:2
+09-24 23:17:46.075 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/chapter.html
+09-24 23:17:46.075 D/sourceDebug(20823): <html><body><div id="chapter-content"><p>SYNTHETIC chapter one.</p><p>Second line.</p><img src="/image.png"></div></body></html>
+09-24 23:17:46.078 D/sourceDebug(20823): ┌获取章节名称
+09-24 23:17:46.078 D/sourceDebug(20823): └Chapter one
+09-24 23:17:46.078 D/sourceDebug(20823): ┌获取正文内容
+09-24 23:17:46.078 D/sourceDebug(20823): └
+09-24 23:17:46.078 D/sourceDebug(20823): 　　CHECK chapter one.
+09-24 23:17:46.078 D/sourceDebug(20823): 　　Second line.
+09-24 23:17:46.078 D/sourceDebug(20823): 　　<img src="http://127.0.0.1:8765/image.png">
+09-24 23:17:46.115 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/chapter2.html
+09-24 23:17:46.115 D/sourceDebug(20823): <html><body><div id="chapter-content"><p>SYNTHETIC chapter two.</p></div></body></html>
+09-24 23:17:46.125 D/sourceDebug(20823): ┌获取章节名称
+09-24 23:17:46.125 D/sourceDebug(20823): └Chapter two
+09-24 23:17:46.125 D/sourceDebug(20823): ┌获取正文内容
+09-24 23:17:46.125 D/sourceDebug(20823): └
+09-24 23:17:46.125 D/sourceDebug(20823): 　　CHECK chapter two.
+09-24 23:18:08.587 D/sourceDebug(20823): ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+09-24 23:18:08.588 D/sourceDebug(20823): ︾开始解析目录页
+09-24 23:18:08.604 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/toc.html
+09-24 23:18:08.605 D/sourceDebug(20823): <html><body><a class="chapter" href="/chapter.html">Chapter one</a><a class="chapter" href="/chapter2.html">Chapter two</a></body></html>
+09-24 23:18:08.605 D/sourceDebug(20823): ┌获取目录列表
+09-24 23:18:08.607 D/sourceDebug(20823): └列表大小:2
+09-24 23:18:08.608 D/sourceDebug(20823): ┌解析目录列表
+09-24 23:18:08.609 D/sourceDebug(20823): └目录列表解析完成
+09-24 23:18:08.609 D/sourceDebug(20823): ≡首章信息
+09-24 23:18:08.609 D/sourceDebug(20823): ◇章节名称:Chapter one
+09-24 23:18:08.609 D/sourceDebug(20823): ◇章节链接:/chapter.html
+09-24 23:18:08.610 D/sourceDebug(20823): ◇章节信息:
+09-24 23:18:08.610 D/sourceDebug(20823): ◇是否VIP:false
+09-24 23:18:08.610 D/sourceDebug(20823): ◇是否购买:false
+09-24 23:18:08.610 D/sourceDebug(20823): ◇目录总数:2
+09-24 23:18:08.612 D/sourceDebug(20823): ︽目录页解析完成
+09-24 23:18:08.613 D/sourceDebug(20823): 
+09-24 23:18:08.613 D/sourceDebug(20823): ︾开始解析正文页
+09-24 23:18:08.623 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/chapter.html
+09-24 23:18:08.623 D/sourceDebug(20823): <html><body><div id="chapter-content"><p>SYNTHETIC chapter one.</p><p>Second line.</p><img src="/image.png"></div></body></html>
+09-24 23:18:08.626 D/sourceDebug(20823): ┌获取章节名称
+09-24 23:18:08.626 D/sourceDebug(20823): └Chapter one
+09-24 23:18:08.626 D/sourceDebug(20823): ┌获取正文内容
+09-24 23:18:08.626 D/sourceDebug(20823): └
+09-24 23:18:08.626 D/sourceDebug(20823): 　　CHECK chapter one.
+09-24 23:18:08.626 D/sourceDebug(20823): 　　Second line.
+09-24 23:18:08.626 D/sourceDebug(20823): 　　<img src="http://127.0.0.1:8765/image.png">
+09-24 23:18:08.627 D/sourceDebug(20823): 【诊断】1.提取后 正常 len=107,lines=4,imgs=1 耗时1ms
+09-24 23:18:08.628 D/sourceDebug(20823): 【诊断】2.HTML格式化后 正常 len=85,lines=3,imgs=1
+09-24 23:18:08.628 D/sourceDebug(20823): 【诊断】3.书源替换后 正常 len=81,lines=3,imgs=1 耗时1ms
+09-24 23:18:08.628 D/sourceDebug(20823): 【诊断】4.阅读处理后 未执行 (书源调试链路止于 BookContent，未进入阅读处理)
+09-24 23:18:08.628 D/sourceDebug(20823): ︽正文页解析完成
+09-24 23:18:11.471 D/sourceDebug(20823): ≡获取成功:http://127.0.0.1:8765/chapter.html
+09-24 23:18:11.471 D/sourceDebug(20823): <html><body><div id="chapter-content"><p>SYNTHETIC chapter one.</p><p>Second line.</p><img src="/image.png"></div></body></html>
+09-24 23:18:11.474 D/sourceDebug(20823): ┌获取章节名称
+09-24 23:18:11.474 D/sourceDebug(20823): └Chapter one
+09-24 23:18:11.474 D/sourceDebug(20823): ┌获取正文内容
+09-24 23:18:11.474 D/sourceDebug(20823): └
+09-24 23:18:11.474 D/sourceDebug(20823): 　　CHECK chapter one.
+09-24 23:18:11.474 D/sourceDebug(20823): 　　Second line.
+09-24 23:18:11.474 D/sourceDebug(20823): 　　<img src="http://127.0.0.1:8765/image.png">

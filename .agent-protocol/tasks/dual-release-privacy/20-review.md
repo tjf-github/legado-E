@@ -1,155 +1,168 @@
 <!-- agent-protocol-binding
-round_id: reviewer-r004
-task_digest: 7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216
-snapshot_digest: 40f10aa52597fef3c6e53c6485da0a21ce784f3cbf61b42e9a963bccea4cdba0
---># dual-release-privacy — C+D 阶段独立复审（第 2 轮，reviewer=claude 只读，route_revision 6 / standard）
+round_id: reviewer-r005
+task_digest: 1b5d59a0a4d5ec701f9fb35e56a807318dfe4bf9f2c314230c0b08a014dfdb52
+snapshot_digest: 391b6a47e7ee60a48ac1aa113e0694061b18821dc46bda3d2002828777c1f019
+--># dual-release-privacy — 独立复审报告（reviewer=claude，route_revision 7，round reviewer-r004）
 
 ## 0. 结论
 
-**通过（有条件）——未发现足以否决本次实现的业务阻塞项；但“C+D 已完成”在当前冻结快照上尚未成立，必须在 `30-acceptance.md` 闭合。**
+**通过** —— 就本轮唯一业务改动（`.github/workflows/test.yml` 的四处 job 级 `if` 硬禁用）而言，**未发现缺陷**：GitHub-only 收敛成立，双身份 matrix、`prerelease` 与"缺一即失败"守卫完好，四个外部 job 无论 Secrets 是否存在都恒不运行。
 
-三条要点：
+但**不构成"可发布"**：报告 §2.3 把"push main 必然走 beta 通道"当成已确定结论写出，而该结论实际依赖两个未闭合的触发条件（F1、F2）。这两项不是本 diff 引入的缺陷，是既有 workflow 行为；它们必须在 controller 推送 `main` 之前被显式核对，否则会出现"要么发布不完整、要么违授权建正式版"的两种具体失败。**F1/F2 未闭合前，本轮结论只到"diff 正确"，不到"发布可执行"。**
 
-1. **代码层**：我只读核对了白名单内全部业务文件与协议证据，冻结契约 1–8 在代码与 CI 层面均已落地，未发现身份压平、身份来自设置、`.releaseS` 残留、越界改动或新增安全面；第 1 轮 F-01（Gitee 通道依赖 `/releases/latest`）的修复我独立读代码确认成立。
-2. **证据层（本次最主要的发现）**：`10-execution.md` §4 的 D1/D2/D4/D5/D7 结果与**当前冻结树不同源**。硬证据：当前 `AppReleaseInfoTest.kt` 有 **10** 个 `@Test`（第 70/77/92/104/129/149/178/214/234/262 行），而 §1 写“新增 3 个契约测试”（6+3=9）、§4 D1 记 `tests=9`。§9 F-01 新增的第 10 个测试（`giteeChannelSelectionFollowsReleaseMetadataNotListOrder`，第 262–298 行）是 **F-01 修复的产物**，而 D1/D2 的数字都早于它 ⇒ **所有门禁输出都产生于 F-01 功能改动之前**，修复后的树在可读证据里没有任何一方的执行结果。
-3. **能力层**：本次调用我没有命令执行工具（只有 Read/Grep/Glob，与 `15-reviewer-raw.md` 记录的 r003 调用参数 `--allowedTools Read,Grep,Glob` 相同），因此 `06-review-commands.json` 冻结的 4 条命令在我这一侧**全部 NOT RUN**；第 1 轮同样如此。也就是说，本任务至今**没有任何一方在冻结树上留下过独立执行的测试输出**（`18-review-probes.md` 只有一条 `git diff --check -- .github/workflows/test.yml`，退出码 0、输出为空，且 diff 类命令看不到 untracked 文件）。`10-execution.md` §4 的 `tests=258 / failures=0`、lint、两个 APK 的包名/版本/证书摘要、D6 负例，**全部仍是 executor 自述，我一项都没有复现**。
-
-因此若 acceptor 无法在冻结树上产出**修复后**的门禁原始输出，本任务不得标 `accepted`；这一限制必须按 standard 档的保证降级如实写进 `30-acceptance.md`。
+无阻塞本轮 diff 的问题；F3–F7 为证据/一致性级别，不影响通过对本 diff 的判定。
 
 ---
 
-## 1. 授权边界与我实际读到的东西
+## 1. 我实际执行的核对动作与输出
 
-- 唯一权威入口取 `00-task.md` 顶部“2026-09-20 DSH + Claude 接管任务书”（route_revision 6，standard 档，DSH=controller+executor+acceptor，Claude=只读 reviewer）。我按该节“C+D 读写白名单”取读，未按下方已废止的旧节取读，也**没有**读 `PROJECT.md`/`CURRENT.md`（未列入 reviewer 可读白名单），因此构建/测试命令一律以 `06-review-commands.json` 冻结数组为准。
-- 读到的协议证据：`00-task.md`、`05-routing.md`、`06-review-commands.json`、`10-execution.md`、`14-reviewer-prompt.md`、`15-reviewer-raw.md`、`18-review-probes.md`、`20-review.md`、`30-acceptance.md`、`40-window-migration-plan.md`、`rounds/controller-ab-report-10-execution.md`、`发布推送流程书.md`。
-- 读到的业务文件（逐字全读）：`ReleaseIdentity.kt`、`AppReleaseInfo.kt`、`AppUpdateGitHub.kt`、`AppUpdateGitee.kt`、`AppConst.kt`、`app/build.gradle`、`.github/workflows/test.yml`、`app/src/main/AndroidManifest.xml`、`app/src/main/res/values/strings.xml`（定向）、`values-zh/strings.xml`（定向）、`AppReleaseInfoTest.kt`。
-- **未**做目录遍历、未做跨目录 Grep；所有 Grep 都限定在单个白名单文件路径上。
+**能力边界（先说清楚）**：本实例只提供 `Read` / `Grep` / `Glob` 类只读工具，**没有 Bash**。因此 `06-review-commands.json` 冻结的四条命令（`phase-cd-diff-check` / `phase-cd-business-diff` / `phase-cd-targeted-test` / `phase-cd-status`）**我一条都没跑**，全部 NOT RUN（详见 §4）。以下结论全部来自逐行阅读白名单文件与两次 Grep。
 
-`20-review.md` 当前只有 3 行（“SUPERSEDED / 上一轮证据已归档到 `rounds/reviewer-r003`”）；上一轮的完整原文我从 `15-reviewer-raw.md` 的 `result` 字段读到（这正是 r003 的第 1 轮结论），F-01…F-07 的编号与处置在 `10-execution.md` §9 对得上。
+### 1.1 读取（全部在白名单内）
 
----
+- `00-task.md`、`05-routing.md`、`06-review-commands.json`、`10-execution.md`、`14-reviewer-prompt.md`、`18-review-probes.md`
+- `.github/workflows/test.yml`（全文 537 行，逐行读完）
+- 未读 `PROJECT.md`（任务书 line 108 的 reviewer 白名单未列入）、未读 `发布推送流程书.md`、未读 `app/**`、未读 `updateLog.md`、未读 `.github/` 下其它 workflow 文件。
 
-## 2. 我实际执行的核对动作与输出
+### 1.2 两次 Grep（目标文件均在白名单内）
 
-### 2.1 独立算术与交叉一致性（我自己的推导，不采信报告）
+第一次，结构化提取 job 键 / job 级 `if` / `needs` / 授权注释：
 
-- **资产名 ↔ 版本自洽**：`AppReleaseInfo.kt:16` `name.split("_").getOrNull(2)?.dropLast(2)`。CI `VERSIONL=3.%y.%m%d%H%M`（`test.yml:50`）→ `legado_app_3.<yy>.<MMddHHMM>_<identity>.apk` → split[2]=`3.2609201623` → dropLast(2)=`3.26092016`=`VERSION`=`defaultConfig.versionName`（`build.gradle:21,73`）✓ 客户端比较基准等同安装包 versionName ✓。
-- **历史命名兼容**：`发布推送流程书.md:110` 记载旧资产形如 `legado_测试版_3.YY.MMDDHHMM_release.apk`。按同一 split 规则，split[2] 仍是 VERSIONL ✓ 版本解析兼容；`fromAssetName` 对该名命中 `release` → PRIVATE ✓，旧 `_releaseS` 名先命中 `releaseS` → LEGACY_RELEASES ✓（判定顺序正确，无子串互吞）。
-- **`AppConst.appInfo` 的可达性**：`build.gradle:112-122` debug 只加 `.debug`、`:101-106` release 只加 `.release`，不存在双后缀变体 ⇒ `ReleaseIdentity.kt:36` 的 `"$PRIVATE_PACKAGE.debug"` 恒不可达（与 §7 第 5 条 F-07 的披露一致），而 `"$NORMAL_PACKAGE.debug"` 可达且必要 ✓。
-- **本地 versionCode/versionName 与 D7 自述吻合**：本地兜底 `yy*1000000+MM*10000+dd*100+HH` = 26*1e6+9*1e4+20*100+16 = **26092016**、`3.26.092016`，与 §4 D7 记录的 `versionCode=26092016 / versionName=3.26.092016` 一致 ✓（这只能说明 D7 的数值**自洽**，不能证明它被跑过）。
-- **报告 §7 第 6 条的自我更正成立**：`%y.%m%d%H` 与 `yy.MMddHH` 字段、宽度、补零完全相同，渲染结果一致 ✓（原“本地与 CI 不同”确系事实错误，已更正）。
-- **`AppVariant.of` 不会抛**：`AppReleaseInfo.kt:43-44` 的 `entries.first{}` 覆盖 8 个组合（`:27-37`），不存在取不到值的输入 ✓。
-- **§1 文件计数自洽**：会话起始 git status 的业务改动正好 10 个文件（8 个已跟踪 + `ReleaseIdentity.kt` + 测试目录），与 §2 表格（9 行/10 文件）及 §1 的“10 个（新增 2 个）”一致 ✓。
+```text
+29:  prepare:            31:    if: ${{ !startsWith(github.event.head_commit.message, 'Merge pull request') }}
+144:  build:             145:    needs: prepare
+241:  prerelease:        242:    needs: [ prepare, build ]
+                        243:    if: github.event_name != 'pull_request' && github.repository == 'tjf-github/legado-E'
+312:  lanzou:            313:    # 用户 2026-09-21 授权…   314:    if: ${{ false }}  # github-only   315:    needs: [ prepare, build ]   316:    # 原自动触发条件…
+340:  telegram:          341:    # …                       342:    if: ${{ false }}  # github-only   343:    needs: [prepare, build]     344:    # 原自动触发条件…
+382:  gitee:             383:    # …                       384:    if: ${{ false }}  # github-only   385:    needs: [prepare, build]     386:    # 原自动触发条件…
+497:  update-storage:    498:    # …                       499:    if: ${{ false }}  # github-only   500:    needs: [prepare, build]     501:    # 原自动触发条件…
+```
 
-### 2.2 单文件定向检索（含结果）
+**读出的硬事实**：job 恰为 7 个（`prepare`/`build`/`prerelease`/`lanzou`/`telegram`/`gitee`/`update-storage`），四个外部 job 各**有且仅有一条** job 级 `if`，值为布尔字面量 `false`；`# github-only` 前有两个空格，是合法 YAML 注释（plain scalar 值为 `${{ false }}`）；四个 job 的 `needs` 未变；旧条件只以注释形式存在（L316/344/386/501），无生效残留。
 
-- `test.yml` 匹配 `releaseS|releaseA|sed |app_name|applicationIdSuffix|RELEASE_IDENTITY|legado\.app\.`：**`releaseS`/`releaseA` 零命中**；无 `app_name` 占位符写入、无 `sed` 改包名（唯一疑似命中 446 行是 “refused ” 的子串误报）；`RELEASE_IDENTITY` 只出现在 187 行的构建参数；`legado.app.` 静态字面量只出现在 498 行 update-storage 的 artifact 名 ✓。
-- `AppReleaseInfo.kt` 匹配 `BETA_RELEASES|OFFICIAL|UNKNOWN|releaseS|releaseA`：`BETA_RELEASES` 已彻底不存在，只剩新枚举名与 32 行注释 ✓。
-- `AppConst.kt` 匹配 `BETA_RELEASES|OFFICIAL|UNKNOWN|releaseS|releaseA|contains(`：只剩 `OFFICIAL_SIGNATURE`（30 行）、`isOfficial`（91 行）、`UNKNOWN_OFFICIAL`（105 行），**旧的 `packageName.contains("releaseA"/"releaseS")` 猜身份写法已不存在** ✓。
-- `AppUpdateGitee.kt` 同上：无残留旧身份常量，`appVariant` 只出现在 28/30/66 行的新逻辑 ✓。
-- `AppReleaseInfoTest.kt` 匹配 `@Test`：**10 处**（70/77/92/104/129/149/178/214/234/262）——这是 F-01 的核心硬证据。
-- `strings.xml`：`app_name_private` 已同时存在于 `values/strings.xml:8`（`Legado·Privacy`）与 `values-zh/strings.xml:7`（`阅读·隐私`）✓；`app_name_a`（`values:5`、`zh:4`）与 `app_name_s`（`values:6`、`zh:5`）仍在 ✓（与 F-07 一致）；`beta_releaseS_version` 只作为**字符串资源**存在于 `values/strings.xml:1257`（`translatable="false"`，文案“正式版”），`values-zh` 1246–1249 行另有 `default_version=当前 / official_version=正式版 / beta_release_version=测试版 / beta_releaseA_version=共存版` ✓。
+第二次，扫描外部写入面（`curl|git push|git clone|link-E|gitee|lanzou|telegram|S_GITHUB|GH_TOKEN|workflow_dispatch`，忽略大小写）：命中集中在 L21（`workflow_dispatch` 入口）、L36–38/L54–64（`prepare` 只写 `*_GITHUB_OUTPUT`）、L289（`prerelease` 的 `github.token`）、L312–338 / L340–380 / L382–495 / L497–537（四个已禁用 job 内部）。**在 `prepare`/`build`/`prerelease` 三个启用 job 内，没有任何 `curl`、`git push`、`git clone` 或第三方发布目的地**；GitHub 侧只用到 `softprops/action-gh-release@v2`（L271、L301）、`richardsimko/update-tag@v1`（L293）、`gh release delete beta -y`（L286），全部指向 GitHub 自身。
 
-### 2.3 边界/安全抽查
+### 1.3 对 executor 16 项断言的独立复现结果
 
-- `AndroidManifest.xml:35` `android:label="${app_name}"` 确实使用占位符 ⇒ `build.gradle:103,105,116` 的 `manifestPlaceholders` 生效路径成立；`:538,546` 两个 provider 都用 `${applicationId}` ⇒ 双身份 authorities 天然唯一；`:27-29,541-542` 的固定权限 `io.legado.READ_WRITE`（protectionLevel normal）本轮未被触碰（会话起始 git status 无该文件），与 §7 第 3 条一致。
-- 越界检查：参见 §4 的“未发现”。
+`10-execution.md` §2.2 的 16 项 PASS 中，**15 项我能从工作树逐行独立复现**（不依赖其脚本）：
 
----
+| 断言 | 我的独立证据 |
+| --- | --- |
+| lanzou/telegram/gitee/update-storage 硬禁用 | L314 / L342 / L384 / L499，各仅一条 `if: ${{ false }}` |
+| 无启用 job 依赖被禁用 job | L145 `build.needs=prepare`；L242 `prerelease.needs=[prepare,build]`；无人 needs 四个禁用 job |
+| `prerelease` 保留且守卫未变 | L241–243，guard 仍要求 `github.repository == 'tjf-github/legado-E'` |
+| 缺一即失败守卫在位 | L260–266，`for identity in normal private; do if ! ls legado_app_*_$identity.apk … exit 1` |
+| 双通道且互补 | L269–280（`updateLog_updated == 'yes'` → official）/ L282–310（`!= 'yes'` → beta），两者 `files: apk/*.apk` + `fail_on_unmatched_files: true` |
+| matrix 仅 normal+private | L142 字面量 `{"product":["app"],"type":["normal","private"]}` |
+| 按 matrix 注入身份 | L187 `-PRELEASE_IDENTITY="${{ env.type }}"` |
+| 禁用 job 保留 secret 引用 | L320–325、L372–373、L402、L528 |
+| 恰 4 处 marker | grep 实测 4 处 `# github-only` / 4 处 `if: ${{ false }}` |
+| 旧条件已注释不再生效 | L316/344/386/501 全为注释行 |
 
-## 3. 发现
+**唯一未复现的是第 1 项（YAML 解析器层面）**：我没有运行 PyYAML/actionlint。我给出的等价只读证据是"7 个 job 各只有一条 `if`，且我通读全文未见任何重复映射键"，强度略低于真解析。
 
-### F-01（中｜证据缺口，收口前必须处理）：§4 门禁表与冻结树不同源，F-01 修复后没有任何执行证据
+### 1.4 diff 形态的自洽性核对（推断，非 git diff 实跑）
 
-- 位置：`10-execution.md:30`（“新增 3 个契约测试”）、`:52`（D1 `tests=9`）、`:53`（D2 `tests=258`）、`:55-56`（D4/D5 构建）、`:58`（D7）；对照 `AppReleaseInfoTest.kt:262-298`（第 10 个 `@Test`）与 `10-execution.md:107`（F-01 已修 + 新增该测试）。
-- 具体失败场景：acceptor 若原样继承 §4，会以“9 项定向测试全绿、258 项全量全绿、双 release 构建成功”为 C+D 完成判据；而这些数字对应的是 **F-01 修复之前**的树。冻结树上的真实状态是：10 项定向测试、全量应为 259 项、`AppUpdateGitee.getLatestRelease` 与 `AppReleaseInfo.firstReleaseOfChannel` 属于**修复后未被任何一方执行过**的生产改动（功能改动 ⇒ 按 `MODES.md` 必须重跑门禁，§9 也只做了“重新拉起 reviewer”）。
-- 建议：`30-acceptance.md` 在冻结树上重跑并以原始输出落盘（定向 `AppReleaseInfoTest` 应见 **10** 项、全量单测、`:app:compileAppDebugKotlin`、`:app:lintAppDebug`、normal/private 两次 release 构建），并把 §4 的 D1/D2 数字明确改标为“F-01 修复前”或替换为新记录；不得两者混用。
+按工作树实际结构，每个 job 的变化应为"顶部新增 2 行（授权注释 + `if: ${{ false }}`）+ 原 `if:` 行替换为 1 行旧条件注释"，即每 job **+3 / −1**，四处合计 **+12 / −4**。这与 `10-execution.md` L21 声明的 `git diff --numstat = 12 4` 完全吻合。**推论**：若该 numstat 属实，则四处 job 的 `if` 改动恰好解释了全部增删，`prepare`(L31)、`prerelease`(L243) 的 `if`、`build`、矩阵、守卫、Secrets 引用等其余行确实一字节未动。
 
-### F-02（中｜证据缺口 + 表述不当）：`:app:compileAppDebugKotlin` 缺失，且 §9 用过去时把闭环指向一个尚无该内容的文件
+⚠️ 这是**自洽性推断**：`git diff --numstat` 本身我无法独立复算（无 Bash）。若该数字不实，本推论不成立。
 
-- 位置：`10-execution.md:109`（F-03 处置：“**已补**：acceptor 在冻结树上显式重跑该门禁并记录原始输出（见 `30-acceptance.md`）”）；§4 表（49–57 行）**没有**该门禁行；§6 NOT RUN 清单（76–80 行）也**没有**把它列为 NOT RUN；`30-acceptance.md` 当前正文仍是旧映射的 SUPERSEDED 验收（`:1-3`、`:9`、`:11`），其中 11 行的 `BUILD SUCCESSFUL in 4m 54s` 与 `AppReleaseInfoTest 7/7` 是**废止映射的旧代码**上的运行，不能挪用到本树。
-- 具体失败场景：`00-task.md:28`（约束 6）明确要求“运行：`git diff --check`、定向 JVM、`:app:compileAppDebugKotlin`、全量、lint、两次 release 构建”，并要求未运行项写 `NOT RUN`。该项现在是“既没结果、也没 NOT RUN、还宣称已闭环”，是典型的“该写而没写”。缓解事实：D2 的 `:app:testAppDebugUnitTest` 会编译 debug 变体主源码，故“白名单外是否残留旧 `AppVariant.OFFICIAL/BETA_RELEASES` 引用”这一风险在 D2 通过的前提下已被传递覆盖（但 D2 本身也是修复前的自述）。
-- 建议：acceptor 在 `30-acceptance.md` 写原始命令、退出码与实际输出后，F-01/F-02 一并闭合；若无法运行，必须写 `NOT RUN` 并据此降级结论。
+### 1.5 签名材料外泄面（安全项，我实际核对过）
 
-### F-03（中低｜未核对假设）：三个决定行为的白名单外输入无法核对
-
-- 位置：`ReleaseIdentity.kt:49-53`（依赖设置项键名）、`AppUpdateGitHub.kt:29` / `AppUpdateGitee.kt:29`（依赖 `AppConfig.updateToVariant` 的类型与取值）、`AppConst.kt:69-72`（依赖包名集合）。
-- 具体失败场景：若 `res/values/arrays.xml` 的 `default_app_variant_value` 的 entryValues **不是** `default_version/official_version/beta_release_version/beta_releaseA_version/beta_releaseS_version`（例如实际是索引或别的键），则 `betaChannelOfSetting` 全部返回 `null` ⇒ 用户在“检查更新查找版本”里选“测试版/正式版”**静默无效**，回退到安装包默认通道（本机 release 证书非官方/beta 签名 ⇒ 默认正式通道，见 §7 第 4 条）。本轮在无 diff、无网络、无命令的前提下**无法核实**；`res/values/arrays.xml`、`res/xml/pref_config_other.xml`、`AppConfig.kt` 均在白名单外，我按边界没有读。
-- 严重度限定的理由（不是阻塞项）：最坏后果是“通道退回默认”，**永不换身份**（`fromPackageName` 为白名单 fail-closed；未命中返回 `null` 而非猜测），属 fail-safe。
-- 建议：E 阶段真机复核一次设置项与实际通道的对应关系；或由 controller 单独授权后把这三个文件纳入一次性核对。
-
-### F-04（低｜测试覆盖不对称）：Gitee 侧只断言“可区分”，不像 GitHub 侧那样断言“精确命中”
-
-- 位置：`AppReleaseInfoTest.kt:130-147` vs `:105-127`。GitHub 侧有 `pickLikeCurrentConsumer`（`:63-68`）真跑“按 `checkVariant` 过滤”，Gitee 侧只断言 `assets[0].appVariant != assets[1].appVariant`。
-- 具体失败场景：若将来 Gitee 的资产解析与 GitHub 分叉（例如给 `GiteeAsset.assetToAppReleaseInfo` 单独加分支），`giteeSelectionMustBeIdentityExactAndOrderIndependent` 仍会绿，而真实消费端可能取错资产。当前两处解析共用 `ReleaseIdentity.fromAssetName` + `AppVariant.of`，故实际风险低。
-- 建议：把 Gitee 侧改成与 GitHub 同形（对每个 `checkVariant` 断言 `pickLikeCurrentConsumer` 命中的 `name`），一行级改动即可消除不对称。
-
-### F-05（低｜健壮性）：Gitee 列表固定 `per_page=5` 且无分页
-
-- 位置：`AppUpdateGitee.kt:37-38`、`:53`。F-01 修复后 beta 与正式通道都用这一页。
-- 具体失败场景：Gitee 的正式 release（tag=版本号）只增不删，beta release 每次 beta 发布才重建。若某段时间连续出现 ≥5 次“改了 updateLog 的正式发布”而中间没有 beta 发布，beta release 落到第 6 条之后 ⇒ beta 通道用户拿到“已是最新版本”，尽管其 APK 仍在仓库里。概率低但机制真实。
-- 建议：`per_page=30`（或页面翻到底）即可；或在 `30-acceptance.md` 记为“已知限制”。
-
-### F-06（低｜简化/同步风险）：同一条契约规则在 GitHub/Gitee 两处复制
-
-- 位置：`AppUpdateGitHub.kt:26-31` 与 `AppUpdateGitee.kt:26-31`（连注释都相同）。
-- 风险场景：A/B 阶段暴露的正是“两个消费端漂移”（Gitee 独有身份锁）。现在两处逐字一致，但没有任何测试绑定它们；下次改动只改一处就会静默分叉。
-- 建议：抽一个 `fun installedCheckVariant(): AppVariant`（放 `ReleaseIdentity.kt` 或更新模块内）供两处调用；属纯收敛，不新增抽象层。
-
-### F-07（低｜死代码/空操作，F-07 原项已披露，我独立确认并补一条）
-
-- `AppReleaseInfo.kt:127`：`GiteeAsset` 生成的 `AppReleaseInfo.createdAt` 恒为 `0`，因此 `AppUpdateGitee.kt:55` 的 `sortedByDescending { it.createdAt }` 对 Gitee **是空操作**，实际顺序 = API 返回顺序。当前每个 Gitee release 只会上传同一批次的新命名资产，没有可错选的混合资产，故不构成缺陷；但“已按创建时间排序”这个隐含保证不成立，建议删掉该行或改注释说明。
-- `ReleaseIdentity.kt:36` `"$PRIVATE_PACKAGE.debug"` 不可达（我按 `build.gradle:101-122` 独立确认）；`values:5-6` / `zh:4-5` 的 `app_name_a`/`app_name_s` 仍在；`-PRELEASE_IDENTITY=private` 对 **debug 变体无效果**（debug 恒为 `app_name` + `.tjf.debug`，即 NORMAL 身份）——若有人指望用 debug 包验证 private 身份，会得到错误的身份预期。
-- 建议：白名单放开后统一清理；本条不阻塞。
-
-### F-08（信息｜已披露残留，我确认为事实但不能核对“旧值”）
-
-- `test.yml:498`（artifact `legado.app.private`）+ `:524`（`cp ./apk-private/*.apk link-E-repo/sigma/leagado_Sigma_正式版.apk`）：我可以确认**现在**上传到 link-E 的是 `.release` 包名的 private APK，而目标文件名不变。**旧 job 取的是哪一支我无法核实**（无 diff），因此“该文件的包名身份是否已从 `.releaseS` 变为 `.release`”只能按 §9 F-02 的“用户已裁决、F 阶段显性核对”处理 —— 我同意这一处置，并建议把它写成 F 阶段的显式契约检查项，而不是隐性变化。
-- `10-execution.md:87`（§7 第 4 条）：本机 release 证书 `bea423a4…` 既不等于 `OFFICIAL_SIGNATURE`（`AppConst.kt:30-31`）也不等于 `BETA_SIGNATURE`（`:32-33`）⇒ 本机/自签 release 默认真走**正式通道**（`AppConst.kt:91-96`）。结合 `发布推送流程书.md:12-13` 记载的日常发布路径是 **beta 预发布**：若用户的设置是“当前”，应用内检查更新会读 `/releases/latest`，在两次正式发布之间只会得到“已是最新版本”。我无法用 diff 证明“判定逻辑与改动前一致”（§7 第 4 条的主张），故列为 **E 阶段必核项**：先记录真机已装 `.release` 的证书摘要与设置项，再判断默认通道与 beta 标签的关系。
-
-### F-09（信息｜探针覆盖有限）
-
-- `18-review-probes.md:11-19` 只记录了一条 `git diff --check -- .github/workflows/test.yml`（退出码 0、耗时 0.14s、正文为空），且 `06-review-commands.json:13-18` 的 `phase-cd-business-diff`、`:20-25` 的 `phase-cd-targeted-test`、`:27-32` 的 `phase-cd-status` 都没有任何探针输出。唯一含“测试是否转绿”信息的通道因此完全依赖 executor 自述。
-- 另：该探针与 F-04（旧编号）指出的问题同源 —— `git diff` 看不到 untracked 的 `ReleaseIdentity.kt` 与整个测试目录，而这两个文件正是本次改动的主体与唯一回归保护。
+`build` job 的 `Release Apk Sign` 步骤（L169–178）把 keystore 与口令写入 `$GITHUB_WORKSPACE/app/legado.jks` 与 `gradle.properties`。我核对了本文件内的全部 `upload-artifact`（L209/L228/L235）与 release `files:`（L279/L309）路径，只有 `apk/*.apk` 与 `mapping/*.txt`/`missing_rules.txt`，**没有任何上传路径覆盖 keystore 或 gradle.properties**。→ 未发现凭据外泄路径。
 
 ---
 
-## 4. 已核对但未发现问题的方面（按任务书约束逐条）
+## 2. 发现
 
-- **约束 1（Gradle fail-closed）**：`build.gradle:39-43` —— 未指定默认 `private`、非 `normal|private` 立即抛 `GradleException`（第 41 行）；`test.yml` 内无 `sed` 改包名；187 行用 `-PRELEASE_IDENTITY="${{ env.type }}"` 注入。**通过**。
-- **约束 2（显示名与包名分离、共享版本/源码/签名）**：`build.gradle:101-106` 只改 `applicationIdSuffix` 与 `app_name` 占位符；`defaultConfig.applicationId=io.legado.app.tjf`（`:69`）、版本（`:72-73`）、单一 `signingConfigs.myConfig`（`:54-67`）均未按身份分叉；`AndroidManifest.xml:35` 使用占位符；`app_name_private` 两份 strings 都有。**通过**。
-- **约束 3（两轴分离 + 历史兼容）**：`ReleaseIdentity.kt:14-18,61-67`、`AppReleaseInfo.kt:25-45`；`.releaseS/.releaseA` 只映射 `LEGACY_RELEASES`，与 NORMAL/PRIVATE 均不相等；`firstReleaseOfChannel`（`:82-83`）按 release 元数据选通道而非列表顺序。**通过**（F-01 修复我逐行读过：`AppUpdateGitee.kt:34-56` 两条通道统一取列表、选不到即抛“已是最新版本”，不再可能拿另一支静默判最新）。
-- **约束 4（资产层精确选择）**：`AppUpdateGitHub.kt:62` / `AppUpdateGitee.kt:66` 均为 `it.appVariant == checkVariant` 精确相等；`AppReleaseInfo.kt:99,117` 与 `AppUpdate*.checkVariant`（`:26-31`）同源。**通过**（覆盖不对称见 F-04）。
-- **约束 5（CI 与下游迁移）**：`test.yml:142` 矩阵恒为 `normal/private`；`:187` 注入身份；`:191-193` 资产名 `legado_app_<VERSIONL>_<identity>.apk`；`:230` artifact `legado.${{ env.product }}.${{ env.type }}`（product 为静态 `app`，与 `:498` 的 `legado.app.private` 一致）；`:261-266` 缺任一身份即失败（该守卫在正式与 beta 两条路径上都先于发布执行）；`:353-356` telegram 改用 `*_private.apk`；`:387-391` gitee 直传已定名资产；`:498` update-storage 取 private。`releaseS`/`releaseA` 在 `test.yml` 内**零命中**。**通过**。
-- **约束 6（A/B 红测转绿 + 门禁）**：转绿在**文件层**可确认（10 个测试 + 新实现），但门禁证据不同源 —— 见 **F-01/F-02**。
-- **约束 7（包名/版本/证书摘要）**：§4 D7 的记录口径正确（只记证书 SHA-256、不输出密钥内容），数值自洽（见 §2.1），但**未被我复现**。口径**通过**，数值**未验证**。
-- **约束 8（保留用户既有改动、AI 封存）**：会话起始 git status 的业务改动恰好等于 C+D 业务写白名单（8 个已跟踪 + 2 个新增），业务 diff 不含 AI 源码/设置；`AndroidManifest.xml` 未在改动列表内。`维护计划书`、AI 任务路由、`bookshelf.json`、`.claude/` 属用户既有/他任务（AI 路由差异为 EOF 换行，A/B 报告第 20 行已说明），本任务未吸收。**通过（就 diff 路径列表而言；逐字 diff 我无法生成）**。
-- **安全面（未发现新增问题）**：`test.yml` 新增/改动片段只内联 `${{ env.type }}`/`${{ env.VERSIONL }}`（来自 `:142` 的静态字面量矩阵）与固定字面量 `normal private`，未把 `github.event.*` 之类不可信输入带进 `run:`；无新增路径拼接或文件系统操作（`fromAssetName`/`fromPackageName` 是纯字符串比较）；无 SQL/WebView/权限放大；权限 `io.legado.READ_WRITE` 未被本轮触碰（真机共存仍是 E 的门槛，与 §7 第 3 条一致）；未读取/输出密钥内容。
-- **越界（未发现）**：业务改动全部落在 `00-task.md:17` 的 C+D 业务写白名单内；`ReleaseIdentity.kt` 是纯模型文件（无 Android 依赖），符合“如确需纯模型拆分，只额外允许新增”的条件；未发现白名单外文件被改；未发现 `.claude/`、`bookshelf.json`、AI 任务或《维护计划书》内容被本任务吸收。
+### F1 — 【中·发布前必须闭合】报告把"必然走 beta"写成结论，但该分支由 `git diff --name-only HEAD~1 HEAD` 是否命中 `updateLog.md` 决定
+
+- 位置：`.github/workflows/test.yml:82`（`UPDATE_LOG_CHANGED=$(echo "$CHANGED_FILES" | grep -q "app/src/main/assets/updateLog.md" …)`）、`:87-88`（`updated=yes`）、`:270`（`if: needs.prepare.outputs.updateLog_updated == 'yes'` → `prerelease: false`）；主张出处 `10-execution.md:102`。
+- 报告原文（`10-execution.md:102`）："本轮**没有**改 `updateLog.md`（任务书禁止），所以 `push main` 时 `updateLog_updated != 'yes'` 分支成立 → 走 beta"。这是**结论式表述**，不是条件式表述。
+- **具体失败场景**：controller 按授权把开发分支合并到 `main` 并推送。`prepare` 的检出是合并提交，`HEAD~1` 是合并提交的第一父（即 `main` 原头），因此 `HEAD~1..HEAD` 等于**整条开发分支的累计 diff**。只要该区间内**任一历史提交**（不是本轮、不是 executor 的提交）触碰过 `app/src/main/assets/updateLog.md`，`UPDATE_LOG_CHANGED=yes`、`CRONET_JSON_CHANGED=no` → `updated=yes` → L270 走 `Publish Official Release`，`prerelease: false`，**创建正式版 Release**。这与 `00-task.md:11` 的"不得创建正式版"直接冲突，且发生在 controller 已授权推 `main` 之后、不可回滚到"未发布"状态（`softprops/action-gh-release` 创建的正式 Release 需人工删除）。
+- **为什么 executor 覆盖不到**：这条路径取决于开发分支与 `main` 的**历史差异**，不是工作树状态；executor 报告 §5 的六条残留里没有任何一条提到它，`§2.3` 反而把它当既定事实。这正是"该写条件却写成了结论"。
+- **建议（推送前，controller 执行）**：
+  1. `git diff --name-only $(git merge-base origin/main HEAD)..HEAD -- app/src/main/assets/updateLog.md` —— 输出为空才可安全推送；
+  2. 推送后立刻核对新建的是 `beta` 预发布还是正式 tag；
+  3. 若确实命中，需先用单独授权处理（例如改走非 `HEAD~1` 的判定），不得在本轮授权下直接推。
+
+### F2 — 【中·发布前必须闭合】若以 GitHub PR 方式合并到 `main`，`prepare` 被 job 级 `if` 跳过，整条发布链静默不产出任何 APK 与 Release；报告完全未披露该分支
+
+- 位置：`.github/workflows/test.yml:31`（`if: ${{ !startsWith(github.event.head_commit.message, 'Merge pull request') }}`），连锁影响 `build`(L145) 与 `prerelease`(L242)。
+- **具体失败场景**：controller 按《发布推送流程书.md》用 GitHub PR 合并开发分支（GitHub 默认合并提交信息为 `Merge pull request #N from …`），或本地 `git merge --no-ff` 后把合并提交信息改写成该前缀。此时 `prepare` 的 `if` 求值为假 → `prepare` skipped → `build`/`prerelease` 因 `needs` 未满足而 skipped。**结果是：Actions 显示"成功"，但既不构建也不发布，`beta` Release 不会被创建或更新**，controller 在"首次线上资产出现后核对"那一步才会发现，届时已消耗一次推送。
+- **为什么算发现**：`10-execution.md` §5 列了 6 条残留（`if: ${{ false }}` 未实跑、`gh release delete beta`、临时文件未清理、`workflow_dispatch` 保留、`prepare` 死输出、服务端校验不确定），**没有任何一条覆盖这个"发布整体 no-op"的分支**。任务书要求 reviewer 重点检查"beta 触发条件"，这就是触发条件面最直接的反例。
+- **建议**：推送前确认合并方式（本地 merge 且提交信息不以 `Merge pull request` 开头）；推送后前 1 分钟内核对 `Test Build` 中 `prepare` 是否 `success` 而非 `skipped`。
+
+### F3 — 【低·证据完整性】`18-review-probes.md` 的冻结 HEAD 与实际 HEAD 不一致，冻结窗口无法对齐
+
+- 位置：`18-review-probes.md:3-5`（`冻结 HEAD：fd045f69b2bdadcba86d30b525fe1fd244edb9ce`、`冻结快照 SHA-256：1434f7b9447516d1a1588da54d23d0b53723b4c76ac5fa926243d5bd16b70463`）；对照 `10-execution.md:12`（`HEAD=3c6685cffb750e83b53aea9cfaafcaa0e61b7fb3`、`snapshot_digest: 7ea670dd3394ad8e5dcd7c1b15030b38b7eefa430a9e8d0f2656b95cad790961`）。
+- **具体失败场景**：会话初始 `git status` 快照显示当前 HEAD 为 `3c6685cff`（`feat(release): add normal and private build identities`），而探针声称冻结在它的父提交 `fd045f69b`（该值同时出现在 `00-task.md:92` 的"实时基线"，说明是任务书写就时的旧值被沿用到探针）。这意味着探针里那条 PASS 的 `workflow-diff-check`（`git diff --check -- .github/workflows/test.yml`，退出码 0、输出为空）**跑的可能是本轮改动落地之前的树**，其"真实工作树前后状态：stable"也不覆盖当前 HEAD。若如此，`00-task.md:100` 依赖的"runner 前后快照不一致时本轮报告失效"这一完整性保证，本轮**实际未被建立**。
+- **建议**：controller 在验收时刷新冻结基线（HEAD 与 snapshot digest），或明确声明该探针属上一轮遗留、本轮改用 `06-review-commands.json` 的 `phase-cd-diff-check` 重跑取证。**注意**：该条不改变 §1 的实质结论——我是直接读当前工作树得出的判断，不依赖探针。
+
+### F4 — 【低·证据缺口】"其它 workflow 无外部写入路径"这一支撑性结论落在我白名单外，无法独立复核
+
+- 位置：`10-execution.md:104-109`（§2.4：`Select-String -Path .github/workflows/{cronet,release,stale,web}.yml -Pattern 'gitee|lanzou|telegram|link-E'` → 无输出）。
+- **失败场景**：`test.yml` 同时带 `workflow_run: workflows: [Build Web]`（L16–20），即 `web.yml` 每次完成后会再触发本 workflow。若这四个文件里存在**该正则覆盖不到**的外部目的地（例如别的上传服务、别的 token 变量名、大写以外的写法），GitHub-only 就不成立，而报告用这条不可复核的检查把它当成了已闭合并写进 §2.3 的结论链。
+- **建议**：controller 推送前用更宽的模式全量复核 `.github/workflows/`（例如按 `uses:|curl|wget|git push|gh release|api\.` 而非仅四个关键词），并把输出贴回 `10-execution.md`。本条**不是**说存在该路径，是说该主张目前只有不可复核的单点证据。
+
+### F5 — 【低·产品侧后果未披露】禁用 `update-storage` 切断 link-E 更新链，既有 private 用户将收不到更新
+
+- 位置：`.github/workflows/test.yml:497-537`。
+- **事实**：该 job 的职责是把 `legado.app.private` 产物推到 `Luoyacheng/link-E` 的 `sigma/leagado_Sigma_正式版.apk`（L532），服务的是既有 `io.legado.app.tjf.release` 升级链。禁用后该文件永久停留在旧版本。
+- **为什么算发现**：这是本轮授权内**预期**的后果（任务书明令禁止写 link-E），executor 报告中属"未做"，但 §5 的残留清单里没把它列为"对既有用户的影响"。发布后若用户反馈"检查不到更新"，需要能立刻定位到这是本轮的有意切断，而不是新 bug。
+- **建议**：在 beta Release 说明或后续任务里登记"link-E 更新链自本轮起停更"，并确认 private 用户的更新源已迁移（或明确接受停更）。
+
+### F6 — 【低·信息性安全】被禁用 job 中保留的 PAT 内嵌 clone URL，未来恢复时风险复现
+
+- 位置：`.github/workflows/test.yml:528`（`git clone https://${{ secrets.S_GITHUB_TOKEN }}@github.com/Luoyacheng/link-E.git link-E-repo`）。
+- **性质**：token 会落入克隆仓库的 `.git/config` remote URL，并可能出现在 `git` 命令的错误输出中。本轮该 job 被 `if: ${{ false }}` 挡住，**风险已被中和**，因此不构成本轮问题。
+- **建议**：将来若按 L27 的"便于恢复"意图重新启用，改用 `http.extraheader` 或 `GH_TOKEN` 环境变量 + 匿名 clone，避免凭据进 URL。
+
+### F7 — 【低·一致性 nit】报告 §2.2 输出与工作树的 secret 引用不完全对应
+
+- 位置：`10-execution.md:80`（`references=['lanzou->secrets.LANZOU', …]`）对照 `.github/workflows/test.yml:320-325`（实际为 `secrets.LANZOU_ID`、`secrets.LANZOU_PSD`、`secrets.LANZOU_FOLDER_ID`、`secrets.LANZOU_URL` 四个）。
+- **判断**：极可能只是该校验脚本做了前缀/首次匹配后截断显示（另三条 `BOT_TOKEN`/`GITEE_TOKEN`/`S_GITHUB_TOKEN` 都精确），**不影响任何结论**。按"报告与工作树不一致即为发现"的要求记录在此，供审计，不建议为此返工。
 
 ---
 
-## 5. 我未检查到的范围（NOT RUN，请勿当成已覆盖）
+## 3. 我检查过、**未发现问题**的方面（明确写"未发现"）
 
-1. **`06-review-commands.json` 全部 4 条命令**：`phase-cd-diff-check`、`phase-cd-business-diff`、`phase-cd-targeted-test`、`phase-cd-status` —— 本次调用没有命令执行工具（只有 Read/Grep/Glob），**全部 NOT RUN**。
-2. **`10-execution.md` §4 的全部结果**（D0–D7）：`git diff --check` 退出码、定向 9/10 项、全量 38 XML/258 项、lint 成功、两次 release 构建、D6 负例、两 APK 的 29 位证书摘要 —— **一项都没有被我复现**。lint 的 issue 计数与原始报告文本我没有看到。
-3. **基线对比能力**：无 diff ⇒ 我无法核实 §9 F-05/F-06 声称的“A/B 6 个断言逐字未改”（我只能确认当前文件**恰好含**这 6 个测试名 + 3 个 C 阶段测试 + 1 个 F-01 测试）、无法核实 `test.yml`/`AppConst.kt`/`AppUpdateGitee.kt` 除报告所述之外是否还有其它改动、无法核实 §7 第 4 条“判定逻辑与改动前一致”。
-4. **白名单外但强相关**：`res/values/arrays.xml`、`res/xml/pref_config_other.xml`（设置项 entryValues）、`AppConfig.kt`（`updateToVariant` 的类型/默认值）、`AppUpdate.kt`（两个实现之外的消费端与更新源选择）、其它任何可能引用旧 `AppVariant` 常量的源码 —— **未读、未搜**（见 F-03；后者只能由编译覆盖）。
-5. **测试目录完整性**：我只读了 `AppReleaseInfoTest.kt`，未枚举 `app/src/test/java/io/legado/app/help/update/` 下是否还有其它文件。
-6. **`PROJECT.md` / `CURRENT.md`**：未按白名单读取；构建/测试命令只来自 `06-review-commands.json`。
-7. **冻结窗口与快照**：`18-review-probes.md:1-9` 的“HEAD/快照 SHA-256/命令清单 SHA-256/工作树 stable/总结 PASS”都是 runner 侧记录，我没有哈希工具，无法自算或复核；我只能声明我没有写任何文件（含未执行任何会改工作树的命令）。
-8. **真机与远端**：E/F 全部范围（安装覆盖升级、数据保留、双包共存、应用内检查更新、link-E 消费方、GitHub Actions 实跑、Gitee 真实上传）——未授权、**NOT RUN**。
-9. **Gitee API 真实语义**：`/releases?per_page=5&direction=desc` 是否真返回 `prerelease` 与 `assets`、排序字段是否为 `created_at` —— 无网络、无命令，**未能验证**（F-01 修复的两条读法我都无法实测，只能确认纯函数选支逻辑正确；若列表不返回 `assets`，`AppReleaseInfo.kt:70` 会抛“获取新版本出错”，属 E/F 必核项）。
-10. **`git status` 的当前值**：我用的是会话起始快照（harness 提供），不是实时值。
-
-**轮次提示**：按 `05-routing.md` route_revision 4 的“新一轮复审从未来 C 阶段重新计数”，r003 为 C 阶段第 1 轮、本轮为第 2 轮，已达 `00-task.md` 的“最大复审轮次 2”。若本轮之后还需修改生产代码（含为 F-01/F-02 补跑后发现的任何问题），需要 controller 显式重冻结并提高轮次上限，不能在本轮额度内继续。
+- **YAML 结构与重复键**：7 个 job；四个目标 job 各恰一条 job 级 `if`；未见任何重复映射键；`if: ${{ false }}  # github-only` 的注释符前有空格，属合法 YAML 注释，值确为布尔字面量。**未发现**重复键导致"后者覆盖前者"的假禁用——这正是 executor 主动规避的点，我确认其规避有效。
+- **job 依赖图**：不存在任一**启用中**的 job `needs` 这四个被禁用 job；禁用它们不会连带 skip `prerelease`。**未发现**级联误伤。
+- **残留自动条件**：旧 `secrets.*`/`needs.*` 条件仅存在于 L316/344/386/501 注释行。**未发现**生效残留。
+- **GitHub 发布路径完整性**：matrix（L142）、身份注入（L187）、无 `name` 过滤的全量 artifact 下载（L251–253）、`mv */*.apk .`（L257）、缺一即失败守卫（L261–266）、双通道互补发布（L270/L283/L300）。**未发现**单一身份可被单独发布或缺失时可发出。
+- **file 内其它外部写入路径**：`curl`（L409–492）全在 `gitee` 内，`git push`（L537）与 `git clone`（L528）全在 `update-storage` 内，频道投递（L370）在 `telegram` 内。**未发现**三个启用 job 内的第二外部目的地。
+- **凭据外泄**：见 §1.5。**未发现** keystore/口令进入 artifact 或 Release。
+- **越界**：会话初始 `git status` 快照中，唯一被修改的业务文件是 `.github/workflows/test.yml`；`app/**`、`AndroidManifest.xml`、`updateLog.md`、Gradle、资源文件均未出现在修改列表里。这与 executor 声明的"本轮业务侧只改一个文件"一致，也与"本轮无需重跑 Android 全量门禁"的豁免理由（任务书 `:9`）自洽。**未发现**业务侧越界。（其余变更全部落在 `.agent-protocol/` 协议文件与 `bookshelf.json`/《维护计划书》，属 runner/controller 或用户既有改动，非本轮业务 diff；谁写的我无法从白名单内定责。）
+- **简化**：本轮未引入新抽象、无向后兼容垫片、无新增文件。禁用方式是"每 job 恰一条 `if` + 旧条件降级为注释"，是在"最小可审计"约束下的合理取舍；`prepare` 中 `lanzou/telegram/gitee/sgithub` 四个 outputs 成为死输出（`10-execution.md:140` 已主动披露并给出保留理由）。**判定可接受，不作为 finding**。
 
 ---
 
-## 6. 给 acceptor 的收口清单（按优先级）
+## 4. 我没检查到的范围（NOT RUN / 白名单外，不得据此推论通过）
 
-1. 在冻结树上重跑并原样落盘：`:app:compileAppDebugKotlin`、定向 `AppReleaseInfoTest`（**应见 10 项**）、全量 `:app:testAppDebugUnitTest`（**应见 259 项**）、`:app:lintAppDebug`、`assembleAppRelease -PRELEASE_IDENTITY=normal|private`、以及 `aapt2/apksigner` 摘要比对；命令、退出码、原始输出缺一不可（闭合 F-01/F-02，并顺带覆盖“白名单外旧常量引用是否清零”）。
-2. `10-execution.md` §4 的 D1/D2 数字必须改标为“F-01 修复前”或替换为新记录，避免验收继承过期数字。
-3. 明确写出保证降级：mode `dsh-claude` 下 DSH 自执行自验收、reviewer 两轮均无命令执行能力、冻结命令四次全部 NOT RUN、F-01 修复后的树在本次复审前无任何执行证据。
-4. 把 F-08 两条（link-E 载荷包名身份、真机默认通道 vs beta 标签）写进 F/E 的显式验证项，不要作为隐性变化带过。
-5. 对 F-03/F-05/F-06/F-07 作出“接受 / 延后 / 修”的显式裁决并记录，不要沉默通过。
+1. **所有 `git` 命令：NOT RUN**（本实例无 Bash）。`git diff`、`git diff --check`、`git diff --numstat`、`git status -sb`、`git merge-base` 全部未由我执行。§1.4 的 diff 形态结论是**推算**，不是实跑。
+   - 其中 `phase-cd-diff-check` 由 runner 探针跑过：`18-review-probes.md:11-19` 记录 `git diff --check -- .github/workflows/test.yml` 退出码 0、输出为空 —— 属 **runner 证据，非我亲跑**，且受 F3 的冻结 HEAD 不一致影响。
+2. **`README`/`PROJECT.md`/`发布推送流程书.md`：未读。** 任务书 line 108 的 reviewer 白名单未列 `PROJECT.md`，故按提示词第 4 条不读；`发布推送流程书.md` 同理未列，因此 F2 里"controller 用什么方式合并"我无法查证，只能给出条件式结论。
+3. **`.github/workflows/` 下 test.yml 以外的任何文件：未读**（含 `web.yml`/`release.yml`/`cronet.yml`/`stale.yml`）。F4 因此无法闭合。**没有**用 Glob/Grep 间接探测这些路径。
+4. **`app/**` 全部：本轮未读**（含 `AppReleaseInfo.kt`、`AppUpdateGitHub.kt`、`AppUpdateGitee.kt`、`AppConst.kt`、`AppReleaseInfoTest.kt`、`build.gradle`、`AndroidManifest.xml`、`updateLog.md`）。它们在白名单内但**不属本轮 diff**（本轮只审 workflow 改动），故未展开；C+D 的消费端正确性依赖此前各轮的 reviewer 结论，本轮**未重新验证**。
+5. **Gradle / 定向 JVM 测试 / compile / lint / 两次 release 构建 / `apkanalyzer` / `apksigner`：NOT RUN**，与任务书 `:9` 的豁免一致（本轮未触及 Gradle 与源码），我仅确认"未触及"这一点与工作树快照相符（§3 越界项）。
+6. **`actionlint` / GitHub workflow schema 校验 / PyYAML：NOT RUN**。F1 里 `if: ${{ false }}` 的**服务端**接受性、以及 §1.3 表格第 1 项（无重复键的解析器级证明）均未由我运行工具验证，只有只读结构证据与文档依据。
+7. **executor 的 `verify_github_only.py`：未读、未复算**。它位于 `C:\Users\huixu\AppData\Local\Temp\dual-release-privacy\`（工作区外，非白名单路径），其 16 项输出与 SHA-256 `29A7112B…` **我无法独立核验**；§1.3 的 15 项是我自己从工作树重算的等价断言，不是对该脚本的复算。
+8. **所有哈希值未验证**：`3c6685cffb750e83b53aea9cfaafcaa0e61b7fb3`（全 SHA）、`test.yml` SHA-256 `BA23A58B…`、脚本 SHA-256 `29A7112B…`、`snapshot_digest 7ea670dd…`、探针 `1434f7b9…` —— 一律未复算。
+9. **任何 GitHub Actions 实跑、线上 beta Release、真机/`adb`、外部目的地写入：NOT RUN**，且本轮未授权。
+10. **临时文件残留**：`10-execution.md:133-138` 自述两个调试草稿未清理（沙箱拒绝 + 无审批通道）。我**未尝试**读取或清理系统临时目录（白名单外）。
+
+---
+
+## 5. 给 controller 的最小闭合清单（按顺序）
+
+1. 推送前：跑 F1 的 `merge-base` 检查，确认区间不含 `updateLog.md`；确认合并提交信息不以 `Merge pull request` 开头（F2）。
+2. 推送前：刷新冻结基线或声明探针属上轮遗留，并用 `06-review-commands.json:phase-cd-diff-check` 对当前 HEAD 重跑一次 `git diff --check`（F3）。
+3. 推送前：对 `.github/workflows/` 全量复扫外部写入面，把输出贴回 `10-execution.md` §2.4（F4）。
+4. 推送后：核对 `prepare`/`build`(×2)/`prerelease` 均为 `success`，四个外部 job 均为 `skipped`；核对新建的是 `beta` 预发布且含 `legado_app_*_normal.apk` 与 `legado_app_*_private.apk` 两个资产（任务书 `:12`）。
+5. 同时：确认未创建正式版；在残留清单登记 link-E 停更（F5）与本次 workflow 的服务端接受性（`if: ${{ false }}`，F1 同源风险）。
+
+---
+
+**一句话结论**：本轮 diff 做对了它承诺的事，且我用只读手段独立复核了 16 项断言中的 15 项；但"推送即得双资产 beta Release"这句话在 F1/F2 任一命中时不成立，报告把它当结论写死了。闭合 §5 第 1、2 条之前，本轮应视为"diff 通过、发布待核对"，而非"可发布"。

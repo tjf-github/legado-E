@@ -1,0 +1,17 @@
+{
+    "version":  1,
+    "task_id":  "book-source-p1-diagnostics",
+    "role":  "executor",
+    "round_id":  "executor-r001",
+    "status":  "finished",
+    "planned_files":  [
+                          "10-execution.md"
+                      ],
+    "planned_commands":  [
+                             "长门禁由 review-probe / gate ledger 执行；角色在开跑前补充本轮具体计划"
+                         ],
+    "created_at_utc":  "2026-09-22T05:50:02Z",
+    "updated_at_utc":  "2026-09-22T06:54:20Z",
+    "source":  "runner-seed；可写角色应在长操作前补充计划，reviewer 只读时保留 runner 种子",
+    "runner_observation":  "ok"
+}

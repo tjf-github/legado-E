@@ -1,0 +1,8 @@
+﻿A(frozen tree) : legado_app_3.26.092422.apk 37688190 87aa25c9ebcbe4058157adba09b469542c04830637c7d4ec2bbb3093d5164941
+B(renamed perm): p1-device-apk-B-renamed.apk 37693471 31381c4141b8546196ac9f0207468663134c41fbcc6ced99f00e5b72de0a8cff
+entries A/B: 3621 3621
+only_in_A: []
+only_in_B: []
+differing_entries: ['AndroidManifest.xml', 'META-INF/CERT.RSA', 'META-INF/CERT.SF', 'META-INF/MANIFEST.MF']
+dex entries: ['classes.dex', 'classes10.dex', 'classes11.dex', 'classes12.dex', 'classes13.dex', 'classes14.dex', 'classes15.dex', 'classes16.dex', 'classes17.dex', 'classes18.dex', 'classes19.dex', 'classes2.dex', 'classes20.dex', 'classes21.dex', 'classes22.dex', 'classes23.dex', 'classes3.dex', 'classes4.dex', 'classes5.dex', 'classes6.dex', 'classes7.dex', 'classes8.dex', 'classes9.dex']
+dex identical: True

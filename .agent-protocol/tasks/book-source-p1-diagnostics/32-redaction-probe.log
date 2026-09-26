@@ -1,0 +1,10 @@
+synthetic_input=https://example.invalid/page?chapter=SYNTHETIC_PRIVATE_VALUE#SYNTHETIC_FRAGMENT
+actual=https://example.invalid/page?chapter=SYNTHETIC_PRIVATE_VALUE#SYNTHETIC_FRAGMENT
+sensitive_marker_retained=true
+synthetic_input=Cookie: SYNTHETIC_COOKIE_VALUE
+actual=Cookie:*** SYNTHETIC_COOKIE_VALUE
+sensitive_marker_retained=true
+synthetic_input=Authorization: SYNTHETIC_AUTH_VALUE
+actual=Authorization:*** SYNTHETIC_AUTH_VALUE
+sensitive_marker_retained=true
+leaking_cases=3/3

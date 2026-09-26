@@ -1,0 +1,344 @@
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=--http://127.0.0.1:8765/chapter.html timeout=300.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "--http://127.0.0.1:8765/chapter.html"}
+t+0.10s frame#1: [00:00.000] ⇒开始访正文页:http://127.0.0.1:8765/chapter.html
+t+0.10s frame#2: [00:00.001] ︾开始解析正文页
+t+60.08s frame#3: 【诊断】1.提取后 网络错误 len=0,lines=0,imgs=0 (异常类型 InterruptedIOException，消息默认不输出)
+t+60.08s frame#4: 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+t+60.09s frame#5: 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+t+60.09s frame#6: 【诊断】4.阅读处理后 未执行 (书源调试链路止于 BookContent，未进入阅读处理)
+t+60.09s frame#7: [01:00.025] java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:461)
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:423)
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:381)
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:234)
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:574)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+	at java.lang.Thread.run(Thread.java:1149)
+Caused by: java.io.IOException: Canceled
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:70)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.DecompressInterceptor.intercept(DecompressInterceptor.kt:25)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addInterceptor$1.intercept(OkHttpClient.kt:1399)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.OkHttpExceptionInterceptor.intercept(OkHttpExceptionInterceptor.kt:12)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:226)
+	... 4 more
+
+closed by server at t+60.09s
+=== done frames=7 elapsed=60.09s ===
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=200.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.10s frame#1: [00:00.001] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.10s frame#2: [00:00.002] ︾开始解析目录页
+t+0.10s frame#3: [00:00.030] ≡获取成功:http://127.0.0.1:8765/toc.html
+t+0.11s frame#4: [00:00.031] ┌获取目录列表
+t+0.11s frame#5: [00:00.033] └列表大小:2
+t+0.11s frame#6: [00:00.034] ┌解析目录列表
+t+0.11s frame#7: [00:00.036] └目录列表解析完成
+t+0.11s frame#8: [00:00.036] ≡首章信息
+t+0.11s frame#9: [00:00.036] ◇章节名称:Chapter one
+t+0.11s frame#10: [00:00.037] ◇章节链接:/chapter.html
+t+0.11s frame#11: [00:00.037] ◇章节信息:
+t+0.11s frame#12: [00:00.037] ◇是否VIP:false
+t+0.11s frame#13: [00:00.037] ◇是否购买:false
+t+0.11s frame#14: [00:00.038] ◇目录总数:2
+t+0.11s frame#15: [00:00.041] ︽目录页解析完成
+closed(empty frame) at t+0.11s
+=== done frames=15 elapsed=0.11s ===
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=200.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.09s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.09s frame#2: [00:00.002] ︾开始解析目录页
+t+0.09s frame#3: [00:00.018] ≡获取成功:http://127.0.0.1:8765/toc.html
+t+0.09s frame#4: [00:00.019] ┌获取目录列表
+t+0.09s frame#5: [00:00.021] └列表大小:2
+t+0.09s frame#6: [00:00.022] ┌解析目录列表
+t+0.10s frame#7: [00:00.024] └目录列表解析完成
+t+0.10s frame#8: [00:00.025] ≡首章信息
+t+0.10s frame#9: [00:00.025] ◇章节名称:Chapter one
+t+0.10s frame#10: [00:00.025] ◇章节链接:/chapter.html
+t+0.10s frame#11: [00:00.026] ◇章节信息:
+t+0.10s frame#12: [00:00.026] ◇是否VIP:false
+t+0.10s frame#13: [00:00.026] ◇是否购买:false
+t+0.10s frame#14: [00:00.027] ◇目录总数:2
+t+0.10s frame#15: [00:00.030] ︽目录页解析完成
+t+0.10s frame#16: <empty payload frame, treated as ping>
+t+0.10s frame#17: [00:00.031] ︾开始解析正文页
+t+11.73s frame#18: 【诊断】1.提取后 未执行 (本次调试链路未执行该阶段)
+t+11.73s frame#19: 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+t+11.73s frame#20: 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+t+11.73s frame#21: 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms
+closed by server at t+60.09s
+=== done frames=21 elapsed=60.09s ===
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=200.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.09s frame#1: [00:00.001] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.09s frame#2: [00:00.001] ︾开始解析目录页
+t+0.09s frame#3: [00:00.026] ≡获取成功:http://127.0.0.1:8765/toc.html
+t+0.09s frame#4: [00:00.027] ┌获取目录列表
+t+0.09s frame#5: [00:00.030] └列表大小:2
+t+0.09s frame#6: [00:00.031] ┌解析目录列表
+t+0.09s frame#7: [00:00.033] └目录列表解析完成
+t+0.09s frame#8: [00:00.033] ≡首章信息
+t+0.09s frame#9: [00:00.034] ◇章节名称:Chapter one
+t+0.09s frame#10: [00:00.034] ◇章节链接:/chapter.html
+t+0.09s frame#11: [00:00.035] ◇章节信息:
+t+0.09s frame#12: [00:00.035] ◇是否VIP:false
+t+0.09s frame#13: [00:00.035] ◇是否购买:false
+t+0.09s frame#14: [00:00.036] ◇目录总数:2
+t+0.09s frame#15: [00:00.039] ︽目录页解析完成
+t+0.09s frame#16: <empty payload frame, treated as ping>
+t+0.09s frame#17: [00:00.040] ︾开始解析正文页
+t+6.60s frame#18: 【诊断】1.提取后 未执行 (本次调试链路未执行该阶段)
+t+6.60s frame#19: 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+t+6.60s frame#20: 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+t+6.60s frame#21: 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms
+t+22.43s frame#22: 【诊断】1.提取后 未知错误 len=0,lines=0,imgs=0 (异常类型 IOException，消息默认不输出)
+t+22.43s frame#23: 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+t+22.43s frame#24: 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+t+22.43s frame#25: 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms
+t+22.44s frame#26: [00:22.387] java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+	at _COROUTINE._BOUNDARY._(CoroutineDebugging.kt:42)
+	at io.legado.app.help.http.OkHttpUtilsKt.newCallResponse(OkHttpUtils.kt:37)
+	at io.legado.app.help.http.OkHttpUtilsKt.newCallStrResponse(OkHttpUtils.kt:56)
+	at io.legado.app.model.analyzeRule.AnalyzeUrl.executeStrRequest(AnalyzeUrl.kt:478)
+	at io.legado.app.model.analyzeRule.AnalyzeUrl.getStrResponseAwait(AnalyzeUrl.kt:431)
+	at io.legado.app.model.webBook.WebBook.getContentAwait(WebBook.kt:417)
+	at io.legado.app.model.webBook.WebBook$getContent$1.invokeSuspend(WebBook.kt:375)
+	at io.legado.app.help.coroutine.Coroutine$executeBlock$2.invokeSuspend(Coroutine.kt:236)
+	at io.legado.app.help.coroutine.Coroutine$executeInternal$1.invokeSuspend(Coroutine.kt:263)
+Caused by: java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+	at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:230)
+	at okhttp3.internal.connection.Exchange.readResponseHeaders(Exchange.kt:117)
+	at okhttp3.internal.http.CallServerInterceptor.intercept(CallServerInterceptor.kt:97)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addNetworkInterceptor$1.intercept(OkHttpClient.kt:1398)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:34)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:101)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:85)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:74)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.DecompressInterceptor.intercept(DecompressInterceptor.kt:25)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addInterceptor$1.intercept(OkHttpClient.kt:1399)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.OkHttpExceptionInterceptor.intercept(OkHttpExceptionInterceptor.kt:12)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:226)
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:574)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+	at java.lang.Thread.run(Thread.java:1149)
+	Suppressed: java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+		... 25 more
+	Caused by: java.io.EOFException: \n not found: limit=0 content=…
+		at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:362)
+		at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+		at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+		... 24 more
+	Suppressed: java.io.IOException: unexpected end of stream on http://127.0.0.1:8765/...
+		... 25 more
+	Caused by: java.io.EOFException: \n not found: limit=0 content=…
+		at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:362)
+		at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+		at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+		... 24 more
+Caused by: java.io.EOFException: \n not found: limit=0 content=…
+	at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:362)
+	at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+	at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+	... 24 more
+
+t+22.44s frame#27: <empty payload frame, treated as ping>
+closed by server at t+22.44s
+=== done frames=27 elapsed=22.44s ===
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=90.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.09s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.09s frame#2: [00:00.001] ︾开始解析目录页
+t+0.09s frame#3: [00:00.026] ≡获取成功:http://127.0.0.1:8765/toc.html
+t+0.09s frame#4: [00:00.028] ┌获取目录列表
+t+0.09s frame#5: [00:00.031] └列表大小:2
+t+0.09s frame#6: [00:00.032] ┌解析目录列表
+t+0.09s frame#7: [00:00.034] └目录列表解析完成
+t+0.09s frame#8: [00:00.035] ≡首章信息
+t+0.09s frame#9: [00:00.035] ◇章节名称:Chapter one
+t+0.09s frame#10: [00:00.036] ◇章节链接:/chapter.html
+t+0.09s frame#11: [00:00.037] ◇章节信息:
+t+0.09s frame#12: [00:00.037] ◇是否VIP:false
+t+0.09s frame#13: [00:00.038] ◇是否购买:false
+t+0.09s frame#14: [00:00.039] ◇目录总数:2
+t+0.09s frame#15: [00:00.041] ︽目录页解析完成
+t+0.09s frame#16: <empty payload frame, treated as ping>
+t+0.09s frame#17: [00:00.041] ︾开始解析正文页
+t+6.76s frame#18: 【诊断】1.提取后 未执行 (本次调试链路未执行该阶段)
+t+6.77s frame#19: 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+t+6.77s frame#20: 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+t+6.77s frame#21: 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=90.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.09s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.09s frame#2: [00:00.001] ︾开始解析目录页
+t+60.06s frame#3: [01:00.012] java.io.InterruptedIOException: timeout
+	at okhttp3.internal.connection.RealCall.timeoutExit(RealCall.kt:461)
+	at okhttp3.internal.connection.RealCall.callDone(RealCall.kt:423)
+	at okhttp3.internal.connection.RealCall.noMoreExchanges$okhttp(RealCall.kt:381)
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:234)
+	at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:574)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1156)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:651)
+	at java.lang.Thread.run(Thread.java:1149)
+Caused by: java.net.SocketException: Socket closed
+	at java.net.SocketInputStream.read(SocketInputStream.java:188)
+	at java.net.SocketInputStream.read(SocketInputStream.java:143)
+	at okio.internal.DefaultSocket$SocketSource.read(DefaultSocket.kt:124)
+	at okio.RealBufferedSource.indexOf(RealBufferedSource.kt:457)
+	at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.kt:350)
+	at okhttp3.internal.http1.HeadersReader.readLine(HeadersReader.kt:31)
+	at okhttp3.internal.http1.Http1ExchangeCodec.readResponseHeaders(Http1ExchangeCodec.kt:196)
+	at okhttp3.internal.connection.Exchange.readResponseHeaders(Exchange.kt:117)
+	at okhttp3.internal.http.CallServerInterceptor.intercept(CallServerInterceptor.kt:97)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addNetworkInterceptor$1.intercept(OkHttpClient.kt:1398)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:34)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:101)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:85)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:74)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.DecompressInterceptor.intercept(DecompressInterceptor.kt:25)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.HttpHelperKt$okHttpClient_delegate$lambda$0$$inlined$-addInterceptor$1.intercept(OkHttpClient.kt:1399)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at io.legado.app.help.http.OkHttpExceptionInterceptor.intercept(OkHttpExceptionInterceptor.kt:12)
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:126)
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:226)
+	... 4 more
+
+t+60.06s frame#4: <empty payload frame, treated as ping>
+closed by server at t+60.06s
+=== done frames=4 elapsed=60.06s ===
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=45.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.10s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.10s frame#2: [00:00.001] ︾开始解析目录页
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=45.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.09s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.09s frame#2: [00:00.001] ︾开始解析目录页
+=== connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=45.0s ===
+opened
+sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+t+0.07s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+t+0.07s frame#2: [00:00.001] ︾开始解析目录页
+t+0.07s frame#3: [00:00.017] ≡获取成功:http://127.0.0.1:8765/toc.html
+t+0.07s frame#4: [00:00.019] ┌获取目录列表
+t+0.07s frame#5: [00:00.020] └列表大小:2
+t+0.07s frame#6: [00:00.021] ┌解析目录列表
+t+0.07s frame#7: [00:00.022] └目录列表解析完成
+t+0.07s frame#8: [00:00.022] ≡首章信息
+t+0.07s frame#9: [00:00.022] ◇章节名称:Chapter one
+t+0.07s frame#10: [00:00.022] ◇章节链接:/chapter.html
+t+0.07s frame#11: [00:00.023] ◇章节信息:
+t+0.07s frame#12: [00:00.023] ◇是否VIP:false
+t+0.07s frame#13: [00:00.023] ◇是否购买:false
+t+0.07s frame#14: [00:00.023] ◇目录总数:2
+t+0.07s frame#15: [00:00.025] ︽目录页解析完成
+t+0.07s frame#16: <empty payload frame, treated as ping>
+t+0.07s frame#17: [00:00.026] ︾开始解析正文页
+t+0.08s frame#18: [00:00.036] ≡获取成功:http://127.0.0.1:8765/chapter.html
+t+0.08s frame#19: [00:00.039] ┌获取章节名称
+t+0.08s frame#20: [00:00.039] └Chapter one
+t+0.08s frame#21: [00:00.039] ┌获取正文内容
+t+0.08s frame#22: [00:00.039] └
+　　CHECK chapter one.
+　　Second line.
+　　<img src="http://127.0.0.1:8765/image.png">
+t+0.08s frame#23: 【诊断】1.提取后 正常 len=107,lines=4,imgs=1 耗时1ms
+t+0.08s frame#24: 【诊断】2.HTML格式化后 正常 len=85,lines=3,imgs=1
+t+0.08s frame#25: 【诊断】3.书源替换后 正常 len=81,lines=3,imgs=1 耗时1ms
+t+0.08s frame#26: 【诊断】4.阅读处理后 未执行 (书源调试链路止于 BookContent，未进入阅读处理)
+t+0.08s frame#27: [00:00.041] ︽正文页解析完成
+t+0.08s frame#28: <empty payload frame, treated as ping>
+closed by server at t+0.08s
+=== done frames=28 elapsed=0.08s ===
+[23:29:40] === connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=60.0s ===
+[23:29:40] opened
+[23:29:40] sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+[23:29:40] t+0.12s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+[23:29:40] t+0.12s frame#2: [00:00.001] ︾开始解析目录页
+[23:29:40] t+0.13s frame#3: [00:00.065] ≡获取成功:http://127.0.0.1:8765/toc.html
+[23:29:40] t+0.15s frame#4: [00:00.067] ┌获取目录列表
+[23:29:40] t+0.15s frame#5: [00:00.070] └列表大小:2
+[23:29:40] t+0.15s frame#6: [00:00.070] ┌解析目录列表
+[23:29:40] t+0.15s frame#7: [00:00.072] └目录列表解析完成
+[23:29:40] t+0.15s frame#8: [00:00.073] ≡首章信息
+[23:29:40] t+0.15s frame#9: [00:00.073] ◇章节名称:Chapter one
+[23:29:40] t+0.15s frame#10: [00:00.074] ◇章节链接:/chapter.html
+[23:29:40] t+0.16s frame#11: [00:00.074] ◇章节信息:
+[23:29:40] t+0.16s frame#12: [00:00.075] ◇是否VIP:false
+[23:29:40] t+0.16s frame#13: [00:00.075] ◇是否购买:false
+[23:29:40] t+0.16s frame#14: [00:00.075] ◇目录总数:2
+[23:29:40] t+0.17s frame#15: [00:00.078] ︽目录页解析完成
+[23:29:40] t+0.17s frame#16: <empty payload frame, treated as ping>
+[23:29:40] t+0.17s frame#17: [00:00.079] ︾开始解析正文页
+[23:29:51] t+10.37s frame#18: 【诊断】1.提取后 未执行 (本次调试链路未执行该阶段)
+[23:29:51] t+10.37s frame#19: 【诊断】2.HTML格式化后 未执行 (本次调试链路未执行该阶段)
+[23:29:51] t+10.37s frame#20: 【诊断】3.书源替换后 未执行 (本次调试链路未执行该阶段)
+[23:29:51] t+10.37s frame#21: 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时3ms
+[23:30:23] === connect ws://127.0.0.1:1123/bookSourceDebug key=++http://127.0.0.1:8765/toc.html timeout=60.0s ===
+[23:30:23] opened
+[23:30:23] sent {"tag": "http://127.0.0.1:8765/", "key": "++http://127.0.0.1:8765/toc.html"}
+[23:30:23] t+0.09s frame#1: [00:00.000] ⇒开始访目录页:http://127.0.0.1:8765/toc.html
+[23:30:23] t+0.09s frame#2: [00:00.001] ︾开始解析目录页
+[23:30:23] t+0.09s frame#3: [00:00.020] ≡获取成功:http://127.0.0.1:8765/toc.html
+[23:30:23] t+0.09s frame#4: [00:00.021] ┌获取目录列表
+[23:30:23] t+0.10s frame#5: [00:00.024] └列表大小:2
+[23:30:23] t+0.10s frame#6: [00:00.024] ┌解析目录列表
+[23:30:23] t+0.10s frame#7: [00:00.026] └目录列表解析完成
+[23:30:23] t+0.10s frame#8: [00:00.027] ≡首章信息
+[23:30:23] t+0.10s frame#9: [00:00.027] ◇章节名称:Chapter one
+[23:30:23] t+0.10s frame#10: [00:00.027] ◇章节链接:/chapter.html
+[23:30:23] t+0.10s frame#11: [00:00.028] ◇章节信息:
+[23:30:23] t+0.10s frame#12: [00:00.028] ◇是否VIP:false
+[23:30:23] t+0.10s frame#13: [00:00.028] ◇是否购买:false
+[23:30:23] t+0.10s frame#14: [00:00.029] ◇目录总数:2
+[23:30:23] t+0.10s frame#15: [00:00.031] ︽目录页解析完成
+[23:30:23] t+0.10s frame#16: <empty payload frame, treated as ping>
+[23:30:23] t+0.10s frame#17: [00:00.031] ︾开始解析正文页
+[23:30:27] t+3.49s frame#18: [00:03.433] ≡获取成功:http://127.0.0.1:8765/chapter2.html
+[23:30:27] t+3.50s frame#19: [00:03.439] ┌获取章节名称
+[23:30:27] t+3.50s frame#20: [00:03.440] └Chapter two
+[23:30:27] t+3.50s frame#21: [00:03.440] ┌获取正文内容
+[23:30:27] t+3.50s frame#22: [00:03.440] └
+　　CHECK chapter two.
+[23:31:04] t+40.26s frame#23: [00:40.168] ≡获取成功:http://127.0.0.1:8765/chapter.html
+[23:31:04] t+40.26s frame#24: [00:40.173] ┌获取章节名称
+[23:31:04] t+40.26s frame#25: [00:40.173] └Chapter one
+[23:31:04] t+40.26s frame#26: [00:40.173] ┌获取正文内容
+[23:31:04] t+40.26s frame#27: [00:40.174] └
+　　CHECK chapter one.
+　　Second line.
+　　<img src="http://127.0.0.1:8765/image.png">
+[23:31:04] t+40.26s frame#28: 【诊断】1.提取后 正常 len=107,lines=4,imgs=1 耗时2ms
+[23:31:04] t+40.27s frame#29: 【诊断】2.HTML格式化后 正常 len=85,lines=3,imgs=1 耗时1ms
+[23:31:04] t+40.27s frame#30: 【诊断】3.书源替换后 正常 len=81,lines=3,imgs=1
+[23:31:04] t+40.27s frame#31: 【诊断】4.阅读处理后 正常 len=81,lines=3,imgs=1 耗时1ms

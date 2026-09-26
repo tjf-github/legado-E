@@ -6,7 +6,7 @@
 
 1. `D:\vsproject\legado-E\.agent-protocol\tasks\dual-release-privacy\00-task.md` —— 任务书。目标、非目标、授权范围、完成条件、停止条件都以它为准。
 2. `D:\vsproject\legado-E\.agent-protocol/README.md` —— 协议本体。
-3. `D:\vsproject\legado-E\.agent-protocol/CURRENT.md` —— 当前模式与角色映射（mode=triad，route_revision=4）。
+3. `D:\vsproject\legado-E\.agent-protocol/CURRENT.md` —— 当前模式与角色映射（mode=triad，route_revision=7）。
 4. `D:\vsproject\legado-E\.agent-protocol/PROJECT.md` —— 项目专属事实：构建/测试命令、敏感路径、禁止操作。
 5. 需要时读上一环：`D:\vsproject\legado-E\.agent-protocol\tasks\dual-release-privacy\00-task.md`。
 

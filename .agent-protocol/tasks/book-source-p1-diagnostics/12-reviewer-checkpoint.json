@@ -1,0 +1,17 @@
+{
+    "version":  1,
+    "task_id":  "book-source-p1-diagnostics",
+    "role":  "reviewer",
+    "round_id":  "reviewer-r002",
+    "status":  "finished",
+    "planned_files":  [
+                          "20-review.md"
+                      ],
+    "planned_commands":  [
+                             "长门禁由 review-probe / gate ledger 执行；角色在开跑前补充本轮具体计划"
+                         ],
+    "created_at_utc":  "2026-09-24T01:50:29Z",
+    "updated_at_utc":  "2026-09-24T01:56:28Z",
+    "source":  "runner-seed；可写角色应在长操作前补充计划，reviewer 只读时保留 runner 种子",
+    "runner_observation":  "ok"
+}

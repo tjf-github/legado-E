@@ -1,0 +1,4 @@
+﻿33-reading-chapter-one-diag-off: 'Chapter one&#10;\u3000\u3000CHECK chapter one.&#10;\u3000\u3000Second line.&#10; &#10;'
+40-S4-reading-chapter-one: 'Chapter one&#10;\u3000\u3000CHECK chapter one.&#10;\u3000\u3000Second line.&#10; &#10;'
+50-S6-reading-after-session-closed: 'Chapter one&#10;\u3000\u3000CHECK chapter one.&#10;\u3000\u3000Second line.&#10; &#10;'
+parity(all three equal): True

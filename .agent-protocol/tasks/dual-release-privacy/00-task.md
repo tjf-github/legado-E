@@ -2,6 +2,16 @@
 
 状态：`rework`
 
+## 2026-09-21 GitHub-only 双版本发布收口（用户最新授权，route_revision 7）
+
+- 用户明确要求最终只进行 GitHub 双版本发布，并授权解决其余发布阻断。发布目标固定为 GitHub `beta` Release 同时包含 `normal` 与 `private` 两个 APK；不得向蓝奏云、Telegram、Gitee 或 link-E 写入。
+- executor 本轮唯一业务改动：在 `.github/workflows/test.yml` 以最小、可审计方式硬禁用 `lanzou`、`telegram`、`gitee`、`update-storage` 四个 job，同时保留 GitHub `prerelease` job、双身份 matrix 和缺一即失败守卫。不得改 APK 身份、签名、版本、应用功能、AI 功能或其它文件。
+- executor 需运行 `git diff --check`，并静态证明四个外部 job 无论 Secrets 是否存在都不会运行、GitHub Release 路径仍会接收两个 APK；把命令与结果追加到 `10-execution.md`。不要求重复已经在提交 `3c6685cff` 和 CI run `35555332167` 上通过的 Android 全量门禁，除非 workflow 改动触及 Gradle/源码。
+- reviewer 仅对本轮 workflow diff 做独立只读复审，重点检查 GitHub-only、双资产完整性守卫、beta 触发条件及是否存在其它外部写入路径；报告写入 `20-review.md`，不得修改项目文件。
+- 用户本条消息同时授权 controller 在本轮验收通过后：提交本轮 workflow 收口、推送开发分支、按《发布推送流程书.md》将开发分支合并至 `main`、推送 `main` 触发 GitHub Actions，并核对 GitHub beta Release 的两个 APK。不得创建正式版，不得修改 `updateLog.md`，不得触发或手工执行任何非 GitHub 发布。
+- 首次线上资产出现后，controller 再核对 GitHub beta Release 仅含预期 `normal`/`private` APK，并尽可能完成应用内更新 URL 选择断言；若 UI/设备条件使后者无法自动化，必须如实列为发布后残余，不得把它伪装为发布前阻断。
+- 历史 `role-verify` 的 timeout/哈希漂移记录不得改写或删除。本轮以新的 executor/reviewer/acceptor 证据和实际 GitHub Release 结果作发布判定；旧协议完整性失败继续披露，但不再单独阻止用户已明确授权的 GitHub-only 发布。
+
 ## 2026-09-21 Codex 发布级验收接管（当前唯一入口，route_revision 7）
 
 - 用户明确要求对已完成 A-D 开展验收，并希望达到可发布程度；现役模式恢复为 `triad` / high：Codex=controller+acceptor、DSH=executor、Claude=只读 reviewer。旧 `dsh-claude` 的 C+D 实现、复审和自验收均保留为输入证据，但不直接继承其最终判定。
@@ -106,6 +116,8 @@
 - 明确禁止的数据和操作：`keystore*`、Token/Secrets、真实书源与正文、用户缓存、未脱敏日志；提交、推送、发布、切分支、删除数据、安装 APK、改设备或 App 配置。
 
 ## 完成条件
+
+> **SUPERSEDED — 本块整体已废止，不得勾选。** 本块写于 route_revision 6 之前，用的是被第 63-68 行「2026-09-20 controller 决策」明确废止的 `release` / `releaseS` 映射。权威口径是：既有 `io.legado.app.tjf.release` 延续为**隐私版**、新普通版为 `io.legado.app.tjf`，`.releaseS` 不进入本次发布。当前验收状态以 `30-acceptance.md` 的「E 阶段真机验收」§8 为准。原文一个字节未改，保留作审计。
 
 - [ ] CI 的构建矩阵无论更新日志是否变化，均含 `release` 与 `releaseS` 两个类型。
 - [ ] 普通版继续使用 `.release`，共存版仅在独立 CI job 中临时替换为 `.releaseS`；产物名继续包含 `release` / `releaseS`，资产解析与消费端仍按变体精确匹配。

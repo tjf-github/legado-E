@@ -1,0 +1,13 @@
+﻿PASS blocker1_exception_message_not_in_summary :: 【诊断】1.提取后 未知错误 len=0,lines=0,imgs=0 (异常类型 IllegalArgumentException，消息默认不输出)
+PASS blocker1_stable_class_name_present :: 【诊断】1.提取后 未知错误 len=0,lines=0,imgs=0 (异常类型 IllegalArgumentException，消息默认不输出)
+PASS blocker1_chain_failure_message_not_in_summary :: 【诊断】1.提取后 未知错误 len=14,lines=1,imgs=0 耗时1ms (异常类型 IllegalStateException，消息默认不输出)
+PASS blocker2_executed_snapshot_kept :: StageSnapshot(stage=4.阅读处理后, errorClass=正常, summary=len=17,lines=1,imgs=0, elapsedMs=3, executed=true, note=null)
+PASS blocker2_summary_keeps_real_reading_readout :: 【诊断】4.阅读处理后 正常 len=17,lines=1,imgs=0 耗时3ms
+PASS blocker2_missing_stage_still_marked :: StageSnapshot(stage=4.阅读处理后, errorClass=正常, summary=, elapsedMs=0, executed=false, note=未进入阅读处理)
+PASS f01_chain_failure_not_stamped_on_reading_stage :: StageSnapshot(stage=4.阅读处理后, errorClass=正常, summary=len=17,lines=1,imgs=0, elapsedMs=3, executed=true, note=null) | StageSnapshot(stage=1.提取后, errorClass=网络错误, summary=len=0,lines=0,imgs=0, elapsedMs=0, executed=true, note=异常类型 UnknownHostException，消息默认不输出)
+PASS f02_report_decision_three_states :: noSnapshot=false,onlyNotExecuted=false,firstReal=true,secondReal=false
+PASS f03_host_kept_when_path_has_at :: 请求 https://api.example.com/@user/profile 失败
+PASS f03_userinfo_still_dropped :: 请求 https://api.example.com/@user/profile 失败
+PASS f03_malformed_url_without_authority_drops_credentials :: 请求 https://api.example.com/x 失败
+probe_failures=0/11
+

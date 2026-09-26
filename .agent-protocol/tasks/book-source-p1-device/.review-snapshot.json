@@ -1,0 +1,35 @@
+﻿{
+    "version":  1,
+    "checked_at_utc":  "2026-09-24T15:38:42Z",
+    "state":  "stable",
+    "before":  {
+                   "GitAvailable":  true,
+                   "Repository":  true,
+                   "GitRoot":  "D:/vsproject/legado-E",
+                   "Head":  "b8ba92e194468f0d7e6103c1175ba9f2a8233d95",
+                   "GitDigest":  "78d9516e0d2109440467eee6ddf297059c0efe0844bdddd0bc269e0326aa11d8",
+                   "ProtocolDigest":  "5bae81d5fd014f8546eaa28fcf6d97b3d28de62c129fcc27d536f40f3536c326",
+                   "TaskDigest":  "2e900d08080ae6fceacc4881680236819190b37ab470326652e2063f09035286",
+                   "CommandsDigest":  "e15beedbb7eb03907a0c91163fb21e62e0a380eb6542b22962fc03240b6c08b7",
+                   "ExecutionDigest":  "a5926af3c34dbd77e0fc220c35105e4457e6b2cf2989a9c46b00ba47c6d8bb2a",
+                   "GitignoreDigest":  "afd0a71c15121f9fc19da6f08deb7b3ff77720a4bbc99798ad7157db6ba027af",
+                   "AgentsDigest":  "010784af761f0218e0380a567c5267abbdb4d2cc5b3582f3eaa49814c5fe057d",
+                   "Digest":  "7f9941e6ca3f77387c5948e601ce4999b262c0794a2296d0751977ba59d7d668",
+                   "Detail":  ""
+               },
+    "after":  {
+                  "GitAvailable":  true,
+                  "Repository":  true,
+                  "GitRoot":  "D:/vsproject/legado-E",
+                  "Head":  "b8ba92e194468f0d7e6103c1175ba9f2a8233d95",
+                  "GitDigest":  "78d9516e0d2109440467eee6ddf297059c0efe0844bdddd0bc269e0326aa11d8",
+                  "ProtocolDigest":  "5bae81d5fd014f8546eaa28fcf6d97b3d28de62c129fcc27d536f40f3536c326",
+                  "TaskDigest":  "2e900d08080ae6fceacc4881680236819190b37ab470326652e2063f09035286",
+                  "CommandsDigest":  "e15beedbb7eb03907a0c91163fb21e62e0a380eb6542b22962fc03240b6c08b7",
+                  "ExecutionDigest":  "a5926af3c34dbd77e0fc220c35105e4457e6b2cf2989a9c46b00ba47c6d8bb2a",
+                  "GitignoreDigest":  "afd0a71c15121f9fc19da6f08deb7b3ff77720a4bbc99798ad7157db6ba027af",
+                  "AgentsDigest":  "010784af761f0218e0380a567c5267abbdb4d2cc5b3582f3eaa49814c5fe057d",
+                  "Digest":  "7f9941e6ca3f77387c5948e601ce4999b262c0794a2296d0751977ba59d7d668",
+                  "Detail":  ""
+              }
+}

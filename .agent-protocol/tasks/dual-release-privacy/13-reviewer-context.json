@@ -1,21 +1,21 @@
 {
     "version":  1,
-    "generated_at_utc":  "2026-09-20T09:21:16Z",
+    "generated_at_utc":  "2026-09-21T06:22:54Z",
     "task_id":  "dual-release-privacy",
     "task_class":  "standard",
     "role":  "reviewer",
-    "round_id":  "reviewer-r004",
-    "mode":  "dsh-claude",
-    "assurance":  "standard",
-    "route_revision":  "6",
+    "round_id":  "reviewer-r005",
+    "mode":  "triad",
+    "assurance":  "high",
+    "route_revision":  "7",
     "role_map":  {
-                     "controller":  "dsh",
+                     "controller":  "codex",
                      "executor":  "dsh",
                      "reviewer":  "claude",
-                     "acceptor":  "dsh"
+                     "acceptor":  "codex"
                  },
-    "task_digest":  "7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216",
-    "snapshot_digest":  "40f10aa52597fef3c6e53c6485da0a21ce784f3cbf61b42e9a963bccea4cdba0",
+    "task_digest":  "1b5d59a0a4d5ec701f9fb35e56a807318dfe4bf9f2c314230c0b08a014dfdb52",
+    "snapshot_digest":  "391b6a47e7ee60a48ac1aa113e0694061b18821dc46bda3d2002828777c1f019",
     "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
     "role_contract":  ".agent-protocol/prompts/reviewer.md",
     "evidence_file":  ".agent-protocol/tasks/dual-release-privacy/20-review.md",
@@ -60,26 +60,26 @@
     "read_list":  [
                       {
                           "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\dual-release-privacy\\00-task.md",
-                          "sha256":  "7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216",
-                          "bytes":  15728,
+                          "sha256":  "1b5d59a0a4d5ec701f9fb35e56a807318dfe4bf9f2c314230c0b08a014dfdb52",
+                          "bytes":  20820,
                           "why":  "任务书：范围、白名单、完成条件、停止条件以它为准"
                       },
                       {
                           "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\dual-release-privacy\\10-execution.md",
-                          "sha256":  "8bb2aa9b8df4d19b121c84582564cde20d8122d077ce8a9e43c742cf0da2053d",
-                          "bytes":  16799,
+                          "sha256":  "5ce0705a4fdec7722747675baa8c5537f1b0d84c4bf60858717bcdb3ba506ac0",
+                          "bytes":  15056,
                           "why":  "上一环产物：当作待验证的主张读，不要当作事实"
                       },
                       {
                           "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\PROJECT.md",
-                          "sha256":  "f08c643fb4b1829dad2bee7c7e5e114637f1b014f47f638319c25756bcbfee03",
-                          "bytes":  1814,
+                          "sha256":  "a40f5d47fa72f672ccf583d2c5218d61fc0d075a78df956e005edcba302e1959",
+                          "bytes":  1826,
                           "why":  "项目专属事实；仅在任务书把它列入你的可读白名单时读"
                       },
                       {
                           "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\CURRENT.md",
-                          "sha256":  "1383408aaf782b582ce59a91d82d7c7aee64649fb9901e4a289091c8793bc203",
-                          "bytes":  488,
+                          "sha256":  "b36d4e68feb6fe25740ebfa733d356eea4a78161e09dbec489e9b68b2bd3db15",
+                          "bytes":  483,
                           "why":  "当前模式与角色映射；换挡后 delta 会让你读它，所以它必须在这张清单里"
                       }
                   ],
@@ -101,28 +101,6 @@
 
                       ],
     "recent_rounds":  [
-                          {
-                              "round_number":  2,
-                              "round_id":  "executor-r002",
-                              "role":  "executor",
-                              "summary":  "absent",
-                              "status":  "",
-                              "not_run":  0,
-                              "files_changed":  0,
-                              "worktree_dirty":  0,
-                              "findings":  ""
-                          },
-                          {
-                              "round_number":  2,
-                              "round_id":  "reviewer-r002",
-                              "role":  "reviewer",
-                              "summary":  "absent",
-                              "status":  "",
-                              "not_run":  0,
-                              "files_changed":  0,
-                              "worktree_dirty":  0,
-                              "findings":  ""
-                          },
                           {
                               "round_number":  3,
                               "round_id":  "executor-r003",
@@ -157,8 +135,30 @@
                               "findings":  ""
                           },
                           {
+                              "round_number":  4,
+                              "round_id":  "reviewer-r004",
+                              "role":  "reviewer",
+                              "summary":  "runner-fallback",
+                              "status":  "completed",
+                              "not_run":  1,
+                              "files_changed":  0,
+                              "worktree_dirty":  13,
+                              "findings":  ""
+                          },
+                          {
                               "round_number":  5,
                               "round_id":  "executor-r005",
+                              "role":  "executor",
+                              "summary":  "absent",
+                              "status":  "",
+                              "not_run":  0,
+                              "files_changed":  0,
+                              "worktree_dirty":  0,
+                              "findings":  ""
+                          },
+                          {
+                              "round_number":  6,
+                              "round_id":  "executor-r006",
                               "role":  "executor",
                               "summary":  "absent",
                               "status":  "",

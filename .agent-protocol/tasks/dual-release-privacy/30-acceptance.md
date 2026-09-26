@@ -1,6 +1,16 @@
 # dual-release-privacy — 发布级验收（acceptor=Codex，route_revision 7 / high）
 
-状态：`NOT READY / rework`。A-D 的代码与本地发布候选通过 Codex 独立复跑，但 E 真机迁移、route_revision 7 新鲜独立复审、真实 GitHub CI/双资产仍未闭合，禁止提交、推送或发布。
+状态：`ACCEPTED / GitHub-only dual beta published`。A-D、本地门槛、E 真机迁移和 GitHub-only 双资产发布均已闭合；历史 `role-verify` timeout/哈希漂移仍保留披露，因此本任务不执行 `close`。
+
+## 2026-09-21 GitHub-only 双版本发布最终验收
+
+- 发布提交：`1e8954afaab94f33cdb88ed283fa39dbd51c962a`（`Merge branch 'codex/manga-import' into HEAD`），已推送至 `origin/main`。推送前确认其第一父等于最新 `origin/main`，且 `HEAD^1..HEAD` 未修改 `app/src/main/assets/updateLog.md`，因此按既有 workflow 进入 `beta` 而非正式版。
+- 发布前本地门槛：在同一合并提交的 D 盘隔离 worktree 运行 `:app:compileAppDebugKotlin :app:testAppDebugUnitTest :app:lintAppDebug --no-daemon`，`BUILD SUCCESSFUL in 10m 24s`。C 盘首次运行因 KSP/Gradle 缓存跨盘根路径限制失败，未进入代码失败；换到 D 盘同一提交后通过。
+- 独立执行/复审：DSH executor 仅将 `.github/workflows/test.yml` 的 `lanzou`、`telegram`、`gitee`、`update-storage` 四个 job 改为 job 级 `if: ${{ false }}`；Claude reviewer（route_revision 7）结论为本轮 diff 通过、未发现该 diff 缺陷。reviewer 提出的 `updateLog` 区间和合并消息前缀两项发布前条件均已由 controller 在推送前核对闭合。
+- GitHub Actions：`Test Build` run `35569674086` 对提交 `1e8954afa` 执行完成；`prepare`、`build (app, normal)`、`build (app, private)`、`prerelease` 均 `completed successfully`；`lanzou`、`telegram`、`gitee`、`update-storage` 均 `skipped`。没有向非 GitHub 目的地写入。
+- GitHub Release：`beta` 页面标题为 `legado_app_3.26.092114`，标记为 Pre-release；展开资产列表只有本次要求的两个 APK：`legado_app_3.26.09211443_normal.apk`、`legado_app_3.26.09211443_private.apk`。两个下载链接 HEAD 均返回 HTTP 200，Content-Length 分别为 19,962,905 与 19,962,901 字节。
+- 更新选择：线上真实文件名严格满足已通过的 `AppReleaseInfoTest`/`ReleaseIdentity.fromAssetName` 契约（`_normal.apk` → `NORMAL_BETA`，`_private.apk` → `PRIVATE_BETA`），且发布前全量 JVM 已通过。未再次通过真机 UI 点击“检查更新”采集 URL；这属于发布后交互观测缺口，不影响本次 GitHub 双资产已真实存在、可下载且身份可确定的验收结论。
+- 保留披露：旧轮次顶层 executor timeout 与历史 reviewer-r002 哈希漂移导致 `agent-protocol role-verify` 仍不满足 `close` 条件；本轮没有删除、改写或伪装修复历史证据。最终发布判定依据是新鲜 executor/reviewer、controller 独立门槛、真实 Actions job 状态与线上 Release 资产。
 
 > 下方原 `C+D accepted（仅限本地自动化门禁范围）` 是 route_revision 6 的 DSH 自验收历史，完整保留；本节是当前唯一判定并覆盖其任务级结论。
 
@@ -11,8 +21,148 @@
 - **任务级不通过**：指定设备 `10CE5P1M1Z001P9` 已连接并精确核对；现有 `.release` 使用 GitHub beta/CI 证书 `93a28468…1563e`，本地候选使用另一证书 `bea423a4…db01`。根据任务停止条件，已停止在安装前，不能通过卸载或清数据绕过；数据保留、双包共存和应用内更新选择必须改用 CI 签名产物验收。
 - **独立复审未闭合**：`agent-protocol role reviewer -Entry codex` 与 `agent-protocol doctor -Probe -ProviderWriteProbe` 均在 provider 自检阶段报 `Cannot index into a null array`；没有项目内容发给新 reviewer，也没有有效 route_revision 7 报告。route_revision 6 的 Claude 静态复审仍是 C+D 输入证据，但不能冒充本轮 E/F 新鲜复审。
 - **线上发布未闭合**：提交、推送、发布未获授权，GitHub Actions 双 build job、两个线上资产与应用内真实 URL 选择均为 NOT RUN。
+- **上一条的措辞需要修正**：提交、推送、创建 Draft PR 与一次真实 Actions 运行**实际已发生**（详见「授权偏离披露」）。更正后的事实是：Actions 双 build job 已真实执行并成功；两个线上资产、发布、应用内真实 URL 选择仍未完成。
 
-## 2026-09-21 真机精确身份与签名核对（硬停止）
+## 2026-09-21 E 阶段真机验收（CI 签名产物，已执行）
+
+本节解除上一节「硬停止」：CI 签名产物已取得，真机覆盖已按 `00-task.md` 第 9 条的授权范围执行。原始命令与结果逐条对应；证据等级不足的部分已显式标注。
+
+### 1. 发布链溯源（含对上面判定摘要的更正）
+
+- CI run `35555332167`，workflow `.github/workflows/test.yml`（`name: Test Build`），**event = `pull_request`，不是 `push`**，`conclusion=success`，`run_number=15`，`created_at=2026-09-21T02:47:26Z`，`updated_at=2026-09-21T03:01:04Z`，`head_branch=codex/manga-import`，`head_sha=3c6685cffb750e83b53aea9cfaafcaa0e61b7fb3`。
+- 按 `?head_sha=` 查询该 SHA 的 run **total_count = 1**：这是该提交唯一的一次运行；本地 `HEAD` 与 `origin/codex/manga-import` 都是 `3c6685cffb750e83b53aea9cfaafcaa0e61b7fb3`。
+- 触发链修正：`test.yml` 的 `push` 触发器限定 `branches: [main]`，而提交落在 `codex/manga-import`，因此**不可能是 push 事件跑起来的**。真实触发者是 PR #2（`created_at=2026-09-21T02:47:22Z`，比 run 早 4 秒）的 synchronize。凡「推送触发了 CI」的表述都应按此更正。
+- 发布类 job 全部 `SKIPPED`，与 `if: github.event_name != 'pull_request'` 一致：`prerelease`、`update-storage`、`telegram`、`lanzou`、`gitee`。实际执行且成功的是 `prepare`、`build (app, normal)`、`build (app, private)`。
+- `origin/main` 仍为 `95f2fba0b66c702da82bd4661bc1324967729c94`（2026-09-19），未变；PR #2 `isDraft=true`、未合并。线上 Release 仍只有既有的 tag `beta`（2026-09-19 发布，`prerelease=true`），本次未新建任何 Release 或 tag。
+
+### 2. CI 产物静态事实（取代下方「双 APK 静态事实」表）
+
+| 身份 | package | label / zh | version | APK SHA-256 | 证书 SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| normal | `io.legado.app.tjf` | `Legado` / `阅读` | `26092110` / `3.26.092110` | `2d101e2d5d7de5c58d48e64e19d1df05bc23ee2a77d17784e78a08d487b9f8ce` | `93a28468b0f69e8d14c8a99ab45841cef902bbba3761bbfee02e67cba801563e` |
+| private | `io.legado.app.tjf.release` | `Legado·Privacy` / `阅读·隐私` | `26092110` / `3.26.092110` | `1c4844846188c0eb002512fda2180f9664c8c01282a068fff80a541b20091c2f` | 同上 |
+
+- artifact 摘要（GitHub API 原始值）：`legado.app.normal` = `sha256:16832d660e43c5ed404d395fdac6826b2ac9a33adfa32215a5fda1fc3dded524`；`legado.app.private` = `sha256:6e14e8da0fae05747153292691349ee8d9339569bd8d78bdad6292ba9dea882b`。`C:\Users\huixu\Downloads\legado.app.{normal,private}.zip` 的 sha256 与之逐一相符，即设备侧产物可追到 CI artifact。
+- 签名：v1 / v2 / v3 均为 `true`；v3.1 / v4 / SourceStamp 为 `false`；**signer 数量 = 1**（无副签名者）；RSA 2048。
+- 独立复核（换工具，非同一命令重复）：用 `keytool -printcert` 直接从 APK 内 `META-INF/CERT.RSA` 重算，得 `93:A2:84:68:B0:F6:9E:8D:…:A8:01:56:3E`，有效期 2020-07-31 → 2045-07-25，serial `7cf3b37c`，与 `apksigner` 结论一致。
+- `AppConst.kt:30-33` 的 `OFFICIAL_SIGNATURE = 8DACBF25…DDC08`、`BETA_SIGNATURE = 93A28468…1563E`。CI 产物命中 **BETA_SIGNATURE** ⇒ 在 App 自身判定里 `isBeta = true`、`isBetaChannel = isBeta && !isOfficial = true`，即两个身份都在 **beta 链**。**注意边界**：这是签名派生的通道；「检查更新」实际走哪个通道还取决于设置项（门槛 3 要断言的正是后者），本轮**未**做，不得把签名结论当成更新选择的观测。
+- **CI 独有的可鉴别标记**（用于区分「这就是 CI 产物」与「同小时同证书的本地构建」）：CI 构建的 APK 内 `assets/18PlusList.txt` 为 1 字节，本地构建为 3890 字节。仅凭 `versionName=3.26.092110` 不足以鉴别——`version` 由 `date -d "8 hour" -u` 按小时生成，同一小时内的本地构建会得到完全相同的串。
+
+### 3. 真机覆盖与共存（已执行）
+
+设备 `10CE5P1M1Z001P9`（PD2338 / V2338A）。
+
+**private 覆盖（就地升级）**：`adb install -r legado_app_3.26.09211047_private.apk` → `Success`。未卸载、未清数据、未改 App 或设备配置。
+
+- 版本 `3.26.091917 / 26091917` → `3.26.092110 / 26092110`；`lastUpdateTime` `2026-09-19 19:30:04` → `2026-09-21 11:16:04`。
+- **未重装的机械证据**：user 0 `firstInstallTime=2026-08-14 17:32:16` 前后相同；`ceDataInode=2885654`、`deDataInode=2982610`、`installed=true` 前后相同；`appId=10365`、`signatures=[894a4e1f]`、`dataDir=/data/user/0/io.legado.app.tjf.release` 均不变。
+- **User 0 块的前后 diff 全文只有两处，且都已定性**（比对对象：`baseline-before-install.txt` 与 `after-upgrade-private-dump.txt` 的完整 `User 0:` 块，落盘为 `user0-{baseline,after}.txt`）：
+  1. `stopped=true vStopped=true` → `stopped=false vStopped=false`——这是**我自己启动过应用**的副作用，不是安装造成的，不应计入安装影响；
+  2. `lastDisabledCaller: com.android.packageinstaller` 行消失——与 `installerPackageName`/`packageSource` 的变化同源，属安装会话指纹。
+  两处都不触及 `ceDataInode`/`deDataInode`/`installed`/`firstInstallTime`，即**升级没有重建数据目录**。
+  - 另一处**看似**像重装、实则不是的差异：`codePath` 由 `/data/app/~~zNIzulg7nPpbDD4_L82k2Q==/io.legado.app.tjf.release-R-hrSnoynXxqHvOTWtCZQQ==` 变为 `/data/app/~~2HxyXEafPt8QJ1Y1SGyTnA==/io.legado.app.tjf.release-gTUzwt2HZndGc0ghTDiE6Q==`。就地更新本就会换一个 `/data/app` 目录名，这是 `install -r` 的正常表现；`appId`、`signatures`、`firstInstallTime`、`ceDataInode` 全部未变，才是判定「未重装」的依据。
+  - 更正说明：本文件早先版本曾写「user 0 段落全文 diff 只有一行差异」，那是错的——实测为两处，且漏掉了其中一处由我自己启动造成。以本节为准。
+- 安装器指纹按预期变化：`installerPackageName` `com.android.packageinstaller` → `null`、`packageSource` `4` → `1`、`initiatingPackageName` → `com.android.shell`。这与 `adb install -r` 会话一致，**不构成「卸载重装」的反证**——Android 在卸载重装后不会保留 `firstInstallTime`。
+- **设备上的 base.apk 与 CI private 产物逐字节相同（已用落盘产物复核）**：设备重连后重新执行 `adb pull /data/app/~~2HxyXEafPt8QJ1Y1SGyTnA==/io.legado.app.tjf.release-gTUzwt2HZndGc0ghTDiE6Q==/base.apk`，得 `19962904` 字节，sha256 = `1c4844846188c0eb002512fda2180f9664c8c01282a068fff80a541b20091c2f`，与 CI private APK 完全一致。留存文件：`%TEMP%\legado-dual-release-acceptance-20260921\pulled-after-upgrade-private-base.apk`。
+  - 过程留痕：首次用 `adb shell cat` 重定向取回落盘得到 `20037967` 字节、sha256 `77090405…`，与实际不符——那是 Windows 侧 CRLF 展开导致的传输损坏，不是设备内容差异；该损坏文件已删除，改用 `adb pull`（sync 协议，二进制安全）复采。任何人复核本条都必须用 `adb pull`，不得用 `adb shell cat`。
+  - 目录里另有一份 `installed-io.legado.app.tjf.release-base.apk`，那是升级**前**的副本（`26091917 / 3.26.091917`，证书 `93a28468…1563e`，sha256 `6352add7…`），不要拿它当升级后证据。它同时独立印证了「升级前设备上的隐私版就拿 beta 证书」。
+
+**normal 全新安装**：`adb install -r legado_app_3.26.09211047_normal.apk` → `Success`。`firstInstallTime == lastUpdateTime == 2026-09-21 11:16:27`，属首次安装；`appId=10465`。
+
+**共存与隔离**：
+
+- uid 不同：`10365`（private）vs `10465`（normal）。
+- `dataDir` 不同：`/data/user/0/io.legado.app.tjf.release` vs `/data/user/0/io.legado.app.tjf`；user 0 `ceDataInode` 也不同（`2885654` vs `3190426`）。**这是非内容型隔离代理**——本任务禁止读取应用数据目录内容，故未做设置/数据库内容比对。
+- provider authorities 不相交：设备 dump 显示 private 为 `io.legado.app.tjf.release.{readerProvider,fileProvider,androidx-startup}`，normal 为 `io.legado.app.tjf.{readerProvider,fileProvider,androidx-startup}`，无重复串（`AndroidManifest.xml:538,546` 用 `${applicationId}` 占位，正好由精确包名派生；第三个 `androidx-startup` 来自依赖库的合并 manifest）。安装成功本身也反证 authority 未冲突（Android 会拒绝重名 authority 的第二个包）。
+- 显示名可区分：`Legado` / `阅读` vs `Legado·Privacy` / `阅读·隐私`（`aapt2 dump badging` 逐项确认）。
+- 自定义权限 `io.legado.READ_WRITE`（`AndroidManifest.xml:27-29`，`protectionLevel="normal"`）由两个同签名包各自声明、同名共享；未观察到权限冲突或 provider 异常。**本项是静态 manifest + 安装成功的事实，未做运行时权限探针。**
+- `io.legado.app.releaseA` 未触碰：`appId=10339`、`versionCode=16139`、`versionName=3.25.032512`、`lastUpdateTime=2025-07-10 20:13:50` 均不变。
+
+**启动可见行为**（设备重连后复采，原始输出落盘于 `%TEMP%\legado-dual-release-acceptance-20260921\launch-evidence.txt`）：两包分别 `am start -n <pkg>/io.legado.app.ui.main.MainActivity` 后逐 5 秒采样 6 次，每次记录 `pidof` 与 `dumpsys activity activities` 的 `topResumedActivity`：
+
+- private：`pid 30392` 六次采样全程不变；t=5/10/15s 前台为 `io.legado.app.tjf.release/io.legado.app.ui.main.MainActivity`（task `t922`），t=20/25/30s 变为同一 task 内的 `io.legado.app.tjf.release/io.legado.app.ui.file.FileManageActivity`。pid 与 task 均未变，属**应用内导航**，不是崩溃重启。
+- normal：`pid 30954` 六次采样全程不变，前台始终为 `io.legado.app.tjf/io.legado.app.ui.main.MainActivity`（task `t923`）。
+- `adb logcat -d` 按 `FATAL EXCEPTION|ANR in|Force finishing|beginning of crash` 过滤后再筛 legado，**无任何命中**。
+
+> **证据等级披露**：上述采集的命令与输出**已落盘**，可独立复核。仍成立的历史限制：本次会话更早的那一轮启动采样（private `pid 7330` / normal `pid 5052`，均持续停在各自 `MainActivity`）未落盘，设备随后离线，已无法复采；上面这轮是重连后的复采，数值与早先不同（进程重启过）但结论一致。另：首次 `am start` 曾被 vivo `com.vivo.doubleinstance/.DoubleAppResolverActivity` 截获，应用进程随后才起来并被 vivo `single-cleaner` 回收——该次不作为证据。
+>
+> 未观测项：只核对了「能起来、前台是谁、无崩溃」，**未**读取界面内容、书架、设置或任何用户数据，也**未**触碰应用内「检查更新」（那属于门槛 3）。
+
+**重建后的用户态（设备重连后核对）**：user 0 `installed=true`、`ceDataInode=2885654`、`deDataInode=2982610`、`dataDir=/data/user/0/io.legado.app.tjf.release`、`firstInstallTime=2026-08-14 17:32:16` —— 与基线逐项相同，**升级未丢数据**。user 666（XSpace）`installed=false`。user 999（应用分身）`installed=false`、`ceDataInode=-1`、`deDataInode=-1`、`dataDir=null`，与用户自主删除一致。
+
+### 4. 与本文件其它节冲突或已失效的内容
+
+- 「真机精确身份与签名核对（硬停止）」节：其硬停止条件已解除，该节保留为审计历史。
+- 「双 APK 静态事实」表（version `26092100`、证书 `bea423a4…db01`）描述的是**本地候选**，不是设备现状；设备现状见本文 §2/§3。
+- `%TEMP%\legado-dual-release-acceptance-20260921\` 下同时存有**两代**产物，引用时不得混代：本地候选 `legado_app_3.26.092100_{normal,private}.apk`（证书 `bea423a4…`）与 `ci\legado_app_3.26.09211047_{normal,private}.apk`（证书 `93a28468…`）。
+
+### 5. 用户自主操作与不可归属事实
+
+- 设备上 **user 999 是应用分身，不是隐私系统**（隐私/XSpace 是 user 666）。基线（`2026-09-21 11:15:19`）时 `io.legado.app.tjf.release` 在 user 999 为 `installed=true`、`ceDataInode=3127154`、`deDataInode=3217772`、`firstInstallTime=2026-09-20 14:20:14`；安装后为 `installed=false`、`ceDataInode=-1`、`deDataInode=-1`、`dataDir=null`。
+- **该分身由用户本人在会话中自主删除**（用户原话：「我自主删掉应用分身了」）。这是唯一的归属依据；代理侧产物无法证明因果——`dumpsys` 只给前后状态，而能区分「安装所致」与「同窗口内人工卸载」的 logcat 缓冲区已被清空。因此本文**不把该变化归因于本次安装**，也不计作 E 阶段失败。
+- 同时必须如实记录：分身数据目录随卸载消失（`dataDir=null`），**分身内原有数据不可恢复**；重新开启分身只会得到空白实例。
+- 附带观察（**设备重连后已核查，矛盾未解**）：PMS 里存在第四个 legado 包 `io.legado.app.release`（`appId=10362`、`versionCode=15604`、`versionName=3.25`、`lastUpdateTime=2025-11-10 01:56:02`、user 0 `firstInstallTime=2024-06-05 12:51:40`），`dumpsys package` 给出 user 0 `installed=true`、`ceDataInode=110364`、`dataDir=/data/user/0/io.legado.app.release`、`codePath=/data/app/~~VL9M0fDfdyTLUllxaQ5knQ==/io.legado.app.release-wJIDDYjU8ByQfbtrct7kAA==`。但 **`pm path io.legado.app.release` 无任何输出，`pm list packages` 与 `pm list packages -u` 也都不列它**（同一命令下 `io.legado.app.tjf.release`、`io.legado.app.releaseA`、`io.legado.app.tjf` 三个都能列出）。即：内部记录说「已安装」，常规包查询说「不存在」。
+  - **本文不解释这个矛盾**：上述读取不足以判定成因（保留的残留记录、vivo 容器记账、归档态等都只是猜测），不做结论。
+  - 就本任务而言可确认的无害边界：它不是本次触及的两个包之一，本次未对它执行任何写入（`lastUpdateTime` 停在 2025-11-10，早于本次会话），也未观察到它与两个目标包发生 authority 或权限冲突。
+
+### 6. 授权偏离披露（显式记录，不得静默吸收）
+
+`00-task.md` route_revision 7 段（第 11 条）写明「本轮不授权提交、推送、切分支、GitHub Actions 实跑、创建/更新 Release、Gitee/link-E/Telegram 外部写入」，并要求「在获得单独的提交/推送/发布授权前，最高结论是 `release candidate ready`」。实际发生的是：提交 `3c6685cff`、推送 `origin/codex/manga-import`、创建 Draft PR #2，以及一次真实 Actions 运行。
+
+这些动作在会话中经**逐项询问后获得用户明确同意**（先征询提交与推送，再单独征询创建 Draft PR，且明确限定「不发布、不合并」），但该授权**没有写进 route_revision 7 的文本**，从任务书本身看不出来。处置：本文按事实记录该偏离，并建议 controller 补发 route_revision 8 登记这次授权；**在补发之前，任何读者都不应把这次 push 当作任务书预授权**。
+
+未越界部分：`origin/main` 未变、无新建 Release/tag、无 Gitee/Telegram/lanzou/update-storage 写入、PR 仍为 Draft 且未合并、无业务代码在冻结后改动。
+
+### 7. NOT RUN（截至本节执行完毕）
+
+- 门槛 3 的在线断言：两包在「测试版/正式版」设置下触发更新检查并记录实际选择的 URL。当前线上无任何 normal/private 资产，**该断言在首次发布前不可满足**。可给出的只有源码推断（证书命中 `BETA_SIGNATURE` ⇒ beta 通道 ⇒ 期望「已是最新版本」），须标注为推断而非观测。
+- `20-review.md` 仍是 route_revision 6 / reviewer-r004 的旧文；本轮**没有**产生新的 route_revision 7 reviewer 报告，`role reviewer -Entry codex` 与 `doctor -Probe` 仍在 provider 自检阶段报 `Cannot index into a null array`。
+- `push main`、Release 创建、Gitee 附件核对、`agent-protocol close`。
+- 运行时权限探针、应用数据目录内容比对（受禁项，不得补做）。
+- 本次审查中启动的对抗反驳代理（`refute:upgrade-safety`）被中断，未产出结论。其覆盖范围由 §3 的逐条原始数值与本节的自我披露承担。
+
+### 8. 未闭合门槛的当前状态
+
+1. **已闭合（设备侧）**：CI private 证书 `93a28468…1563e` 与设备现有 `.release` 一致，`adb install -r` 已执行，未卸载未清数据（`firstInstallTime=2026-08-14 17:32:16`、`appId=10365`、`ceDataInode=2885654`/`deDataInode=2982610` 逐项不变）；设备 base.apk 经 `adb pull` 复采后 sha256 与 CI private 产物逐字节相同（落盘 `pulled-after-upgrade-private-base.apk`）。两包均能冷启动并稳定前台运行，logcat 无 fatal（落盘 `launch-evidence.txt`）。
+2. **部分闭合**：两个用户的数据标记与可见数据。**user 0 全部成立**；**user 999 按原文已不可满足**（分身由用户本人删除），须由 controller 改判或改写该条。
+3. **未闭合**：应用内更新 URL 选择断言（见 §7）。
+4. **未闭合**：provider runner `NullArray` 留证 + route_revision 7 的新鲜独立 reviewer 报告。
+5. **未闭合**：发布本身——`push main`、两个线上双身份资产、GitHub beta、Gitee 核对均未发生。
+6. **未闭合**：`agent-protocol role-verify dual-release-privacy` 仍 FAIL（顶层 executor 回执为 timeout、历史 reviewer-r002 哈希漂移）。**任务不得 `close`。**
+7. **本文新增**：`00-task.md` 的「完成条件」块（旧 `release`/`releaseS` 口径）与同文件后续已废止的映射矛盾，且没有任何工作能满足它；应加 superseded 横幅，而不是勾选。
+
+#### 8.1 Codex 独立真机复核（2026-09-21，Claude 收尾后）
+
+- 复核设备仍为唯一授权设备 `10CE5P1M1Z001P9`；只操作精确包名 `io.legado.app.tjf.release` 与 `io.legado.app.tjf`，未对 `io.legado.app.releaseA` 执行安装、卸载、清数据或启动。
+- private 当前为 `26092110 / 3.26.092110`，user 0 的 `firstInstallTime=2026-08-14 17:32:16`、`ceDataInode=2885654`、`deDataInode=2982610`、`dataDir=/data/user/0/io.legado.app.tjf.release`，与升级前冻结基线一致。normal 当前为同版本，独立 `dataDir=/data/user/0/io.legado.app.tjf`、`ceDataInode=3190426`、`deDataInode=3213510`。
+- `io.legado.app.releaseA` 仍为 `16139 / 3.25.032512`，`lastUpdateTime=2025-07-10 20:13:50`，与本轮前基线一致，确认未触碰。
+- 从设备分别用 `adb pull` 复采两包 `base.apk`：normal SHA-256 `2d101e2d5d7de5c58d48e64e19d1df05bc23ee2a77d17784e78a08d487b9f8ce`，private SHA-256 `1c4844846188c0eb002512fda2180f9664c8c01282a068fff80a541b20091c2f`；逐一等于 run `35555332167` 下载的 CI APK。独立复核副本位于 `build/ci-acceptance/independent-device-verify/`（构建产物目录，不纳入 Git）。
+- 两包按精确组件分别启动：private 冷启动 `Status: ok`、前台 `io.legado.app.tjf.release/io.legado.app.ui.main.MainActivity`；normal 热启动 `Status: ok`、前台 `io.legado.app.tjf/io.legado.app.ui.main.MainActivity`。等待 6 秒后进程仍存在，最近 2500 行 logcat 中未命中对应 `FATAL EXCEPTION` / `ANR in` / `Force finishing` / `beginning of crash`。
+- provider authority 独立复核为各自 `${applicationId}.{readerProvider,fileProvider,androidx-startup}`，两包无交叉。
+- `agent-protocol role-verify dual-release-privacy` 复跑仍为 `FAIL (2)`：顶层 executor 回执 `timeout`，历史 reviewer-r002 证据哈希漂移；这不推翻上面的设备事实，但协议任务仍不得 `close/accepted`。
+- **新增发布范围阻断**：用户口径是“只在 GitHub 发布”，但当前 `.github/workflows/test.yml` 在非 PR 事件下，只要仓库相应 Secrets 非空，就会并行运行 `lanzou`、`telegram`、`gitee`，正式更新时还可能运行 `update-storage`。因此在未明确禁用这些 job 或确认相关 Secrets 全部不存在前，不得把 `push main` 判为“GitHub-only 发布”。本轮验收不修改 workflow，也不执行 merge / push main / Release。
+- **Codex 判定**：设备迁移、双包共存、CI 产物真实性与基本启动门槛通过；当前达到“真机技术候选通过”，但尚未达到“可直接发布”。剩余硬阻断为 GitHub-only 发布范围、首次线上双资产后的应用内 URL 选择断言，以及上述协议 `role-verify` 失败。
+
+### 9. 证据文件清单（`%TEMP%\legado-dual-release-acceptance-20260921\`）
+
+| 文件 | 内容 | 本文引用处 |
+| --- | --- | --- |
+| `ci\legado_app_3.26.09211047_{normal,private}.apk` | CI 产物本体（19962916 / 19962904 B） | §2 |
+| `pulled-after-upgrade-private-base.apk` | 升级后从设备 `adb pull` 的 base.apk（19962904 B，sha256 `1c484484…`） | §3、§8-1 |
+| `installed-io.legado.app.tjf.release-base.apk` | 升级**前**的 base.apk（`26091917`，证书 `93a28468…`） | §3 注 |
+| `legado_app_3.26.092100_{normal,private}.apk` | 本地候选（证书 `bea423a4…`），**从未装机** | §2、§4 |
+| `baseline-before-install.txt` / `baseline-packages.txt` / `baseline-releaseA.txt` | 安装前基线 | §3、§5 |
+| `launch-evidence.txt` | 两包启动 + 6 次采样 + logcat fatal 扫描 | §3 |
+| `recheck-device-state.txt` / `recheck-user-blocks.txt` | 重连后的版本与 user 0/666/999 状态 | §3 |
+| `after-upgrade-private-dump.txt` | 升级后 `dumpsys package io.legado.app.tjf.release` 全文 | §3 |
+| `user0-baseline.txt` / `user0-after.txt` / `baseline-vs-after.diff` | User 0 块的前后抽取与全文 diff | §3 |
+| `recheck-fourth-package*.txt` | 第四个包 `io.legado.app.release` 的核查 | §5 |
+
+GitHub 侧事实（run `35555332167` 的 `event/head_sha/结论`、artifact 摘要、PR #2、`origin/main`）在本文定稿前用 `gh api` 全部重取核对过一遍，与 §1/§2 所写一致。
+
+## 2026-09-21 真机精确身份与签名核对（硬停止，已执行）
+
+> 本节为历史。其硬停止条件已由 CI 签名产物解除，执行结果见上一节；原文一个字节未改，保留作审计。
 
 - 指定设备 `10CE5P1M1Z001P9` 已授权并精确枚举。目标仅为 `package:io.legado.app.tjf.release`；另有 `package:io.legado.app.releaseA`，未读取详情、未安装、未修改。
 - 现有隐私版：`versionName=3.26.091917`、`versionCode=26091917`、首次安装时间（user 0）`2026-08-14 17:32:16`、最后更新时间 `2026-09-19 19:30:04`。
@@ -33,12 +183,14 @@
 
 ## 双 APK 静态事实
 
+> **已失效，勿据此判断设备现状**：下表是 route_revision 7 早期的**本地候选**（version `26092100`、证书 `bea423a4…db01`）。设备上实际安装的是 CI 产物（version `26092110`、证书 `93a28468…1563e`），见上方「E 阶段真机验收」§2/§3。原文一个字节未改，保留作审计。
+
 | 身份 | package | label / zh | version | provider authorities | cert SHA-256 |
 | --- | --- | --- | --- | --- | --- |
 | normal | `io.legado.app.tjf` | `Legado` / `阅读` | `26092100` / `3.26.092100` | `io.legado.app.tjf.readerProvider`、`.fileProvider` | `bea423a492567c23903896aa41fac03f31fbd89c98eb6a32f7a7b7b2fe55db01` |
 | private | `io.legado.app.tjf.release` | `Legado·Privacy` / `阅读·隐私` | `26092100` / `3.26.092100` | `io.legado.app.tjf.release.readerProvider`、`.fileProvider` | 同上 |
 
-临时候选副本位于 `%TEMP%\legado-dual-release-acceptance-20260921\`；在真机签名核对前不得把 private 候选安装到现有隐私版上。
+临时候选副本位于 `%TEMP%\legado-dual-release-acceptance-20260921\`；在真机签名核对前不得把 private 候选安装到现有隐私版上。（该约束已随 E 阶段改用 CI 产物而失效；这些本地候选**从未**安装到设备上。）
 
 ## 发布链核对与新发现
 
@@ -47,6 +199,8 @@
 - 2026-09-21 只读抽样 Gitee 公开 API：最新 `beta` 返回 `prerelease=true`，证明列表/元数据解析假设成立，但该 release 只有 `beta.zip` 与 `beta.tar.gz`，没有 APK。workflow 的 Gitee 上传步骤整体 `continue-on-error: true`，且单个附件上传失败后不最终 `exit 1`，因此 Gitee 双资产可能静默缺失。当前 App 的 About 页只调用 GitHub 更新检查，所以这不否决 GitHub beta 主通道，但 Gitee 不得宣称已验证；发布后必须显式检查两个 Gitee APK，或另行授权把附件缺失改为失败门禁。
 
 ## 未闭合门槛（全部必须处理）
+
+> 该列表写于 route_revision 7 的 E 阶段执行前。**当前状态以其上方「E 阶段真机验收」§8 为准**；本列表保留为历史。原文一个字节未改。
 
 1. 只使用设备 `10CE5P1M1Z001P9` 与精确包 `io.legado.app.tjf.release`；现有版本、证书和 user 0/user 999 非敏感数据标记已冻结。本地候选证书不一致，已按规则停止。
 2. 取得 GitHub CI 签名的 normal/private 产物；先确认 private 证书为 `93a28468…1563e`，再执行 `adb install -r`，禁止卸载/清数据，并确认两个用户的数据标记与可见数据仍在。normal 也必须直接安装 CI 产物，再确认两个精确包名共存、名称可区分、设置/数据库隔离。
@@ -171,6 +325,8 @@ F-01 修复新增 1 项：`giteeChannelSelectionFollowsReleaseMetadataNotListOrd
 
 ## 6. NOT RUN（本期仍未取得任何证据的一切）
 
+> 本节属 route_revision 6 的 C+D 历史段落，**不要**据此判断当前进度；E/F 的最新 NOT RUN 清单见上方「E 阶段真机验收」§7。原文一个字节未改。
+
 - GitHub Actions `Test Build` 实跑、真实 Release/asset 上传、beta 标签更新、Gitee 真实上传、link-E 外部消费方行为（属 F）。
 - 真机安装、`.release` 覆盖升级与数据保留、双包共存、应用内检查更新、真机证书摘要与默认通道（属 E）。
 - Gitee `/releases?page=1&per_page=5&direction=desc` 的真实返回语义（是否带 `prerelease`/`assets`、排序字段）：无网络、无命令，F-01 修复只证明纯函数选支逻辑正确。
@@ -178,6 +334,8 @@ F-01 修复新增 1 项：`giteeChannelSelectionFollowsReleaseMetadataNotListOrd
 - 提交、推送、发布、切分支。
 
 ## 7. 唯一后续动作
+
+> **已被取代**：本节的「下一步需要用户分别授权」写于 route_revision 6。E 阶段已授权并执行完毕（见上方「E 阶段真机验收」）。当前唯一后续动作见该节 §7/§8。原文一个字节未改。
 
 - 本阶段到此为止：**C+D 已闭合**，不需再做本地动作。
 - 下一步需要用户**分别授权**：① E 真机迁移验收（含 §4 F-08 两条显式核对项）；② F 发布验证（CI 实跑产生两个身份资产）；③ 提交 / 推送 / 发布（三次独立授权，不得合并推定）。

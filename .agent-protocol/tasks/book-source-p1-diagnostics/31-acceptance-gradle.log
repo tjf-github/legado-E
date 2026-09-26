@@ -1,0 +1,91 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+Calculating task graph as configuration cache cannot be reused because file 'app\build.gradle' has changed.
+> Task :modules:rhino:preBuild UP-TO-DATE
+> Task :modules:book:preBuild UP-TO-DATE
+> Task :modules:book:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :modules:rhino:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preAppDebugUnitTestBuild UP-TO-DATE
+> Task :modules:book:preDebugBuild UP-TO-DATE
+> Task :app:preAppDebugBuild UP-TO-DATE
+> Task :modules:rhino:preDebugBuild UP-TO-DATE
+> Task :modules:rhino:processDebugNavigationResources UP-TO-DATE
+> Task :modules:book:writeDebugAarMetadata UP-TO-DATE
+> Task :modules:book:generateDebugResources UP-TO-DATE
+> Task :modules:book:processDebugNavigationResources UP-TO-DATE
+> Task :modules:rhino:generateDebugResources UP-TO-DATE
+> Task :modules:rhino:writeDebugAarMetadata UP-TO-DATE
+> Task :modules:book:packageDebugResources UP-TO-DATE
+> Task :modules:rhino:packageDebugResources UP-TO-DATE
+> Task :modules:rhino:parseDebugLocalResources UP-TO-DATE
+> Task :modules:book:parseDebugLocalResources UP-TO-DATE
+> Task :modules:rhino:generateDebugRFile UP-TO-DATE
+> Task :modules:book:generateDebugRFile UP-TO-DATE
+> Task :app:generateAppDebugResources UP-TO-DATE
+> Task :app:createAppDebugCompatibleScreenManifests
+> Task :modules:book:extractDeepLinksDebug UP-TO-DATE
+> Task :app:extractDeepLinksAppDebug UP-TO-DATE
+> Task :modules:book:processDebugManifest UP-TO-DATE
+> Task :modules:rhino:extractDeepLinksDebug UP-TO-DATE
+> Task :modules:rhino:processDebugManifest UP-TO-DATE
+> Task :app:generateAppDebugBuildConfig
+> Task :modules:book:compileDebugLibraryResources UP-TO-DATE
+> Task :modules:rhino:compileDebugLibraryResources UP-TO-DATE
+> Task :modules:book:compileDebugKotlin NO-SOURCE
+> Task :modules:book:javaPreCompileDebug UP-TO-DATE
+> Task :app:packageAppDebugResources UP-TO-DATE
+> Task :app:processAppDebugNavigationResources UP-TO-DATE
+> Task :app:parseAppDebugLocalResources UP-TO-DATE
+> Task :app:compileAppDebugNavigationResources UP-TO-DATE
+> Task :modules:rhino:javaPreCompileDebug UP-TO-DATE
+> Task :modules:book:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:mergeAppDebugResources UP-TO-DATE
+> Task :app:mapAppDebugSourceSetPaths UP-TO-DATE
+> Task :app:javaPreCompileAppDebugUnitTest UP-TO-DATE
+> Task :modules:book:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :modules:book:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:checkAppDebugAarMetadata UP-TO-DATE
+> Task :modules:book:processDebugJavaRes UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsAppDebug UP-TO-DATE
+> Task :app:javaPreCompileAppDebug UP-TO-DATE
+> Task :modules:rhino:compileDebugKotlin UP-TO-DATE
+> Task :modules:rhino:compileDebugJavaWithJavac NO-SOURCE
+> Task :modules:rhino:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :modules:rhino:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :modules:rhino:processDebugJavaRes UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesAppDebug UP-TO-DATE
+> Task :app:processAppDebugMainManifest
+> Task :app:processAppDebugManifest
+> Task :app:processAppDebugManifestForPackage
+warn: removing resource io.legado.app.tjf.debug:string/image_no_gap without required default value.
+warn: removing resource io.legado.app.tjf.debug:string/manga_epaper_stting without required default value.
+
+> Task :app:processAppDebugResources
+> Task :app:kspAppDebugKotlin
+> Task :app:compileAppDebugKotlin
+> Task :app:processAppDebugJavaRes UP-TO-DATE
+> Task :app:compileAppDebugJavaWithJavac
+> Task :app:bundleAppDebugClassesToRuntimeJar
+> Task :app:bundleAppDebugClassesToCompileJar
+> Task :app:kspAppDebugUnitTestKotlin
+
+> Task :app:compileAppDebugUnitTestKotlin
+w: file:///D:/vsproject/legado-E/app/src/test/java/io/legado/app/help/book/diagnostics/BookSourceDiagnosticsContractTest.kt:287:51 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
+
+> Task :app:compileAppDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:copyRoomSchemas NO-SOURCE
+> Task :app:processAppDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:testAppDebugUnitTest
+
+[Incubating] Problems report is available at: file:///D:/vsproject/legado-E/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.4/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3m 40s
+57 actionable tasks: 14 executed, 43 up-to-date
+Configuration cache entry stored.

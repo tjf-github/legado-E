@@ -1,15 +1,15 @@
-﻿---
-task_id: dual-release-privacy
-evidence_dir: .agent-protocol/tasks/dual-release-privacy
-state: rework
-mode: triad
-assurance: high
-route_revision: 7
-controller: codex
+---
+task_id: none
+evidence_dir: none
+state: accepted
+mode: dsh-claude
+assurance: standard
+route_revision: 8
+controller: dsh
 executor: dsh
 reviewer: claude
-acceptor: codex
-last_closed_task: ai-stage-e-anchor-proof
+acceptor: dsh
+last_closed_task: book-source-p1-device
 channel_test: passed@2026-09-18
 ---
 

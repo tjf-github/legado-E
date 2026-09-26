@@ -1,0 +1,186 @@
+{
+    "version": 1,
+    "task_id": "book-source-p1-diagnostics",
+    "role": "executor",
+    "round_id": "executor-r002",
+    "source": "role",
+    "status": "completed",
+    "note": "返工轮（round 2）机器摘要。本轮由人类在 DSH 窗口直接指派，未经 agent-protocol runner 拉起，故无 runner 封套与回执；本文件由 executor 直接落盘。",
+    "rework_basis": [
+        "30-acceptance.md findings 处置表",
+        "30-acceptance.md 唯一下一步",
+        "20-review.md"
+    ],
+    "addressed": [
+        "B-1 错误分类接线（阶段内 catch + 链路级兜底 + 阅读处理阶段被吞异常）",
+        "B-2 阶段一改为 contentRule.content 真实提取产出与提取耗时",
+        "B-3 缺失阶段收尾统一标注未执行",
+        "L-5 采集权改为会话内 AtomicBoolean 一次性认领",
+        "B-4 摘要先于 state=1000/-1 终止信号",
+        "B-5 新增 DiagnosticsToggleParityTest 开关产出等价差分测试",
+        "M-1 脱敏：查询串/片段整段丢弃 + 冒号后按行掩码 + 非凭据键守卫",
+        "M-2 恢复 app/build.gradle 严格测试默认（该文件现与 HEAD 一致）",
+        "L-1 诊断接收端改为会话目标绑定，本地书/别的书/别的章节取不到",
+        "L-2 更正 @textNodes 结论并补直系文本节点正例",
+        "L-3 skeleton 如实标注未接线；删除未被使用的接口与 DISABLED 单例",
+        "L-4 tmp-gradle-home 盘点来源后按清理规则删除"
+    ],
+    "pending_controller": [
+        "M-3 AnalyzeByXPath.kt 越界改动需 controller 显式纳入范围或要求回退（本轮未改）"
+    ],
+    "not_run": [
+        "真机 / UI 四阶段可见性",
+        "Web 端调试竞态复现（B-4 修复为静态顺序修正，无实机前后对照）",
+        "端到端（真机）诊断开关前后正文一致性",
+        ":app:lintAppDebug",
+        "@webjs: 与真实书源 / 真实站点",
+        "runner 封套与角色回执（本轮未经 runner）"
+    ],
+    "files_changed": [
+        "app/src/main/java/io/legado/app/help/book/diagnostics/BookSourceDiagnostics.kt",
+        "app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticRedactor.kt",
+        "app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticClassifier.kt",
+        "app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticErrorClass.kt",
+        "app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticStage.kt",
+        "app/src/main/java/io/legado/app/help/book/diagnostics/ContentLineNormalizer.kt",
+        "app/src/main/java/io/legado/app/model/Debug.kt",
+        "app/src/main/java/io/legado/app/model/webBook/BookContent.kt",
+        "app/src/main/java/io/legado/app/help/book/ContentProcessor.kt",
+        "app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt",
+        "app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeByXPath.kt",
+        "app/src/main/java/io/legado/app/data/entities/ReplaceRule.kt",
+        "app/build.gradle",
+        "app/src/test/java/io/legado/app/help/book/diagnostics/BookSourceDiagnosticsContractTest.kt",
+        "app/src/test/java/io/legado/app/help/book/diagnostics/DiagnosticsToggleParityTest.kt",
+        "app/src/test/java/io/legado/app/model/analyzeRule/AnalyzeRuleContractTest.kt",
+        "app/src/test/java/io/legado/app/utils/HtmlFormatterContractTest.kt",
+        "app/src/test/java/io/legado/app/data/entities/ReplaceRuleContractTest.kt",
+        "app/src/test/java/io/legado/app/help/book/ContentProcessorContractTest.kt",
+        ".agent-protocol/tasks/book-source-p1-diagnostics/10-execution.md",
+        ".agent-protocol/tasks/book-source-p1-diagnostics/10-execution.summary.json",
+        ".agent-protocol/tasks/book-source-p1-diagnostics/11-implementation-notes.md",
+        ".agent-protocol/tasks/book-source-p1-diagnostics/rounds/executor-r001/**"
+    ],
+    "commands": [
+        {
+            "cmd": "$env:GRADLE_USER_HOME='D:\\gradle_home'; .\\gradlew.bat :app:compileAppDebugKotlin :app:testAppDebugUnitTest --console=plain",
+            "elevated": "danger-full-access（任务书 §8.3 原命令）",
+            "exit_code": 0,
+            "result": "BUILD SUCCESSFUL in 1m 31s; suites=44 tests=380 failures=0 errors=0 skipped=0",
+            "log": "app/build/p1-rework-gate.log",
+            "caveat": "该次成功运行时最终源码还多一个未被引用的 sessionId 字段；删除后已用下方等价通道在最终源码上复跑"
+        },
+        {
+            "cmd": "GRADLE_USER_HOME=<workspace>/build/drp-gradle-home; <gradle-8.14.4 dist>/bin/gradle.bat -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.vfs.watch=false --no-problems-report :app:compileAppDebugKotlin :app:testAppDebugUnitTest",
+            "elevated": "none（只写工作区内 build/ 临时目录）",
+            "exit_code": 0,
+            "result": "最终源码：编译与测试任务真实执行（测试 XML 时间戳 16:37，380 通过 0 失败），随后 BUILD SUCCESSFUL in 17s / 57 up-to-date 确认产物对应最终源码",
+            "log": "app/build/p1-rework-gate-wsguh3.log, app/build/p1-rework-gate-final.log",
+            "caveat": "与 §8.3 字面命令在 Gradle 主目录、启动方式与两个开关上有差异，全部由沙箱拒绝工作区外写入引起；不改变编译产物与测试结果"
+        },
+        {
+            "cmd": "java -cp \"app\\build\\tmp\\kotlin-classes\\appDebug;<kotlin-stdlib-2.3.10.jar>\" .agent-protocol\\tasks\\book-source-p1-diagnostics\\P1RedactionProbe.java",
+            "exit_code": 0,
+            "result": "leaking_cases=0/3（首轮 3/3、exit 1）",
+            "log": "app/build/p1-rework-redaction-probe.log"
+        }
+    ],
+    "findings": [
+        {
+            "id": "B-1",
+            "status": "resolved",
+            "note": "分类接入阶段内 catch、链路级兜底与阅读处理阶段被吞异常"
+        },
+        {
+            "id": "B-2",
+            "status": "resolved",
+            "note": "阶段一改为真实提取产出与提取耗时；AnalyzeRule 诊断重载删除"
+        },
+        {
+            "id": "B-3",
+            "status": "resolved",
+            "note": "收尾统一标注缺失阶段；采集权改为会话内认领"
+        },
+        {
+            "id": "L-5",
+            "status": "resolved",
+            "note": "AtomicBoolean 一次性认领，并发测试验证"
+        },
+        {
+            "id": "B-4",
+            "status": "resolved-static-only",
+            "note": "摘要先于终止信号；真机/Web 端复现 NOT RUN"
+        },
+        {
+            "id": "B-5",
+            "status": "resolved-component-level",
+            "note": "生产组件层差分测试通过；端到端真机 NOT RUN"
+        },
+        {
+            "id": "M-1",
+            "status": "resolved",
+            "note": "URL 查询串/片段整段丢弃、冒号后按行掩码；验收方探针 0/3"
+        },
+        {
+            "id": "M-2",
+            "status": "resolved",
+            "note": "恢复严格测试默认，门禁在无该配置下全绿"
+        },
+        {
+            "id": "M-3",
+            "status": "pending-controller",
+            "note": "越界改动保留，需 controller 显式纳入范围"
+        },
+        {
+            "id": "L-1",
+            "status": "resolved",
+            "note": "会话目标绑定隔离本地书/别的书/别的章节"
+        },
+        {
+            "id": "L-2",
+            "status": "resolved",
+            "note": "更正注释并补直系文本节点正例"
+        },
+        {
+            "id": "L-3",
+            "status": "resolved",
+            "note": "skeleton 标注未接线；删除死接口与 DISABLED"
+        },
+        {
+            "id": "L-4",
+            "status": "resolved",
+            "note": "tmp-gradle-home 已盘点来源并删除"
+        },
+        {
+            "id": "OBS-CLOCK",
+            "status": "resolved",
+            "note": "诊断计时随会话开关限定，AnalyzeRule 内计时删除"
+        }
+    ],
+    "unmatched_resolves": [],
+    "resolve_conflicts": [],
+    "invalid_summary": null,
+    "worktree_dirty_after": [
+        "app/src/main/java/io/legado/app/data/entities/ReplaceRule.kt",
+        "app/src/main/java/io/legado/app/help/book/ContentProcessor.kt",
+        "app/src/main/java/io/legado/app/model/Debug.kt",
+        "app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeByXPath.kt",
+        "app/src/main/java/io/legado/app/model/analyzeRule/AnalyzeRule.kt",
+        "app/src/main/java/io/legado/app/model/webBook/BookContent.kt",
+        "app/src/main/java/io/legado/app/help/book/diagnostics/**",
+        "app/src/test/java/io/legado/app/**",
+        ".agent-protocol/tasks/book-source-p1-diagnostics/**",
+        "（另有 P0/首轮之前的既有脏基线：tools/**、docs/book-source-audit/**、app/src/test/resources/bookSourceBaseline/**、.gitignore、CURRENT.md、dual-release-privacy/**、书源与解析优化计划书.md、bookshelf.json、build-dsh-p1-*.log）"
+    ],
+    "worktree_attribution": "只表示本轮结束时工作树里有哪些脏文件；除 files_changed 之外均为既有基线，不是本轮 executor 所改。",
+    "evidence_file": "10-execution.md",
+    "implementation_notes": "11-implementation-notes.md",
+    "round_archive": "rounds/executor-r001/（首轮 7 个证据文件原样归档）",
+    "envelope": "none（本轮未经 agent-protocol runner，无 agent-protocol-binding 与回执）",
+    "generated_at_local": "2026-09-23T15:03:41+08:00",
+    "environment_deviations": [
+        "沙箱拒绝 Gradle wrapper 写 D:\\gradle_home 的 .zip.lck（提权审批后两次无人应答）",
+        "未提权时 Kotlin 编译守护进程写 %LOCALAPPDATA%\\kotlin\\daemon 被拒 → 用 -Pkotlin.compiler.execution.strategy=in-process",
+        "build/reports/problems/problems-report.html 由提权运行创建、未提权进程无法覆盖（首轮 §4.1 同源）→ 用 --no-problems-report"
+    ]
+}

@@ -1,27 +1,27 @@
 ﻿{
     "version":  1,
-    "checked_at_utc":  "2026-09-20T09:26:39Z",
+    "checked_at_utc":  "2026-09-21T06:25:05Z",
     "state":  "stable",
     "before":  {
                    "GitAvailable":  true,
                    "Repository":  true,
                    "GitRoot":  "D:/vsproject/legado-E",
-                   "Head":  "fd045f69b2bdadcba86d30b525fe1fd244edb9ce",
-                   "GitDigest":  "40f10aa52597fef3c6e53c6485da0a21ce784f3cbf61b42e9a963bccea4cdba0",
-                   "TaskDigest":  "7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216",
-                   "ExecutionDigest":  "8bb2aa9b8df4d19b121c84582564cde20d8122d077ce8a9e43c742cf0da2053d",
-                   "Digest":  "76769ce3718c5008e4ea074fcbc9af3bc1d5f28621bede6fcc870bac18d2b4ed",
+                   "Head":  "3c6685cffb750e83b53aea9cfaafcaa0e61b7fb3",
+                   "GitDigest":  "391b6a47e7ee60a48ac1aa113e0694061b18821dc46bda3d2002828777c1f019",
+                   "TaskDigest":  "1b5d59a0a4d5ec701f9fb35e56a807318dfe4bf9f2c314230c0b08a014dfdb52",
+                   "ExecutionDigest":  "5ce0705a4fdec7722747675baa8c5537f1b0d84c4bf60858717bcdb3ba506ac0",
+                   "Digest":  "6bba284df7ae6f52b24cca6edb9df19613086c00f7810bd0b62468dddea7c29a",
                    "Detail":  ""
                },
     "after":  {
                   "GitAvailable":  true,
                   "Repository":  true,
                   "GitRoot":  "D:/vsproject/legado-E",
-                  "Head":  "fd045f69b2bdadcba86d30b525fe1fd244edb9ce",
-                  "GitDigest":  "40f10aa52597fef3c6e53c6485da0a21ce784f3cbf61b42e9a963bccea4cdba0",
-                  "TaskDigest":  "7aad1970fe8504e071bf9e4655f67736209fcf5093bb802b81eaa7e22f6d7216",
-                  "ExecutionDigest":  "8bb2aa9b8df4d19b121c84582564cde20d8122d077ce8a9e43c742cf0da2053d",
-                  "Digest":  "76769ce3718c5008e4ea074fcbc9af3bc1d5f28621bede6fcc870bac18d2b4ed",
+                  "Head":  "3c6685cffb750e83b53aea9cfaafcaa0e61b7fb3",
+                  "GitDigest":  "391b6a47e7ee60a48ac1aa113e0694061b18821dc46bda3d2002828777c1f019",
+                  "TaskDigest":  "1b5d59a0a4d5ec701f9fb35e56a807318dfe4bf9f2c314230c0b08a014dfdb52",
+                  "ExecutionDigest":  "5ce0705a4fdec7722747675baa8c5537f1b0d84c4bf60858717bcdb3ba506ac0",
+                  "Digest":  "6bba284df7ae6f52b24cca6edb9df19613086c00f7810bd0b62468dddea7c29a",
                   "Detail":  ""
               }
 }

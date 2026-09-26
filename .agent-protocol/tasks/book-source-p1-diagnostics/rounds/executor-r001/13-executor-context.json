@@ -1,0 +1,148 @@
+{
+    "version":  1,
+    "generated_at_utc":  "2026-09-22T05:50:02Z",
+    "task_id":  "book-source-p1-diagnostics",
+    "task_class":  "standard",
+    "role":  "executor",
+    "round_id":  "executor-r001",
+    "mode":  "triad",
+    "assurance":  "high",
+    "route_revision":  "7",
+    "role_map":  {
+                     "controller":  "codex",
+                     "executor":  "dsh",
+                     "reviewer":  "claude",
+                     "acceptor":  "codex"
+                 },
+    "task_digest":  "56c50f7a086039152d8aea76500accd4c7650f7c678f275d92a7a96305f5d64c",
+    "snapshot_digest":  "c4fd393bf2063ca43244bd282cf5a08c3132140f4ac7869138c715e993eed24c",
+    "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
+    "role_contract":  ".agent-protocol/prompts/executor.md",
+    "evidence_file":  ".agent-protocol/tasks/book-source-p1-diagnostics/10-execution.md",
+    "rules":  [
+                  {
+                      "path":  ".agent-protocol/prompts/executor.md",
+                      "kind":  "role-contract",
+                      "sha256":  "814abb55fb8b50d4c76938e64f408789c88c6ec6d45a3f06f5c266eba0e664b8",
+                      "bytes":  1954
+                  },
+                  {
+                      "path":  ".agent-protocol/README.md",
+                      "kind":  "protocol",
+                      "sha256":  "ea8f7c0cf78170e8b8704d849e9b27c51554e07e99afff493a6139bbce2a69a2",
+                      "bytes":  11611
+                  },
+                  {
+                      "path":  ".agent-protocol/MODES.md",
+                      "kind":  "protocol",
+                      "sha256":  "3f116cc85ed7dba1b6c4f5d23fd063d7cf323988fe4595a874f400997f860a1c",
+                      "bytes":  4689
+                  },
+                  {
+                      "path":  ".agent-protocol/CLOSEOUT.md",
+                      "kind":  "protocol",
+                      "sha256":  "677543ac8419e43a12fe3c568c836c414481f6b92a2da5bdae932b5a17de205c",
+                      "bytes":  4053
+                  },
+                  {
+                      "path":  ".agent-protocol/TASK-PROFILES.json",
+                      "kind":  "policy",
+                      "sha256":  "b0e21c2b46e5eea2a56722cbefd0cb145c0e0eb619b33c3986751f188dcba2b7",
+                      "bytes":  812
+                  },
+                  {
+                      "path":  ".agent-protocol/ROUTES.json",
+                      "kind":  "policy",
+                      "sha256":  "d53ba511e8a3457b7fa8ce7faa9860feea68813c6a9c3fabc2b5192ee47de386",
+                      "bytes":  1573
+                  }
+              ],
+    "read_list":  [
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\book-source-p1-diagnostics\\00-task.md",
+                          "sha256":  "56c50f7a086039152d8aea76500accd4c7650f7c678f275d92a7a96305f5d64c",
+                          "bytes":  11453,
+                          "why":  "任务书：范围、白名单、完成条件、停止条件以它为准"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\PROJECT.md",
+                          "sha256":  "a40f5d47fa72f672ccf583d2c5218d61fc0d075a78df956e005edcba302e1959",
+                          "bytes":  1826,
+                          "why":  "项目专属事实；仅在任务书把它列入你的可读白名单时读"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\CURRENT.md",
+                          "sha256":  "3eacd6f0afea5d19bb82c23e3bee0b92c94ff9bd754bd37493074aaa81833ea7",
+                          "bytes":  491,
+                          "why":  "当前模式与角色映射；换挡后 delta 会让你读它，所以它必须在这张清单里"
+                      }
+                  ],
+    "excluded":  [
+                     {
+                         "pattern":  ".agent-protocol/tasks/\u003c其它任务\u003e/**",
+                         "why":  "历史长报告默认不进上下文；需要历史时只读 read_list 里的 .agent-protocol/ARCHIVE.md 一行索引（对应的 40-archive.json 只在任务书另行授权时才读）"
+                     },
+                     {
+                         "pattern":  "rounds/**",
+                         "why":  "已归档轮次全文默认不读；机器事实已在 recent_rounds 与 findings.json 里"
+                     },
+                     {
+                         "pattern":  "15-*-raw.md",
+                         "why":  "runner 回执是审计材料，不是角色输入"
+                     }
+                 ],
+    "open_findings":  [
+
+                      ],
+    "recent_rounds":  [
+
+                      ],
+    "gate_ledger":  {
+                        "state":  "missing",
+                        "sha256":  "-",
+                        "entries":  [
+
+                                    ]
+                    },
+    "temp_manifests":  [
+                           {
+                               "manifest_id":  "20260922T054924125Z-493771c1",
+                               "round_id":  "executor-r001",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "executor provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260922T054936790Z-009c9e4a",
+                               "round_id":  "executor-pending",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "executor provider invocation",
+                               "cleanup_state":  "removed-by-runner",
+                               "artifacts":  [
+
+                                             ]
+                           },
+                           {
+                               "manifest_id":  "20260922T054952039Z-01bcbdbd",
+                               "round_id":  "executor-r001",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "executor provider invocation",
+                               "cleanup_state":  "scheduled",
+                               "artifacts":  [
+
+                                             ]
+                           }
+                       ],
+    "project_root":  "D:\\vsproject\\legado-E",
+    "usage_notes":  [
+                        "read_list 里是绝对路径；excluded 与 evidence_file 是项目相对路径（统一用正斜杠）。",
+                        "规则文件按 sha256 引用：只有 delta 里列出的变化文件才需要重读。",
+                        "发现一律用 ID 引用（如 F-0002），不要复制全文；claimed_resolved 表示被审方声称已修、尚未被复审方确认。",
+                        "gate_ledger 只记录共享 runner 事实；缓存命中不等于 reviewer 或 acceptor 已独立判断，角色不得把 requested_by_roles 当成结论签名。",
+                        "temp_manifests 只提供清理状态、artifact 哈希和有界摘要；不得按其中路径重读完整长日志。",
+                        "excluded 里的路径默认不读；任务书的读取白名单仍是硬上限。"
+                    ]
+}

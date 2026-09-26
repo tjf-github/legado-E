@@ -1,0 +1,120 @@
+{
+    "version":  1,
+    "task_id":  "book-source-p1-rework-r3",
+    "task_class":  "standard",
+    "mode":  "dsh-claude",
+    "route_revision":  "8",
+    "decision":  "provisional",
+    "product_state":  "rework",
+    "assurance_state":  "partial",
+    "review_rounds":  2,
+    "archived_rounds":  [
+                            "reviewer-r001"
+                        ],
+    "roles":  {
+                  "executor":  {
+                                   "top_round_id":  null,
+                                   "verification":  "NOT_PRESENT",
+                                   "assurance":  "none",
+                                   "machine_integrity":  "not-present",
+                                   "summary_sha256":  "-",
+                                   "legacy_rounds":  [
+
+                                                     ],
+                                   "historical_results":  [
+
+                                                          ]
+                               },
+                  "reviewer":  {
+                                   "top_round_id":  "reviewer-r002",
+                                   "verification":  "PASS",
+                                   "assurance":  "strict-envelope",
+                                   "machine_integrity":  "bound",
+                                   "summary_sha256":  "d39abd3d264a42ce6a62e4f85c88d73698c08185a9697fc1e007cc43ac10982f",
+                                   "legacy_rounds":  [
+
+                                                     ],
+                                   "historical_results":  [
+                                                              {
+                                                                  "round_id":  "reviewer-r001",
+                                                                  "result":  "PASS",
+                                                                  "assurance":  "strict-envelope"
+                                                              }
+                                                          ]
+                               },
+                  "acceptor":  {
+                                   "top_round_id":  null,
+                                   "verification":  "NOT_PRESENT",
+                                   "assurance":  "none",
+                                   "machine_integrity":  "not-present",
+                                   "summary_sha256":  "-",
+                                   "legacy_rounds":  [
+
+                                                     ],
+                                   "historical_results":  [
+
+                                                          ]
+                               }
+              },
+    "total_findings":  7,
+    "findings_source":  "read",
+    "findings_sha256":  "ed47a53d367f2be31ade33f69defc7ab02099d0affd72dcec0c6841afabc995b",
+    "open_findings":  [
+                          {
+                              "id":  "F-0001",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "Debug 侧「会话已结束→不补打」分支缺少守卫测试"
+                          },
+                          {
+                              "id":  "F-0002",
+                              "severity":  "info",
+                              "status":  "open",
+                              "title":  "执行报告 §2 第 1 行行号指向 KDoc 而非实现"
+                          },
+                          {
+                              "id":  "F-0003",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "真机步骤 2「会话存活期间阅读」缺少可复现窗口"
+                          },
+                          {
+                              "id":  "F-0004",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "RssSourceDebugWebSocket.printLog 与阻塞 3 同形（未纳入 P1）"
+                          },
+                          {
+                              "id":  "F-0005",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "阶段四补打权可能被导出/换源统计路径先消费"
+                          },
+                          {
+                              "id":  "F-0006",
+                              "severity":  "info",
+                              "status":  "open",
+                              "title":  "执行侧没有 runner 封套（结构缺口，非代码失败）"
+                          },
+                          {
+                              "id":  "F-0007",
+                              "severity":  "low",
+                              "status":  "open",
+                              "title":  "真机/端到端验收未执行"
+                          }
+                      ],
+    "gate_ledger":  {
+                        "state":  "missing",
+                        "sha256":  "-"
+                    },
+    "evidence":  {
+                     "task_book":  "695f0681c170817674ab0e4e4e368ff0743ed238a9848e85008f4ebfae42256b",
+                     "execution":  "7ec0ddbe3a43f001a5b8fb370c096e61e25b41ef23b49cade468188a77cc141e",
+                     "review":  "4a650bcf495d47c6d03ab742615ae67659a38af62f632225d47e6b2fea12b820",
+                     "acceptance":  "84313bc30d5af17f1ea2a8f15dace987918ef072f80db0f292d20e98dcf62b85"
+                 },
+    "git_head":  "b8ba92e194468f0d7e6103c1175ba9f2a8233d95",
+    "protocol_fingerprint":  "3a239c56c05a3af36588a2297336d72995633cefbcd8076b5ff30bafa8560cf0",
+    "closed_at_utc":  "2026-09-24T14:39:43Z",
+    "note":  "短归档：只记索引与摘要；长报告原文仍留在任务目录，默认不进新任务上下文。"
+}
