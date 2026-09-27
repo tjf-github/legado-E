@@ -17,10 +17,11 @@ channel_test: passed@2026-09-18
 
 只由 controller 更新。若任务目录、任务书状态、角色映射或 `route_revision` 与本文件不一致，所有代理必须停止并报告。
 
-## 交接状态（controller 手写，2026-09-26；`close` 未执行，原因见下）
+## 交接状态（controller 手写，2026-09-27；按「已收敛、未 close」收尾）
 
-- **`state: review` 是手写值，不是 `close` 写的**：`book-source-d2-match` 已实现完毕、三轮独立复审通过（r001 阻塞→修 / r003 通过 / r004 通过）、门禁 46 套件 424 用例全绿、`role-verify` PASS（3 项），但**协议 `close` 执行不了**——`Close-AgentProtocolTask.ps1:142-146` 把「2 个 reviewer 归档 + 1 个顶层回执」计为 3 轮，超过 standard 上限 2；根因是一次被判为挂死的复审尝试永久占用了轮次编号，叠加归档按「第一个空闲位」命名。故 `accepted`/`closed` 与 `ARCHIVE.md` 索引均未生成。
-- **2026-09-26 进展（用户决定后执行）**：①D-2 全部改动已提交为 `2b9ecc2a3`（工作树残留只有 F-2 的三处改动与 `.review-bundle.json`）；②协议三处健壮性已在 `D:\vsproject\agent-collaboration-protocol` 修完（归档按回执轮次 id 命名 + 中止轮次复用编号并在 `superseded-rounds/` 留痕 + `close` 轮次计数只算含绑定回执的轮）；③r004 F-2 已修（`recordFailure` 置链失败标志，此后不再让别处的身份不匹配改写阶段四原因），新增 2 条契约测试，门禁 46 套件 / 426 用例。
-- **唯一下一动作**：`close book-source-d2-match` 已可执行（轮次计数现为 r001 归档 + 顶层 r004 = 2 ≤ standard 上限）；`accepted` 与 `ARCHIVE.md` 由 `close` 写。
-- **未推送**：分支 `codex/manga-import`，未推送、未合并 main、未发布。
+- **本任务状态：已收敛，未 close（用户 2026-09-27 裁定）**。事实链：三轮独立复审通过（r001 阻塞→修 / r003 通过 / r004 通过）、`role-verify` PASS（3 项）、门禁 46 套件全绿。协议三处健壮性已修好后，`close` 能通过全部证据校验，但**轮次计数为 3**（r001 / r003 / r004 都是真实有效复审）> standard 档上限 2；按协议该出口是「升级任务档或转后续任务」，用户选择**留在 `review`**。故 `ARCHIVE.md` 无本任务行，`state: review` 是手写值。
+- **代码已提交**：D-2 全部改动 = `2b9ecc2a3`（46 套件 / 424 用例）；r004 F-2 修复 = `87a3743ac`（46 套件 / 426 用例）。两者都在 `codex/manga-import`，未推送、未合并 main、未发布。
+- **协议三处修复已落地但未提交**：在 `D:\vsproject\agent-collaboration-protocol`（归档按回执轮次 id 命名 / 中止轮次复用编号并留痕 / `close` 只算含绑定回执的轮），另修环境块访问与 BOM 两处连带缺陷；该仓库同批计划书见其 `BATCH-9-PROTOCOL-FIX-PLAN.md`。
+- **未决项**：①协议项目那批改动未提交（提交/推送各自授权）；②本机协议回归套件在 DSH 会话里跑不起来（父进程有大小写同名代理变量，环境块构造成空）——详见《维护计划书》2026-09-26/27 块；③`.review-bundle.json`（7.5 MB）按 `gate-artifacts/README.md` 的说明有意不入库。
+
 
