@@ -353,6 +353,53 @@ class DiagnosticIdentityContractTest {
         assertTrue(collector.snapshots().isEmpty())
     }
 
+    // ---------- r004 F-2：链路已失败时，别处的不匹配不得改写阶段四的原因 ----------
+
+    @Test
+    fun chainFailureKeepsTheReadingStageReasonEvenAfterMismatch() {
+        // r004 F-2 的时序：链路在抓取/提取层就失败（readFailure 归到阶段一），收尾把阶段四
+        // 写成「未进入阅读处理」——这是正确因果；此后用户去读**别的书**，身份不匹配把计数
+        // 从 0 推到 1。旧实现会用「有 1 次被身份隔离排除」覆写原因，把别处的事件当成阶段四的原因。
+        val collector = BookSourceDiagnosticsCollector().apply {
+            bindTarget(source, null, absoluteChapter)
+        }
+        collector.record(DiagnosticStage.EXTRACT, null, 12L, error = java.net.UnknownHostException("fetch failed"))
+        collector.recordFailure(java.net.UnknownHostException("fetch failed"))
+        collector.markNotExecutedIfMissing(
+            DiagnosticStage.READ_PROCESS,
+            collector.readingStageMissingReason()
+        )
+        val before = collector.snapshotOf(DiagnosticStage.READ_PROCESS)!!.note
+        assertEquals("书源调试链路止于 BookContent，未进入阅读处理", before)
+
+        assertFalse(collector.accepts(source, null, "chapter/9.html", base))
+        assertEquals(1, collector.mismatchCount())
+        assertTrue("链路已失败时必须能识别出来", collector.hasChainFailure())
+        assertFalse("不得让它处的不匹配改写失败原因", collector.canRefreshReadingStageMissingReason())
+        assertFalse("不得刷新", collector.refreshReadingStageMissingReasonIfMissing())
+        assertEquals(
+            "第 4 行必须仍写着链路停在哪里，而不是身份隔离",
+            before,
+            collector.snapshotOf(DiagnosticStage.READ_PROCESS)!!.note
+        )
+    }
+
+    @Test
+    fun readingStageReasonStaysRefreshableWithoutChainFailure() {
+        // 对照组：没有链路级失败时，D-2 的刷新行为必须保持不变，别把修复做成了取消刷新。
+        val collector = BookSourceDiagnosticsCollector().apply {
+            bindTarget(source, null, absoluteChapter)
+        }
+        collector.markNotExecutedIfMissing(
+            DiagnosticStage.READ_PROCESS,
+            collector.readingStageMissingReason()
+        )
+        assertTrue(collector.canRefreshReadingStageMissingReason())
+        assertFalse(collector.accepts(source, null, "chapter/9.html", base))
+        assertTrue(collector.refreshReadingStageMissingReasonIfMissing())
+        assertTrue(collector.summaryLines().last().contains("1 次"))
+    }
+
     @Test
     fun blankChapterUrlBindsNothing() {
         // 复审 r003 F-4：`--` 加纯空白会让归一键成为一串空格，绑上一个永远匹配不到的「幽灵目标」，

@@ -71,6 +71,14 @@ class BookSourceDiagnosticsCollector(val isEnabled: Boolean = true) {
     /** 身份不匹配引起的「未执行原因」刷新打印权：一个会话只打印一次，避免逐章阅读时刷屏。 */
     private val mismatchRefreshReported = AtomicBoolean(false)
 
+    /**
+     * 本会话是否发生过链路级失败（[recordFailure]）。
+     *
+     * 置位后「阶段四未执行」的原因已由收尾写出（链路停在哪一层），不得再被与它无关的
+     * 会话级身份不匹配覆写——那是另一种「贴错因果」（复审 r004 F-2）。
+     */
+    private val chainFailureRecorded = AtomicBoolean(false)
+
     /** 被身份隔离排除掉的正文处理次数（只记数，不记 URL）。 */
     private val rejectedIdentities = AtomicInteger()
 
@@ -190,13 +198,17 @@ class BookSourceDiagnosticsCollector(val isEnabled: Boolean = true) {
      * 收尾时计数还是 0，写下的会是「未进入阅读处理」；若此后才发生身份不匹配，而 note 又是写入时固化的字符串，
      * 用户最终读到的仍是那句错误因果（复审 F-1）。
      * - 阶段四已有真实读数时不刷新（不覆盖真实数据）；
-     * - 诊断关闭、或阶段四还没有任何快照时返回 false（后者不该发生：收尾会先标注）。
+     * - 诊断关闭、或阶段四还没有任何快照时返回 false（后者不该发生：收尾会先标注）；
+     * - **本会话已记录链路级失败时不刷新**：那种情况下「未执行」的原因是链路停在了
+     *   抓取/提取层，与「有多少次别的正文处理被身份隔离」无关；此时覆写会把别处的事件
+     *   当成阶段四的原因，重新引入一类贴错因果（复审 r004 F-2）。
      *
      * 「取快照 → 判断 → 写回」必须整体持锁：本方法由**阅读路径处理别的书/章节**时调用，与同章阅读写
      * 阶段四真实读数可能并发；跨锁的读改写会在那个窗口把真实读数覆盖回「未执行」（复审 r003 F-2）。
      */
     fun refreshReadingStageMissingReasonIfMissing(): Boolean {
         if (!isEnabled) return false
+        if (hasChainFailure()) return false
         synchronized(snapshots) {
             val snapshot = snapshots.firstOrNull { it.stage == DiagnosticStage.READ_PROCESS } ?: return false
             if (snapshot.executed) return false
@@ -206,6 +218,17 @@ class BookSourceDiagnosticsCollector(val isEnabled: Boolean = true) {
             return true
         }
     }
+
+    /**
+     * 阶段四未执行的原因是否可以按当前计数刷新。
+     *
+     * 与 [refreshReadingStageMissingReasonIfMissing] 用同一个判据，供调用方决定要不要打印——
+     * 否则「不刷新但照打」会把一份没人读过的原因打给用户，看起来仍像是刚发生的事。
+     */
+    fun canRefreshReadingStageMissingReason(): Boolean = isEnabled && !hasChainFailure()
+
+    /** 本会话是否已有链路级失败（见 [recordFailure]）：JVM 契约测试直接断言该状态。 */
+    fun hasChainFailure(): Boolean = chainFailureRecorded.get()
 
     /** 身份不匹配触发的摘要打印权：一个会话只允许一次，避免逐章阅读时刷屏；诊断关闭时不占用。 */
     fun claimMismatchRefreshReport(): Boolean {
@@ -338,6 +361,8 @@ class BookSourceDiagnosticsCollector(val isEnabled: Boolean = true) {
      */
     fun recordFailure(error: Throwable) {
         if (!isEnabled) return
+        // 先置位再写快照：并发下宁可少刷新一次原因，也不能让「身份隔离」覆写掉真实失败原因。
+        chainFailureRecorded.set(true)
         val lastExecuted = DiagnosticStage.values().lastOrNull {
             it != DiagnosticStage.READ_PROCESS && snapshotOf(it)?.executed == true
         }

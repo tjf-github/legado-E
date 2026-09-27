@@ -139,9 +139,12 @@ object Debug {
      *
      * 会话已结束（callback 被清空）时不输出、不伪造；原因刷新由采集器判断是否真的变了，
      * 打印则用一个会话一次的闩控制——逐章阅读会不断触发不匹配，不能每章刷一次屏。
+     * 链路已失败（阶段一/二/三出过错）时不刷新、也不打印：此时「阶段四未执行」的原因是
+     * 链路停在哪一层，与本次身份不匹配无关（复审 r004 F-2）。
      */
     private fun onIdentityMismatch(collector: BookSourceDiagnosticsCollector) {
         if (callback == null) return
+        if (!collector.canRefreshReadingStageMissingReason()) return
         if (!collector.refreshReadingStageMissingReasonIfMissing()) return
         if (!collector.claimMismatchRefreshReport()) return
         printBookSourceDiagnostics()
