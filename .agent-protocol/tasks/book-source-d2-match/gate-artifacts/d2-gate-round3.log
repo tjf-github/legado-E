@@ -1,0 +1,98 @@
+﻿Reusing configuration cache.
+> Task :modules:book:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :modules:book:preBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :modules:rhino:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :modules:book:preDebugBuild UP-TO-DATE
+> Task :app:preAppDebugBuild UP-TO-DATE
+> Task :modules:rhino:preBuild UP-TO-DATE
+> Task :modules:rhino:preDebugBuild UP-TO-DATE
+> Task :modules:book:writeDebugAarMetadata UP-TO-DATE
+> Task :modules:book:processDebugNavigationResources UP-TO-DATE
+> Task :modules:book:processDebugManifest UP-TO-DATE
+> Task :modules:rhino:writeDebugAarMetadata UP-TO-DATE
+> Task :modules:rhino:generateDebugResources UP-TO-DATE
+> Task :modules:rhino:processDebugNavigationResources UP-TO-DATE
+> Task :app:generateAppDebugResources UP-TO-DATE
+> Task :modules:book:generateDebugResources UP-TO-DATE
+> Task :app:processAppDebugNavigationResources UP-TO-DATE
+> Task :modules:book:packageDebugResources UP-TO-DATE
+> Task :app:compileAppDebugNavigationResources UP-TO-DATE
+> Task :modules:rhino:packageDebugResources UP-TO-DATE
+> Task :modules:book:parseDebugLocalResources UP-TO-DATE
+> Task :app:packageAppDebugResources UP-TO-DATE
+> Task :modules:rhino:parseDebugLocalResources UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsAppDebug UP-TO-DATE
+> Task :app:mergeAppDebugResources UP-TO-DATE
+> Task :app:createAppDebugCompatibleScreenManifests
+> Task :app:parseAppDebugLocalResources UP-TO-DATE
+> Task :modules:book:generateDebugRFile UP-TO-DATE
+> Task :app:extractDeepLinksAppDebug UP-TO-DATE
+> Task :modules:book:extractDeepLinksDebug UP-TO-DATE
+> Task :modules:rhino:extractDeepLinksDebug UP-TO-DATE
+> Task :modules:rhino:compileDebugLibraryResources UP-TO-DATE
+> Task :modules:rhino:processDebugManifest UP-TO-DATE
+> Task :modules:book:javaPreCompileDebug UP-TO-DATE
+> Task :modules:rhino:javaPreCompileDebug UP-TO-DATE
+> Task :modules:book:compileDebugLibraryResources UP-TO-DATE
+> Task :app:preAppDebugUnitTestBuild UP-TO-DATE
+> Task :app:checkAppDebugAarMetadata UP-TO-DATE
+> Task :app:javaPreCompileAppDebugUnitTest UP-TO-DATE
+> Task :app:javaPreCompileAppDebug UP-TO-DATE
+> Task :modules:book:compileDebugKotlin NO-SOURCE
+> Task :modules:book:compileDebugJavaWithJavac UP-TO-DATE
+> Task :modules:book:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :modules:rhino:generateDebugRFile UP-TO-DATE
+> Task :modules:book:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:generateAppDebugBuildConfig FROM-CACHE
+> Task :modules:rhino:compileDebugKotlin UP-TO-DATE
+> Task :modules:rhino:compileDebugJavaWithJavac NO-SOURCE
+> Task :modules:rhino:processDebugJavaRes UP-TO-DATE
+> Task :modules:rhino:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :modules:rhino:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :modules:book:processDebugJavaRes UP-TO-DATE
+> Task :app:processAppDebugMainManifest FROM-CACHE
+> Task :app:dataBindingGenBaseClassesAppDebug UP-TO-DATE
+> Task :app:mapAppDebugSourceSetPaths UP-TO-DATE
+> Task :app:processAppDebugManifest FROM-CACHE
+> Task :app:processAppDebugManifestForPackage FROM-CACHE
+> Task :app:processAppDebugResources FROM-CACHE
+> Task :app:kspAppDebugKotlin
+
+> Task :app:compileAppDebugKotlin
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:83:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:91:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:199:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:207:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:217:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:225:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:236:24 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:245:24 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/help/storage/Restore.kt:327:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/ui/book/explore/ExploreShowViewModel.kt:50:24 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/ui/book/explore/ExploreShowViewModel.kt:57:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/ui/book/read/ReadBookActivity.kt:1523:28 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/ui/book/read/ReadBookActivity.kt:1554:28 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/ui/book/read/ReadBookActivity.kt:1571:24 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/ui/book/read/ReadBookActivity.kt:1593:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/utils/LogUtils.kt:89:20 'fun putNotSave(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/utils/UrlUtil.kt:93:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/utils/UrlUtil.kt:133:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/utils/UrlUtil.kt:146:20 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+w: file:///D:/vsproject/legado-E/app/src/main/java/io/legado/app/utils/UrlUtil.kt:163:24 'fun put(message: String?, throwable: Throwable? = ..., toast: Boolean = ...): Unit' is deprecated. Use i/w/e and toast for new call sites.
+
+> Task :app:processAppDebugJavaRes UP-TO-DATE
+> Task :app:compileAppDebugJavaWithJavac
+> Task :app:bundleAppDebugClassesToRuntimeJar
+> Task :app:bundleAppDebugClassesToCompileJar
+> Task :app:kspAppDebugUnitTestKotlin
+> Task :app:compileAppDebugUnitTestKotlin
+> Task :app:compileAppDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:copyRoomSchemas NO-SOURCE
+> Task :app:processAppDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:testAppDebugUnitTest
+
+BUILD SUCCESSFUL in 1m 11s
+57 actionable tasks: 9 executed, 5 from cache, 43 up-to-date
+Configuration cache entry reused.

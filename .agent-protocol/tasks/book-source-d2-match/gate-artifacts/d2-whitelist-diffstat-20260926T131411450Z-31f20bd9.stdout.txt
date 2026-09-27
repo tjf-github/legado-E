@@ -1,0 +1,5 @@
+ .../io/legado/app/help/book/ContentProcessor.kt    |   3 +-
+ .../help/book/diagnostics/BookSourceDiagnostics.kt | 132 +++++++++++++++++++--
+ app/src/main/java/io/legado/app/model/Debug.kt     |  41 ++++++-
+ .../io/legado/app/model/webBook/BookContent.kt     |   7 +-
+ 4 files changed, 163 insertions(+), 20 deletions(-)

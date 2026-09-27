@@ -1,0 +1,146 @@
+{
+    "version":  1,
+    "generated_at_utc":  "2026-09-26T12:26:24Z",
+    "task_id":  "book-source-d2-match",
+    "task_class":  "standard",
+    "role":  "reviewer",
+    "round_id":  "reviewer-r001",
+    "mode":  "dsh-claude",
+    "assurance":  "standard",
+    "route_revision":  "8",
+    "role_map":  {
+                     "controller":  "dsh",
+                     "executor":  "dsh",
+                     "reviewer":  "claude",
+                     "acceptor":  "dsh"
+                 },
+    "task_digest":  "19286f8f074309e17bbd0075a926b999735ba5706c8d3523b9aac66a3f3a59c4",
+    "snapshot_digest":  "fa604258baaa950519354c52322424ed2bd7f89109a9750c61f6e1bd97552c21",
+    "protocol_fingerprint":  "9c5c705cba2efde46ec3a03e463e0d6ebe6491d24930687adecca4b6d1a6289d",
+    "role_contract":  ".agent-protocol/prompts/reviewer.md",
+    "evidence_file":  ".agent-protocol/tasks/book-source-d2-match/20-review.md",
+    "rules":  [
+                  {
+                      "path":  ".agent-protocol/prompts/reviewer.md",
+                      "kind":  "role-contract",
+                      "sha256":  "dd41769941bb35bb6ef5033c48a44ca683b730f50348ccdd15b35178384decb2",
+                      "bytes":  3436
+                  },
+                  {
+                      "path":  ".agent-protocol/README.md",
+                      "kind":  "protocol",
+                      "sha256":  "6ca26ccb5ca7dc12a4e3f743f8fcf1bb8766a46e11b7ef5a107c6af0ff79636f",
+                      "bytes":  11463
+                  },
+                  {
+                      "path":  ".agent-protocol/MODES.md",
+                      "kind":  "protocol",
+                      "sha256":  "18dec93edd22162423d2b7852a18d8f670425466d62b93ebc175cfb252e45f52",
+                      "bytes":  4632
+                  },
+                  {
+                      "path":  ".agent-protocol/CLOSEOUT.md",
+                      "kind":  "protocol",
+                      "sha256":  "485d0b1970fc8024dc96bfb7bfe6e4a95f1fa1ef191685f51a233716b6b54c6c",
+                      "bytes":  4003
+                  },
+                  {
+                      "path":  ".agent-protocol/TASK-PROFILES.json",
+                      "kind":  "policy",
+                      "sha256":  "7098f73c79e4eeae9da2721ad5ab31d84b5ac4e0e4df0dc0d7580d20378d8ccd",
+                      "bytes":  786
+                  },
+                  {
+                      "path":  ".agent-protocol/ROUTES.json",
+                      "kind":  "policy",
+                      "sha256":  "ba53a62dd9ae5d9b08d95a56314d13308b65f69e175269bbcf461ae0622fb0f8",
+                      "bytes":  1507
+                  }
+              ],
+    "read_list":  [
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\book-source-d2-match\\00-task.md",
+                          "sha256":  "19286f8f074309e17bbd0075a926b999735ba5706c8d3523b9aac66a3f3a59c4",
+                          "bytes":  6834,
+                          "why":  "任务书：范围、白名单、完成条件、停止条件以它为准"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\book-source-d2-match\\10-execution.md",
+                          "sha256":  "65b39234cc3d4d5682906207fb11a793a50b77d8911b0989b85255cac543f8b2",
+                          "bytes":  8529,
+                          "why":  "上一环产物：当作待验证的主张读，不要当作事实"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\PROJECT.md",
+                          "sha256":  "3fdeafee38270f90ae6a99040dc216064f5ab28b4aa3c3fe0df9fbc52c2f27f9",
+                          "bytes":  1808,
+                          "why":  "项目专属事实；仅在任务书把它列入你的可读白名单时读"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\CURRENT.md",
+                          "sha256":  "7f85a04c5aa6ead3251ada5289de136f6c806f5242accfe3804d785f9e0dcdb0",
+                          "bytes":  476,
+                          "why":  "当前模式与角色映射；换挡后 delta 会让你读它，所以它必须在这张清单里"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\ARCHIVE.md",
+                          "sha256":  "e7426ba81a576ebac9519c8fb94bbc585b0c820d89fb4be5a705a9b03e766cad",
+                          "bytes":  549,
+                          "why":  "已关闭任务的一行索引；需要历史时读它，不要翻别的任务目录"
+                      },
+                      {
+                          "path":  "D:\\vsproject\\legado-E\\.agent-protocol\\tasks\\book-source-d2-match\\06-review-commands.json",
+                          "sha256":  "cca8d906639d8108668a5d6409f71f6d57b4ddfc0a7ec08c959d7ee6f3fb634c",
+                          "bytes":  1632,
+                          "why":  "冻结的复审命令数组；任务书授权读取后才能判断门禁覆盖"
+                      }
+                  ],
+    "excluded":  [
+                     {
+                         "pattern":  ".agent-protocol/tasks/\u003c其它任务\u003e/**",
+                         "why":  "历史长报告默认不进上下文；需要历史时只读 read_list 里的 .agent-protocol/ARCHIVE.md 一行索引（对应的 40-archive.json 只在任务书另行授权时才读）"
+                     },
+                     {
+                         "pattern":  "rounds/**",
+                         "why":  "已归档轮次全文默认不读；机器事实已在 recent_rounds 与 findings.json 里"
+                     },
+                     {
+                         "pattern":  "15-*-raw.md",
+                         "why":  "runner 回执是审计材料，不是角色输入"
+                     }
+                 ],
+    "open_findings":  [
+
+                      ],
+    "recent_rounds":  [
+
+                      ],
+    "gate_ledger":  {
+                        "state":  "missing",
+                        "sha256":  "-",
+                        "entries":  [
+
+                                    ]
+                    },
+    "temp_manifests":  [
+                           {
+                               "manifest_id":  "20260926T121830158Z-c328ec66",
+                               "round_id":  "reviewer-r001",
+                               "creator":  "Invoke-AgentProtocolRole.ps1",
+                               "purpose":  "reviewer provider invocation",
+                               "cleanup_state":  "scheduled",
+                               "artifacts":  [
+
+                                             ]
+                           }
+                       ],
+    "project_root":  "D:\\vsproject\\legado-E",
+    "usage_notes":  [
+                        "read_list 里是绝对路径；excluded 与 evidence_file 是项目相对路径（统一用正斜杠）。",
+                        "规则文件按 sha256 引用：只有 delta 里列出的变化文件才需要重读。",
+                        "发现一律用 ID 引用（如 F-0002），不要复制全文；claimed_resolved 表示被审方声称已修、尚未被复审方确认。",
+                        "gate_ledger 只记录共享 runner 事实；缓存命中不等于 reviewer 或 acceptor 已独立判断，角色不得把 requested_by_roles 当成结论签名。",
+                        "temp_manifests 只提供清理状态、artifact 哈希和有界摘要；不得按其中路径重读完整长日志。",
+                        "excluded 里的路径默认不读；任务书的读取白名单仍是硬上限。"
+                    ]
+}

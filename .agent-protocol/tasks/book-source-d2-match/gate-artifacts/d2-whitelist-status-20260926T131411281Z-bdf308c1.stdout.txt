@@ -1,0 +1,6 @@
+ M app/src/main/java/io/legado/app/help/book/ContentProcessor.kt
+ M app/src/main/java/io/legado/app/help/book/diagnostics/BookSourceDiagnostics.kt
+ M app/src/main/java/io/legado/app/model/Debug.kt
+ M app/src/main/java/io/legado/app/model/webBook/BookContent.kt
+?? app/src/main/java/io/legado/app/help/book/diagnostics/DiagnosticIdentity.kt
+?? app/src/test/java/io/legado/app/help/book/diagnostics/DiagnosticIdentityContractTest.kt

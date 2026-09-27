@@ -1,0 +1,50 @@
+{
+    "version":  1,
+    "task_id":  "book-source-d2-match",
+    "role":  "reviewer",
+    "round_id":  "reviewer-r004",
+    "source":  "runner-fallback",
+    "status":  "completed",
+    "not_run":  [
+                    "unknown：角色没有给出机器摘要，未运行项无法判定"
+                ],
+    "files_changed":  [
+
+                      ],
+    "commands":  [
+
+                 ],
+    "findings":  [
+
+                 ],
+    "unmatched_resolves":  [
+
+                           ],
+    "resolve_conflicts":  [
+
+                          ],
+    "invalid_summary":  "no-summary",
+    "worktree_dirty_after":  [
+                                 ".agent-protocol/current.md",
+                                 "app/src/main/java/io/legado/app/help/book/contentprocessor.kt",
+                                 "app/src/main/java/io/legado/app/help/book/diagnostics/booksourcediagnostics.kt",
+                                 "app/src/main/java/io/legado/app/model/debug.kt",
+                                 "app/src/main/java/io/legado/app/model/webbook/bookcontent.kt",
+                                 "docs/book-source-audit/d-2-/350/241/245/346/211/223/345/214/271/351/205/215/345/217/243/345/276/204-/350/243/201/345/256/232.md",
+                                 "/345/217/214/345/271/263/345/217/260/345/274/200/345/217/221/347/216/257/345/242/203/346/265/201/347/250/213/344/271/246.md",
+                                 "app/src/main/java/io/legado/app/help/book/diagnostics/diagnosticidentity.kt",
+                                 "app/src/test/java/io/legado/app/help/book/diagnostics/diagnosticidentitycontracttest.kt"
+                             ],
+    "worktree_attribution":  "unknown：只表示本轮结束时工作树里有哪些脏文件，不代表是本角色改的",
+    "findings_before_sha256":  "-",
+    "findings_after_sha256":  "-",
+    "findings_sha256":  "-",
+    "task_digest":  "1e7d31cd2360dda71d045c69bcb093582ddeb4a5060b2f515d02bbd148bb30f3",
+    "snapshot_digest":  "5997d4e4fe603c56d4ff6d58eb052229b1fbf75ec5dd19dec032dc949d6bb09f",
+    "evidence_file":  "20-review.md",
+    "evidence_sha256":  "aefc6b6afe203762be45bad80560c75c4de970883ea006bd9f8700ebcdeb9aaf",
+    "context_pack":  "13-reviewer-context.json",
+    "protocol_fingerprint":  "9c5c705cba2efde46ec3a03e463e0d6ebe6491d24930687adecca4b6d1a6289d",
+    "generated_at_utc":  "2026-09-26T15:54:48Z",
+    "note":  "source=role 时这段摘要由角色提供并原样提取；runner-fallback 只记录机器可观测事实，不是角色结论。"
+}

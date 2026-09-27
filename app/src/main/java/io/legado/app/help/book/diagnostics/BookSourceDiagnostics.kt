@@ -2,6 +2,7 @@ package io.legado.app.help.book.diagnostics
 
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * 单个阶段的诊断快照。
@@ -67,20 +68,61 @@ class BookSourceDiagnosticsCollector(val isEnabled: Boolean = true) {
     /** 阶段四真实读数补打摘要的采集权：一个会话只补打一次。 */
     private val readingStageReported = AtomicBoolean(false)
 
+    /** 身份不匹配引起的「未执行原因」刷新打印权：一个会话只打印一次，避免逐章阅读时刷屏。 */
+    private val mismatchRefreshReported = AtomicBoolean(false)
+
+    /** 被身份隔离排除掉的正文处理次数（只记数，不记 URL）。 */
+    private val rejectedIdentities = AtomicInteger()
+
     /** 本次会话要调试的正文目标；未绑定前不接受任何阶段快照。 */
     @Volatile
     private var target: Target? = null
 
-    /** 正文目标：书源、书、章节三级身份。[bookUrl] 允许为空（`--<url>` 正文调试入口）。 */
+    /**
+     * 正文目标：书源、书、章节三级身份，**存已归一的键**（见 [DiagnosticIdentity]）。
+     * [bookUrl] 允许为空（`--<url>` 正文调试入口）。
+     * [rawChapterUrl] 是绑定时的原始章节串，用于保留「逐字相等」这条既有匹配途径。
+     *
+     * [toString] 被显式覆盖：本对象会驻留原始章节串，默认的 data class 输出会在有人
+     * `log(target)` 时把 URL 带进日志——诊断链路只允许计数与归一键外流。
+     */
     data class Target(
-        val bookSourceUrl: String?,
+        val sourceKey: String,
         val bookUrl: String?,
-        val chapterUrl: String?
-    )
+        val chapterKey: String,
+        val rawChapterUrl: String?
+    ) {
+        override fun toString(): String =
+            "Target(sourceKey=$sourceKey, bookUrl=${if (bookUrl.isNullOrEmpty()) "none" else "set"}, " +
+                "chapterKey=<set>, rawChapterUrl=${if (rawChapterUrl.isNullOrEmpty()) "none" else "set"})"
+    }
 
-    /** 绑定本次会话要调试的正文目标，须在正文抓取之前调用。 */
-    fun bindTarget(bookSourceUrl: String?, bookUrl: String?, chapterUrl: String?) {
-        target = Target(bookSourceUrl, bookUrl, chapterUrl)
+    /**
+     * 绑定本次会话要调试的正文目标，须在正文抓取之前调用。
+     *
+     * [chapterBaseUrl] 传该章节自己的 `BookChapter.baseUrl`：相对章节地址要靠它才能与调试页粘的绝对地址对上（D-2/M1）。
+     * 书源或章节身份归一出空（例如没给书源）时不绑定任何目标——宁可不诊断，也不放宽成「谁来都收」。
+     */
+    fun bindTarget(
+        bookSourceUrl: String?,
+        bookUrl: String?,
+        chapterUrl: String?,
+        chapterBaseUrl: String? = null
+    ) {
+        val source = DiagnosticIdentity.sourceKey(bookSourceUrl)
+        val chapter = DiagnosticIdentity.chapterKey(chapterBaseUrl, chapterUrl)
+        // isNullOrBlank 而不是 isNullOrEmpty：`--` 加纯空白会让归一键变成一串空格，
+        // 从而绑上一个永远匹配不到的「幽灵目标」（复审 r003 F-4）
+        if (source == null || chapter.isNullOrBlank()) {
+            target = null
+            return
+        }
+        target = Target(
+            sourceKey = source,
+            bookUrl = bookUrl?.trim()?.ifEmpty { null },
+            chapterKey = chapter,
+            rawChapterUrl = chapterUrl?.trim()?.ifEmpty { null }
+        )
     }
 
     /**
@@ -88,14 +130,87 @@ class BookSourceDiagnosticsCollector(val isEnabled: Boolean = true) {
      *
      * 书源与章节必须一致；会话目标带书号时书号也必须一致。因此本地书（origin 是 `loc_book`）、
      * 同一书源下的别的书、同一本书的别的章节都拿不到接收端。
+     * 判定为「不属于本次会话」时只递增 [mismatchCount]，**不保存任何 URL**。
+     *
+     * 章节匹配是**两条途径取或**，归一比较只做新增、不替换：
+     * 1. 归一后相等（修 D-2：相对/绝对、尾斜杠、URL 选项差异）；
+     * 2. 原始串逐字相等（保持既有行为）。
+     * 第 2 条不能删：存量书若 `baseUrl` 为空，绑定侧与阅读侧会归一到不同形态，
+     * 而它们在 P1 真机轮里本来是能对上的（`++<tocUrl>`）——删掉就是把能用的场景改坏。
      */
-    fun accepts(bookSourceUrl: String?, bookUrl: String?, chapterUrl: String?): Boolean {
+    fun accepts(
+        bookSourceUrl: String?,
+        bookUrl: String?,
+        chapterUrl: String?,
+        chapterBaseUrl: String? = null
+    ): Boolean {
+        if (!isEnabled) return false
         val bound = target ?: return false
-        val boundSource = bound.bookSourceUrl
-        if (boundSource.isNullOrEmpty() || boundSource != bookSourceUrl) return false
-        if (bound.chapterUrl.isNullOrEmpty() || bound.chapterUrl != chapterUrl) return false
-        if (!bound.bookUrl.isNullOrEmpty() && bound.bookUrl != bookUrl) return false
-        return true
+        val source = DiagnosticIdentity.sourceKey(bookSourceUrl)
+        val chapter = DiagnosticIdentity.chapterKey(chapterBaseUrl, chapterUrl)
+        val rawChapter = chapterUrl?.trim()?.ifEmpty { null }
+        val book = bookUrl?.trim()?.ifEmpty { null }
+        val chapterMatched = (!chapter.isNullOrEmpty() && chapter == bound.chapterKey) ||
+            (rawChapter != null && rawChapter == bound.rawChapterUrl)
+        val matched = source != null && source == bound.sourceKey &&
+            chapterMatched &&
+            (bound.bookUrl.isNullOrEmpty() || bound.bookUrl == book)
+        if (!matched) rejectedIdentities.incrementAndGet()
+        return matched
+    }
+
+    /**
+     * 被本会话身份隔离排除掉的正文处理次数（只记数，不含 URL/正文）。
+     *
+     * 用途是把 D-2 那种「读同一章却永远补打不上」的静默失效变成可读事实：见 [readingStageMissingReason]。
+     */
+    fun mismatchCount(): Int = rejectedIdentities.get()
+
+    /**
+     * 会话收尾时「阶段四未执行」的说明文案。
+     *
+     * 区分两种完全不同的原因，避免把身份不匹配写成错误因果：
+     * - 没有任何被排除的处理 ⇒ 链路确实没走到阅读处理；
+     * - 有被排除的处理 ⇒ 阅读处理发生过，只是身份不属于本会话（D-2 的典型形态）。
+     * 文案里只有计数，不含任何 URL。
+     */
+    fun readingStageMissingReason(): String {
+        val mismatches = mismatchCount()
+        return if (mismatches > 0) {
+            "书源调试链路止于 BookContent；本会话存活期有 $mismatches 次正文处理被身份隔离排除，未进入本次调试目标"
+        } else {
+            "书源调试链路止于 BookContent，未进入阅读处理"
+        }
+    }
+
+    /**
+     * 把「阶段四未执行」的原因刷新成基于**当前计数**的文案；返回是否真的变了。
+     *
+     * 必须有这个刷新点：调试链路的收尾（[Debug] 的 `finishContentDiagnostics`）**早于**用户去读那一章，
+     * 收尾时计数还是 0，写下的会是「未进入阅读处理」；若此后才发生身份不匹配，而 note 又是写入时固化的字符串，
+     * 用户最终读到的仍是那句错误因果（复审 F-1）。
+     * - 阶段四已有真实读数时不刷新（不覆盖真实数据）；
+     * - 诊断关闭、或阶段四还没有任何快照时返回 false（后者不该发生：收尾会先标注）。
+     *
+     * 「取快照 → 判断 → 写回」必须整体持锁：本方法由**阅读路径处理别的书/章节**时调用，与同章阅读写
+     * 阶段四真实读数可能并发；跨锁的读改写会在那个窗口把真实读数覆盖回「未执行」（复审 r003 F-2）。
+     */
+    fun refreshReadingStageMissingReasonIfMissing(): Boolean {
+        if (!isEnabled) return false
+        synchronized(snapshots) {
+            val snapshot = snapshots.firstOrNull { it.stage == DiagnosticStage.READ_PROCESS } ?: return false
+            if (snapshot.executed) return false
+            val reason = readingStageMissingReason()
+            if (snapshot.note == reason) return false
+            record(snapshot.copy(note = reason))
+            return true
+        }
+    }
+
+    /** 身份不匹配触发的摘要打印权：一个会话只允许一次，避免逐章阅读时刷屏；诊断关闭时不占用。 */
+    fun claimMismatchRefreshReport(): Boolean {
+        if (!isEnabled) return false
+        return mismatchRefreshReported.compareAndSet(false, true)
     }
 
     /** 首个抓取页一次性拿到阶段一/二的采集权；重复调用返回 false。 */

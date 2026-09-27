@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "network_policy": "deny-declared-not-enforced",
+  "commands": [
+    {
+      "name": "d2-whitelist-diff-check",
+      "file": "git",
+      "args": ["diff", "--check", "--", "app/src/main/java/io/legado/app/help/book/diagnostics", "app/src/main/java/io/legado/app/model/Debug.kt", "app/src/main/java/io/legado/app/model/webBook/BookContent.kt", "app/src/main/java/io/legado/app/help/book/ContentProcessor.kt", "app/src/test/java/io/legado/app/help/book/diagnostics", "docs/book-source-audit/D-2-补打匹配口径-裁定.md"],
+      "working_directory": ".",
+      "timeout_sec": 120
+    },
+    {
+      "name": "d2-whitelist-status",
+      "file": "git",
+      "args": ["status", "--porcelain=v1", "--untracked-files=all", "--", "app/src/main/java/io/legado/app/help/book/diagnostics", "app/src/main/java/io/legado/app/model/Debug.kt", "app/src/main/java/io/legado/app/model/webBook/BookContent.kt", "app/src/main/java/io/legado/app/help/book/ContentProcessor.kt", "app/src/test/java/io/legado/app/help/book/diagnostics", "docs/book-source-audit/D-2-补打匹配口径-裁定.md"],
+      "working_directory": ".",
+      "timeout_sec": 120
+    },
+    {
+      "name": "d2-whitelist-diffstat",
+      "file": "git",
+      "args": ["diff", "--stat", "--", "app/src/main/java/io/legado/app/help/book/diagnostics", "app/src/main/java/io/legado/app/model/Debug.kt", "app/src/main/java/io/legado/app/model/webBook/BookContent.kt", "app/src/main/java/io/legado/app/help/book/ContentProcessor.kt", "app/src/test/java/io/legado/app/help/book/diagnostics"],
+      "working_directory": ".",
+      "timeout_sec": 120
+    }
+  ]
+}

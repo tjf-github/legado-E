@@ -102,22 +102,49 @@ object Debug {
      * 把本次会话要调试的正文目标（书源 + 书 + 章节）绑给接收端。
      *
      * 只有匹配这个目标的正文调用才拿得到接收端，本地书/别的书/别的章节不会串进本次摘要。
+     * [chapterBaseUrl] 是该章节自己的 `BookChapter.baseUrl`：章节地址可能是相对路径（规则原文入库），
+     * 少了它就无法与调试页粘的绝对地址对上，会话会对真实阅读永远不匹配（D-2）。
      */
-    fun bindDiagnosticsTarget(bookSourceUrl: String?, bookUrl: String?, chapterUrl: String?) {
-        diagnostics?.bindTarget(bookSourceUrl, bookUrl, chapterUrl)
+    fun bindDiagnosticsTarget(
+        bookSourceUrl: String?,
+        bookUrl: String?,
+        chapterUrl: String?,
+        chapterBaseUrl: String?
+    ) {
+        diagnostics?.bindTarget(bookSourceUrl, bookUrl, chapterUrl, chapterBaseUrl)
     }
 
     /**
      * 取当前调试会话里匹配该正文目标的接收端；未开启诊断、未绑定目标或不匹配时返回 null。
+     *
+     * 不匹配时会顺带刷新一次「阶段四未执行」的原因（见 [onIdentityMismatch]）：
+     * 调试链路收尾早于用户阅读，收尾时计数还是 0，若不刷新，摘要会一直留着
+     * 「未进入阅读处理」这句错误因果（复审 F-1）。
      */
     fun diagnosticsFor(
         bookSourceUrl: String?,
         bookUrl: String?,
-        chapterUrl: String?
+        chapterUrl: String?,
+        chapterBaseUrl: String?
     ): BookSourceDiagnosticsCollector? {
         val collector = diagnostics ?: return null
         if (!collector.isEnabled) return null
-        return collector.takeIf { it.accepts(bookSourceUrl, bookUrl, chapterUrl) }
+        if (collector.accepts(bookSourceUrl, bookUrl, chapterUrl, chapterBaseUrl)) return collector
+        onIdentityMismatch(collector)
+        return null
+    }
+
+    /**
+     * 一次正文处理因身份不符被拒绝时的收口。
+     *
+     * 会话已结束（callback 被清空）时不输出、不伪造；原因刷新由采集器判断是否真的变了，
+     * 打印则用一个会话一次的闩控制——逐章阅读会不断触发不匹配，不能每章刷一次屏。
+     */
+    private fun onIdentityMismatch(collector: BookSourceDiagnosticsCollector) {
+        if (callback == null) return
+        if (!collector.refreshReadingStageMissingReasonIfMissing()) return
+        if (!collector.claimMismatchRefreshReport()) return
+        printBookSourceDiagnostics()
     }
 
     /**
@@ -419,7 +446,7 @@ object Debug {
     ) {
         log(debugSource, "︾开始解析正文页")
         // 先绑定本次会话要调试的正文目标，正文管线才可能把阶段快照写进这个会话
-        bindDiagnosticsTarget(bookSource.bookSourceUrl, book.bookUrl, bookChapter.url)
+        bindDiagnosticsTarget(bookSource.bookSourceUrl, book.bookUrl, bookChapter.url, bookChapter.baseUrl)
         val content = WebBook.getContent(
             scope = scope,
             bookSource = bookSource,
@@ -452,9 +479,11 @@ object Debug {
      */
     private fun finishContentDiagnostics() {
         val collector = diagnostics ?: return
+        // 原因由采集器按「是否有正文处理被身份隔离排除」给出：读同一章却补打不上时，
+        // 不能再写成「未进入阅读处理」——那是错误因果（D-2/M3）
         collector.markNotExecutedIfMissing(
             DiagnosticStage.READ_PROCESS,
-            "书源调试链路止于 BookContent，未进入阅读处理"
+            collector.readingStageMissingReason()
         )
         collector.markMissingStagesNotExecuted("本次调试链路未执行该阶段")
         printBookSourceDiagnostics()

@@ -107,7 +107,8 @@ class ContentProcessor private constructor(
         val replaceBook by lazy { book.toReplaceBook() }
         // 只有本次书源调试会话绑定的那本书、那一章才拿得到接收端；
         // 本地 TXT/EPUB（origin 为 loc_book）、别的书、别的章节一律拿不到，诊断对它们是零额外处理。
-        val diagnostics = Debug.diagnosticsFor(book.origin, book.bookUrl, chapter.url)
+        // chapter.baseUrl 参与身份归一：章节地址可能是相对路径，缺了它就会与调试目标永远不匹配（D-2/M1）。
+        val diagnostics = Debug.diagnosticsFor(book.origin, book.bookUrl, chapter.url, chapter.baseUrl)
         // 计时同样只在会话开启时读时钟，关闭状态下不引入额外处理
         val stageStart = if (diagnostics != null) System.currentTimeMillis() else 0L
         // 本阶段被就地吞掉的异常（替换超时、规则报错）会被分类进诊断，而不是只留在 toast/日志里

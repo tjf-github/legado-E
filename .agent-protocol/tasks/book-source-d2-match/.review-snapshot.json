@@ -1,0 +1,39 @@
+﻿{
+    "version":  1,
+    "checked_at_utc":  "2026-09-26T15:51:55Z",
+    "state":  "stable",
+    "before":  {
+                   "GitAvailable":  true,
+                   "Repository":  true,
+                   "GitRoot":  "D:/vsproject/legado-E",
+                   "Head":  "25b289adb2060da421e437e9766727dac783a0c2",
+                   "GitDigest":  "5997d4e4fe603c56d4ff6d58eb052229b1fbf75ec5dd19dec032dc949d6bb09f",
+                   "IgnoredCount":  22585,
+                   "IgnoredDigest":  "4b46a4f497fea9df62d2f16162eafc585e41e5d8f7567f9121bb1b247520be43",
+                   "ProtocolDigest":  "1a11e32bf0a49f265677142a9eefc2a43106d62a9d2dfba8de32e2c55423dedc",
+                   "TaskDigest":  "1e7d31cd2360dda71d045c69bcb093582ddeb4a5060b2f515d02bbd148bb30f3",
+                   "CommandsDigest":  "cca8d906639d8108668a5d6409f71f6d57b4ddfc0a7ec08c959d7ee6f3fb634c",
+                   "ExecutionDigest":  "3384cea06dde2fe6757fd474826232bd4074d2e43cd4210aeb8d715fb89665b7",
+                   "GitignoreDigest":  "bca566443ef22d1bd4cafdbf0a1a5b6e920ee1d41ea7e04d06438762c3752c53",
+                   "AgentsDigest":  "cbfac3215935054068076288ba56c41746addb0c64dc15d0a864dd8c516fe459",
+                   "Digest":  "486e9f04b91f541bd6a6dc8a20a0a8e83dce1600943ff7cc81d10d8cde605d9c",
+                   "Detail":  ""
+               },
+    "after":  {
+                  "GitAvailable":  true,
+                  "Repository":  true,
+                  "GitRoot":  "D:/vsproject/legado-E",
+                  "Head":  "25b289adb2060da421e437e9766727dac783a0c2",
+                  "GitDigest":  "5997d4e4fe603c56d4ff6d58eb052229b1fbf75ec5dd19dec032dc949d6bb09f",
+                  "IgnoredCount":  22585,
+                  "IgnoredDigest":  "4b46a4f497fea9df62d2f16162eafc585e41e5d8f7567f9121bb1b247520be43",
+                  "ProtocolDigest":  "1a11e32bf0a49f265677142a9eefc2a43106d62a9d2dfba8de32e2c55423dedc",
+                  "TaskDigest":  "1e7d31cd2360dda71d045c69bcb093582ddeb4a5060b2f515d02bbd148bb30f3",
+                  "CommandsDigest":  "cca8d906639d8108668a5d6409f71f6d57b4ddfc0a7ec08c959d7ee6f3fb634c",
+                  "ExecutionDigest":  "3384cea06dde2fe6757fd474826232bd4074d2e43cd4210aeb8d715fb89665b7",
+                  "GitignoreDigest":  "bca566443ef22d1bd4cafdbf0a1a5b6e920ee1d41ea7e04d06438762c3752c53",
+                  "AgentsDigest":  "cbfac3215935054068076288ba56c41746addb0c64dc15d0a864dd8c516fe459",
+                  "Digest":  "486e9f04b91f541bd6a6dc8a20a0a8e83dce1600943ff7cc81d10d8cde605d9c",
+                  "Detail":  ""
+              }
+}

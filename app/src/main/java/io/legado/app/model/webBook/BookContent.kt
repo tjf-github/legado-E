@@ -49,7 +49,12 @@ object BookContent {
         book: Book,
         bookChapter: BookChapter
     ): BookSourceDiagnosticsCollector? =
-        Debug.diagnosticsFor(bookSource.bookSourceUrl, book.bookUrl, bookChapter.url)
+        Debug.diagnosticsFor(
+            bookSource.bookSourceUrl,
+            book.bookUrl,
+            bookChapter.url,
+            bookChapter.baseUrl
+        )
 
     @Throws(Exception::class)
     suspend fun analyzeContent(
