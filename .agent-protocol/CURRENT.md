@@ -23,5 +23,6 @@ channel_test: not-run
 - **代码已提交**：D-2 全部改动 = `2b9ecc2a3`（46 套件 / 424 用例）；r004 F-2 修复 = `87a3743ac`（46 套件 / 426 用例）。两者都在 `codex/manga-import`，未推送、未合并 main、未发布。
 - **协议三处修复已落地但未提交**：在 `D:\vsproject\agent-collaboration-protocol`（归档按回执轮次 id 命名 / 中止轮次复用编号并留痕 / `close` 只算含绑定回执的轮），另修环境块访问与 BOM 两处连带缺陷；该仓库同批计划书见其 `BATCH-9-PROTOCOL-FIX-PLAN.md`。
 - **未决项**：①协议项目那批改动未提交（提交/推送各自授权）；②本机协议回归套件在 DSH 会话里跑不起来（父进程有大小写同名代理变量，环境块构造成空）——详见《维护计划书》2026-09-26/27 块；③`.review-bundle.json`（7.5 MB）按 `gate-artifacts/README.md` 的说明有意不入库。
+- **2026-09-29 补 close 复跑（未通过）**：legado-E 协议模板同步已提交 `773d2c9d9`（本指针 `state: review` 不变）；`agent-protocol close book-source-d2-match` 仍被 standard 轮次上限拒绝（3 轮有效 > 2，尝试 4 含中止 1），**未写入任何产物**；就地升 `high` 会改任务书触发快照漂移且缺 executor 回执，故维持 review。详见《维护计划书》2026-09-29 块。
 
 
