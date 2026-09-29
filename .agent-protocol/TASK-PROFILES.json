@@ -1,10 +1,11 @@
 {
   "light": {
     "max_review_rounds": 1,
-    "independent_reviewer_required": true,
+    "independent_reviewer_required": false,
     "independent_acceptor_required": false,
     "critical_gates_must_rerun": false,
     "max_state_without_reviewer": "provisional",
+    "finalize_reserve_sec": 60,
     "allowed_extensions": [".md", ".txt", ".rst", ".adoc"]
   },
   "standard": {
@@ -13,6 +14,7 @@
     "independent_acceptor_required": false,
     "critical_gates_must_rerun": false,
     "max_state_without_reviewer": "provisional",
+    "finalize_reserve_sec": 90,
     "allowed_extensions": []
   },
   "high": {
@@ -21,6 +23,7 @@
     "independent_acceptor_required": true,
     "critical_gates_must_rerun": true,
     "max_state_without_reviewer": "provisional",
+    "finalize_reserve_sec": 120,
     "allowed_extensions": []
   }
 }

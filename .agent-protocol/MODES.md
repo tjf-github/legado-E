@@ -13,7 +13,7 @@
 
 保证等级与状态上限的机器可读权威值在 `ROUTES.json` 的 `assurance` / `max_state`；本表必须与它一致。
 
-提供方模式只回答“角色由谁承担”。每个任务还必须从 `TASK-PROFILES.json` 选择 `light / standard / high` 风险档，它回答“需要多少验证”：`light` 只允许文档类路径且最多一轮独立静态复审；`standard` 使用冻结快照并最多两轮；`high` 要求独立 acceptor 与关键门禁复跑。风险档不能改变或绕过本表的角色路由，实际保证取模式与任务档中较弱的一侧。
+提供方模式只回答“角色由谁承担”。每个任务还必须从 `TASK-PROFILES.json` 选择 `light / standard / high` 风险档，它回答“需要多少验证”：`light` 只允许文档类路径，默认不拉外部 reviewer；`standard` 要求 executor 与 reviewer 是不同运行身份，使用冻结快照并最多两轮；`high` 要求 executor、reviewer、acceptor 三个判断环节是不同运行身份并复跑关键门禁。激活和换挡都会做机器兼容校验，不兼容就拒绝。
 
 命名有两套形状，别按字面猜角色：`X-Y` 表示 **X 兼 controller+executor+acceptor、Y 当 reviewer**；
 `triad` / `claude-triad` / `codex-dsh` 是特例，指「主控方自己兼一部分角色、其余分给别的提供方」，
@@ -30,15 +30,15 @@
 
 - 同一任务连续两轮复审若只剩 LOW / INFO，且没有功能缺陷、越界、安全问题或阻塞级证据缺口，controller 必须把剩余项转成明确后续任务并进入收尾，不得继续制造无固定点的 rework 循环。
 - 最后一轮复审后，只允许删除或收窄已有表述的文档修正；acceptor 必须在 `30-acceptance.md` 逐项披露。任何扩大承诺、改变功能或改变证据含义的修正都要重新复审。
-- `14-<角色>-prompt.md`、`15-<角色>-raw.md` 和角色证据文件的顶层版本表示当前轮。runner 再次拉起同一角色时，会把上一轮三件套复制到 `rounds/<角色>-rNNN/`；`role-verify` 同时校验当前轮与历史轮。历史失败调用显示为 `SKIP` 并保留审计痕迹，不冒充可信证据；当前轮失败仍是 `FAIL`。
+- `14-<角色>-prompt.md`、`15-<角色>-raw.md` 和角色证据文件的顶层版本表示当前轮。runner 再次拉起同一角色时，会把上一轮文件复制到 `rounds/<角色>-rNNN/`，顶层旧报告改成 `SUPERSEDED` 指针；回执与证据封套共同绑定 round/task/snapshot，`role-verify` 同时校验当前轮与历史轮。超时另写 `partial-<角色>-manifest.json`，只说明发生过什么，不能冒充角色结论。
 
 ## 模式选择优先级
 
 1. 满足任务权限和数据政策；
-2. 三方可用时优先三方模式：Codex 主控用 `triad`，Claude 主控用 `claude-triad`；
-3. 某方额度耗尽时选择仍有独立 reviewer 的双代理模式；
-4. 只有一个代理可用时进入 `single` 并保存可复审证据；
-5. 代理恢复后从 `provisional` 进入 `review`，不能直接改成 `accepted`。
+2. `light` 默认最小协作集，不拉外部 reviewer；若用 `single`，状态上限仍为 `provisional`；
+3. `standard` 默认双实例（executor + 独立 reviewer），controller 可兼 acceptor；
+4. `high`、发布、签名、权限、安全、迁移和高影响数据变更才默认完整三方或等价的三个独立运行身份；
+5. reviewer 发现跨层缺陷、角色结论冲突、同错两轮不收敛或范围升级时，显式换到更高保证 mode；提供方不可用时显式降档并保留证据，恢复后从 `provisional` 进入 `review`，不能直接改成 `accepted`。
 
 ## 品牌与实例
 

@@ -6,6 +6,7 @@
 - 实际读取：
 - 未读取 / 未授权内容：
 - 与 executor 是否为不同运行实例：
+- probe_evidence：`trusted-runner / missing / stale`
 
 ## Verdict
 
@@ -20,4 +21,3 @@
 - 未修改 executor 的报告或源码；
 - 未自行声称 `accepted`；
 - 未运行项写 `NOT RUN`。
-

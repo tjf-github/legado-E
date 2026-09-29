@@ -10,7 +10,7 @@ executor: dsh
 reviewer: claude
 acceptor: dsh
 last_closed_task: book-source-p1-device
-channel_test: passed@2026-09-18
+channel_test: not-run
 ---
 
 # 当前协作指针

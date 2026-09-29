@@ -58,10 +58,11 @@
 - 开工前先读 `.agent-protocol/README.md`、`.agent-protocol/PROJECT.md` 与 `.agent-protocol/CURRENT.md`。
 - 当前任务、模式和角色映射只认 `.agent-protocol/CURRENT.md`，不得根据聊天记录或目录时间猜测。
 - 每个运行实例只写任务书授权给自己的证据文件，不覆盖其他代理原文。
+- 每轮先读自己的 `.agent-protocol/tasks/<任务>/13-<角色>-context.json`：它写明该读哪些文件、哪些历史默认不读、规则文件有没有变；发现用 `F-0001` 这样的 ID 引用，不要复制全文。
 - 需要别的角色时，你自己就是 controller：用 `agent-protocol role <executor|reviewer|acceptor>` 把对方拉起来，不要让人去开新窗口转发提示词。
 - 代理不可用或额度耗尽时按 `.agent-protocol/MODES.md` 显式换挡并记录交接；不得静默换模型后继承原身份。
 - `single` 模式最终状态上限为 `provisional`；正式 `accepted` 至少需要不同于执行实例的独立复审证据。
-- 任务或阶段收尾时按 `.agent-protocol/CLOSEOUT.md` 走清单：清理、留证、状态与索引更新，提交/推送/发布分开授权。
+- 任务或阶段收尾时按 `.agent-protocol/CLOSEOUT.md` 走清单：回执落盘后由 controller 运行 `role-verify`；独立验收未通过但产品已就绪时可保留原判、登记债务并仅以 provisional 收口；再做事务式归档与清理。提交/推送/发布分开授权。
 - 本项目自身的 `AGENTS.md`、安全规则、构建门禁和发布流程始终优先；冲突时停止并交由当前 controller 处理。
 <!-- agent-protocol:end -->
 

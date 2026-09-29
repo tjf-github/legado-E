@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
   "network_policy": "deny-declared-not-enforced",
+  "ignored_materialization_policy": "declare-on-large",
   "commands": []
 }

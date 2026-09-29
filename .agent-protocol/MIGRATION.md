@@ -1,5 +1,15 @@
 # 导入与迁移规则
 
+## 升级前检查、重复更新与回滚
+
+从旧版升级时先记录目标项目 `.agent-protocol/CURRENT.md` 的活动任务与 `route_revision`，并保存目标项目的 Git 工作树状态。先用 `agent-protocol test` 检查旧安装；若当前轮正在运行，等待回执与报告落盘后再升级，避免协议指纹在同一轮内变化。升级前不要把旧项目的 `tasks/` 或 `CURRENT.md` 复制到另一项目。
+
+在目标项目执行 `agent-protocol init -Update -SkipChannelTest`。更新会先在目标项目 `.agent-protocol-backups/<时间戳>/` 备份现有 `.agent-protocol/`、`AGENTS.md` 与 `.gitignore`，再替换稳定模板文件；保留现场的 `CURRENT.md`、`PROJECT.md` 和 `tasks/`。检查命令输出的备份路径、运行 `agent-protocol test`，并核对活动任务、人工填写的项目字段与原有 `AGENTS.md` 正文。再次运行 `-Update` 仍应保留这些现场字段；每次更新产生自己的备份。不要把历史 `LEGACY` 回执解释成新轮的严格证明。
+
+本版本**没有自动卸载或自动回滚命令**。移除接入或恢复旧模板需要在目标项目逐项核对并手工操作：先停用任务调用，选定升级前的完整备份，核对其 `CURRENT.md`、`PROJECT.md`、`tasks/` 与当前现场的差异；若升级后产生新任务/证据，先独立保全，不能直接用旧目录覆盖。恢复稳定模板时只恢复备份中需要的稳定文件与 `AGENTS.md` 的协议标记区，保留当前活动任务、人工项目字段、任务证据和标记区外项目规则。若要完全移除协议，先单独保存任务证据，再从 `AGENTS.md` 删除成对的协议标记区，处理 `.gitignore` 中仅由协议加入且不再需要的规则，最后移走协议目录。任何递归删除或覆盖都需要目标项目所有者明确授权。
+
+备份目录名包含毫秒和随机后缀，连续更新各自保留独立目录。回滚前仍须核对备份内容、目标项目和操作时间，不能仅按目录名推断哪份适合恢复。
+
 ## 可直接迁移
 
 - 角色定义、模式矩阵、状态机、证据文件结构；
@@ -17,7 +27,7 @@
 
 ## 风险档与冻结快照升级
 
-新版任务模板新增 `TASK-PROFILES.json`、`06-review-commands.json`、Git 修前基线、临时目录例外、复审轮次上限与冻结窗口。老任务不做静默改写；它们可以保留为历史证据，但要使用 `review-probe` 或 `close` 必须新建任务，或人工补齐这些机器可读字段并重新复审。
+新版任务模板新增 `TASK-PROFILES.json`、`06-review-commands.json`、Git 修前基线、临时目录例外、复审轮次上限与冻结窗口。缺少这些任务级结构的老任务不做静默改写；要使用 `review-probe` 或 `close` 仍须新建任务，或人工补齐机器可读字段并重新复审。若在途任务结构已满足当前要求，只是 `init -Update` 前归档在 `rounds/` 的成功历史回执没有 round/task/snapshot 封套，`role-verify` 会在哈希一致时把它显式降级为 `LEGACY`（`legacy-hash-only`）并允许当前严格顶层轮继续收口；顶层当前轮绝不自动迁移或降级。
 
 `init` 在目标不属于任何 Git 仓库时默认执行 `git init`，但绝不自动创建提交；不希望初始化可显式加 `-SkipGitInit`。`standard/high` 在没有可复算 HEAD 时不能收口为完成状态。
 

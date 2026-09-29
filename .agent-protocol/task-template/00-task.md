@@ -10,6 +10,10 @@
 ## 实时基线
 
 - 任务风险档：standard
+- 变更范围：docs / config / code / release / security / data
+- 不确定性：low / medium / high
+- 推荐 mode：
+- 升级触发器：跨层缺陷、范围扩大、结论冲突、同错两轮未收敛、发布/权限/安全/数据边界
 - Git 仓库根：
 - 分支：
 - Git HEAD：
@@ -28,12 +32,14 @@
 
 - controller：
 - executor 可读 / 可改：
-- reviewer 可读：
+- reviewer 可读：本任务的 `06-review-commands.json`（冻结命令清单）；其余业务文件由 controller 填写。
 - 沙箱提权：否（默认）。需要提权时任务书必须写明哪一条命令、为什么、提到哪一档；执行侧一次一申请，不得批量提权。
 - 写白名单是**硬上限**：白名单内才是授权范围；白名单外即使只改一个注释也属越界，必须先由 controller 扩权并重新冻结。
 - 正式文件白名单：
-- 允许产生的临时目录：系统临时目录，或本字段明确列出的项目内目录；不得把临时产物混入正式 diff。
-- 收尾前必须清理：本任务产生且不属于正式交付物的临时文件。
+- 机器写范围说明：通过 task -ExecutorWrite 或 scope-expand 写入逐条 executor_write 路径；留空时 runner 报 not-configured，不得宣称未越界。
+- 增量授权：controller 使用 `scope-expand` 追加的 Scope expansion 节属于本任务授权；只扩展列出的角色/文件，原有禁止项仍优先。不得手工同时改写多份范围与上下文文件。
+- 允许产生的临时目录：只允许 runner 通过 `AGENT_PROTOCOL_TEMP_ROOT` 传入并登记的唯一系统临时根；项目内例外必须在本字段另行写明，不得把临时产物混入正式 diff。
+- 收尾前必须清理：runner 在 success / failure / timeout 的 finally 路径清理登记根；清理失败必须在 temp manifest 留待清理状态。
 - acceptor：
 - 外部目的地与模型：
 - 明确禁止的数据和操作：
