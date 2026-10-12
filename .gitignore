@@ -43,5 +43,9 @@ __pycache__/
 # 协议 runner 的一次性临时产物：按既有惯例不入库（历史任务同样未跟踪），结论与哈希已在回执里
 .agent-protocol/tasks/*/temp-artifacts/
 .agent-protocol/tasks/*/temp-manifests/
+# Claude 本机权限配置供 agent-protocol reviewer 使用，不入库
+.claude/settings.local.json
 # 本机专属：书单导出样本（含真实书名/作者，是「书单导入」待办的取证样本，只留本机）
 /bookshelf.json
+# 本机专属：legado-E 项目级 DSH 技能目录（只留本机，不随仓库分发）
+/.dsh/
