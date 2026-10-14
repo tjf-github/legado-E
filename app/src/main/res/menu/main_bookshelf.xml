@@ -41,6 +41,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/menu_select_books"
+        android:icon="@drawable/ic_arrange"
+        android:title="@string/select_books"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_bookshelf_manage"
         android:icon="@drawable/ic_arrange"
         android:title="@string/bookshelf_management"

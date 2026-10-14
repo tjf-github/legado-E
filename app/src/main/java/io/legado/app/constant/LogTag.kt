@@ -15,5 +15,4 @@ object LogTag {
     const val MANGA = "Manga"
     const val BOOKSHELF = "Bookshelf"
     const val TOC = "TableOfContents"
-    const val AI = "AI"
 }

@@ -184,8 +184,6 @@ object PreferKey {
     const val paddingDisplayCutouts = "paddingDisplayCutouts"
     const val autoCheckNewBackup = "autoCheckNewBackup"
 
-    const val aiOnlyNonMeteredNetwork = "aiOnlyNonMeteredNetwork"
-
     const val dThemeName = "durThemeName"
     const val dNThemeName = "durThemeNameNight"
 

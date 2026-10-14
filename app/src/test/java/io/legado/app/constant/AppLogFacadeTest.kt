@@ -42,8 +42,7 @@ class AppLogFacadeTest {
             LogTag.IMPORT,
             LogTag.MANGA,
             LogTag.BOOKSHELF,
-            LogTag.TOC,
-            LogTag.AI
+            LogTag.TOC
         )
 
         assertTrue(tags.all(String::isNotBlank))

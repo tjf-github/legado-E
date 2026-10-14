@@ -28,11 +28,11 @@ abstract class BaseBooksAdapter<VB : ViewBinding>(context: Context) :
     fun isSelected(book: Book): Boolean = selectedBooks.contains(book.bookUrl)
 
     /**
-     * 长按进入多选模式并默认选中该书
+     * 进入多选模式；菜单入口不预选书籍，已有调用可传入初选书籍
      */
-    fun enterSelectionMode(book: Book) {
+    fun enterSelectionMode(book: Book? = null) {
         isSelectionMode = true
-        selectedBooks.add(book.bookUrl)
+        book?.let { selectedBooks.add(it.bookUrl) }
         notifyDataSetChanged()
     }
 
@@ -159,9 +159,5 @@ abstract class BaseBooksAdapter<VB : ViewBinding>(context: Context) :
          */
         fun onSelectionChanged()
 
-        /**
-         * 非多选态长按书籍：请求进入多选模式
-         */
-        fun onLongPressBook(book: Book)
     }
 }

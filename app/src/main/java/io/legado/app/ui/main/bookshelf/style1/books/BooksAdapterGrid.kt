@@ -158,7 +158,7 @@ class BooksAdapterGrid(context: Context, private val callBack: CallBack) :
                         updateItem(holder.layoutPosition, bundleOf(Pair("select", null)))
                         callBack.onSelectionChanged()
                     } else {
-                        callBack.onLongPressBook(it)
+                        callBack.openBookInfo(it)
                     }
                 }
             }
