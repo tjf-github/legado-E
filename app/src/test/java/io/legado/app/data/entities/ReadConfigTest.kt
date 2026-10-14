@@ -3,12 +3,39 @@ package io.legado.app.data.entities
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 
 class ReadConfigTest {
+
+    @Test
+    fun legacyRemovedFeatureFlagDoesNotAffectReadingSettings() {
+        val converters = Book.Converters()
+        val expected = Book.ReadConfig(
+            reverseToc = true,
+            pageAnim = 3,
+            reSegment = true,
+            imageStyle = "cover",
+            imageGap = 2,
+            useReplaceRule = false,
+            ttsEngine = "test",
+            splitLongChapter = false,
+            playSpeed = 1.5f
+        )
+        val configJson = converters.readConfigToString(expected).dropLast(1)
+        for (legacyFlag in listOf("true", "false", "null")) {
+            val restored = converters.stringToReadConfig(
+                "$configJson,\"aiEnabled\":$legacyFlag}"
+            )
+            assertEquals(expected, restored)
+            val saved = converters.readConfigToString(restored)
+            assertFalse(saved.contains("\"aiEnabled\""))
+            assertEquals(expected, converters.stringToReadConfig(saved))
+        }
+    }
 
     @Test
     fun readConfigRoundTripAllFields() {

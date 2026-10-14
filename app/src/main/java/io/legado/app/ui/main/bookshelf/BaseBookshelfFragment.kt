@@ -89,8 +89,19 @@ abstract class BaseBookshelfFragment(layoutId: Int) : VMBaseFragment<BookshelfVi
 
     abstract fun gotoTop()
 
+    abstract fun enterSelectionMode()
+
+    protected open val showBookSelectionMenu: Boolean get() = true
+
+    fun updateSelectionMenu() {
+        supportToolbar?.menu?.findItem(R.id.menu_select_books)?.apply {
+            isVisible = showBookSelectionMenu
+        }
+    }
+
     override fun onCompatCreateOptionsMenu(menu: Menu) {
         menuInflater.inflate(R.menu.main_bookshelf, menu)
+        updateSelectionMenu()
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem) {
@@ -100,6 +111,7 @@ abstract class BaseBookshelfFragment(layoutId: Int) : VMBaseFragment<BookshelfVi
             R.id.menu_search -> startActivity<SearchActivity>()
             R.id.menu_update_toc -> activityViewModel.upToc(books, onlyUpdateRead)
             R.id.menu_bookshelf_layout -> configBookshelf()
+            R.id.menu_select_books -> enterSelectionMode()
             R.id.menu_group_manage -> showDialogFragment<GroupManageDialog>()
             R.id.menu_add_local -> startActivity<ImportBookActivity>()
             R.id.menu_import_manga -> startActivity<ImportMangaActivity>()

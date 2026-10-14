@@ -132,6 +132,10 @@ class BookshelfFragment1() : BaseBookshelfFragment(R.layout.fragment_bookshelf1)
         AppConfig.saveTabPosition = tab.position
     }
 
+    override fun enterSelectionMode() {
+        fragmentMap[groupId]?.enterSelectionMode()
+    }
+
     override fun gotoTop() {
         fragmentMap[groupId]?.gotoTop()
     }

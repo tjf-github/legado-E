@@ -129,14 +129,13 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
             onlyUpdateRead = it.getBoolean("onlyUpdateRead", false)
             binding.refreshLayout.isEnabled = enableRefresh
         }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
         initSelectActionBar()
         initRecyclerView()
         upRecyclerData()
     }
 
     /**
-     * 多选模式：长按进入、底部操作栏全选/反选/删除/移组，back 或「完成」退出
+     * 多选模式：菜单进入、底部操作栏全选/反选/删除/移组，back 或「完成」退出
      */
     private fun initSelectActionBar() {
         binding.selectActionBar.setMainActionText(R.string.delete)
@@ -148,8 +147,12 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
         }
     }
 
-    private fun enterSelectionMode(book: Book) {
-        booksAdapter.enterSelectionMode(book)
+    fun enterSelectionMode() {
+        if (booksAdapter.isEmpty() || booksAdapter.isSelectionMode) return
+        booksAdapter.enterSelectionMode()
+        // MainActivity also handles back; register on entry so selection consumes back first.
+        backCallback.remove()
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
         upSelectionBar()
     }
 
@@ -377,10 +380,6 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
 
     override fun onSelectionChanged() {
         upSelectCount()
-    }
-
-    override fun onLongPressBook(book: Book) {
-        enterSelectionMode(book)
     }
 
     override fun selectAll(selectAll: Boolean) {

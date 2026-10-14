@@ -122,7 +122,7 @@ class BooksAdapterList(
                         updateItem(holder.layoutPosition, bundleOf(Pair("select", null)))
                         callBack.onSelectionChanged()
                     } else {
-                        callBack.onLongPressBook(it)
+                        callBack.openBookInfo(it)
                     }
                 }
             }

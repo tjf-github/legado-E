@@ -90,6 +90,7 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
     override var books: List<Book> = emptyList()
     private var enableRefresh = true
     override var onlyUpdateRead = false
+    override val showBookSelectionMenu: Boolean get() = groupId != BookGroup.IdRoot
     private val bookshelfMargin by lazy { AppConfig.bookshelfMargin }
     private var itemCount = 0
     private var totalRows = 0
@@ -103,7 +104,6 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
 
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         setSupportToolbar(binding.titleBar.toolbar)
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
         initSelectActionBar()
         initRecyclerView()
         initBookGroupData()
@@ -111,7 +111,7 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
     }
 
     /**
-     * 多选模式：长按进入、底部操作栏全选/反选/删除/移组，back 或「完成」退出；
+     * 多选模式：菜单进入、底部操作栏全选/反选/删除/移组，back 或「完成」退出；
      * 仅在进入分组后（列表全为书籍）生效
      */
     private fun initSelectActionBar() {
@@ -124,8 +124,12 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
         }
     }
 
-    private fun enterSelectionMode(book: Book) {
-        booksAdapter.enterSelectionMode(book)
+    override fun enterSelectionMode() {
+        if (groupId == BookGroup.IdRoot || books.isEmpty() || booksAdapter.isSelectionMode) return
+        booksAdapter.enterSelectionMode()
+        // MainActivity also handles back; register on entry so selection consumes back first.
+        backCallback.remove()
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
         upSelectionBar()
     }
 
@@ -238,6 +242,7 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
     }
 
     private fun initBooksData() {
+        updateSelectionMenu()
         if (groupId == BookGroup.IdRoot) {
             if (isAdded) {
                 binding.titleBar.title = getString(R.string.bookshelf)
@@ -270,6 +275,7 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
                 AppLog.put("书架更新出错", it)
             }.conflate().flowOn(Dispatchers.Default).collect { list ->
                 books = list
+                updateSelectionMenu()
                 booksAdapter.updateItems(groupId)
                 itemCount = getItemCount()
                 val spanCount = bookshelfLayout
@@ -324,14 +330,9 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
     override fun onItemLongClick(item: Any) {
         when (item) {
             is Book -> {
-                // 根视图混排分组与书籍，长按保持原行为；进入分组后长按进入多选
-                if (groupId == BookGroup.IdRoot) {
-                    startActivity<BookInfoActivity> {
-                        putExtra("name", item.name)
-                        putExtra("author", item.author)
-                    }
-                } else {
-                    enterSelectionMode(item)
+                startActivity<BookInfoActivity> {
+                    putExtra("name", item.name)
+                    putExtra("author", item.author)
                 }
             }
 
